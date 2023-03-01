@@ -1,0 +1,23 @@
+{
+  "name": "baby-cars-api",
+  "version": "1.0.0",
+  "description": "API Used to manage the information on databases for baby cars app and bay cars crm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AngelMD99/baby-cars-api.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AngelMD99/baby-cars-api/issues"
+  },
+  "homepage": "https://github.com/AngelMD99/baby-cars-api#readme",
+  "dependencies": {
+    "fastify": "^4.13.0"
+  }
+}
