@@ -8,7 +8,7 @@ fastify.register(require('@fastify/cors'), {
 	methods: ['GET','POST','PUT','HEAD','DELETE','OPTIONS']
 });
 require("./config/db");
-// fastify.register(require("./routes/base.routes"));
+fastify.register(require("./routes/base.routes"));
 // fastify.register(require("./routes/tenant.routes"));
 // fastify.register(require("./routes/module.routes"));
 // fastify.register(require("./routes/news.routes"));
