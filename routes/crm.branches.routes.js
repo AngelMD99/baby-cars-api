@@ -1,4 +1,4 @@
-const { branchCreate } = require('../controllers/branch.controller');
+const { branchCreate, branchShow, branchDelete,branchList, branchUpdate } = require('../controllers/branch.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -16,7 +16,7 @@ const authorizeFunc = async function (req, reply) {
         if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'invalid_cms_token'
+                message: 'invalid_crm_token'
             })
         }
     
@@ -88,13 +88,76 @@ const postBranchUpOpts = {
     handler: branchCreate,
 }
 
+const getSingleBranchOpts={
+    schema: {
+         description:"Retrieves the information of a single branch with the id provided.",
+         tags:['Branches'],
+         headers:{
+            authorization:{type:'string'}
+        },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: branchDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: branchShow,
+    
+}
+
+const putSingleBranchOpts={
+    schema: {
+         description:"Allows to update the information of a single branch with the id provided.",
+         tags:['Branches'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         }, 
+         body: {
+            type: 'object',
+            properties: {                
+                code:{type:'string', minLength:8},
+                name: { type: 'string' },
+                password: { type: 'string' }, 
+                location: { type: 'string'}                               
+            },
+        },      
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:branchDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: branchUpdate,
+    
+}
+
 
 
 function crmBranchesRoutes(fastify, options, done) {
     //fastify.get('/cms/branches', getBranchesOpts)
-    //fastify.get('/cms/branches/:id', getSingleBranchOpts)
+    fastify.get('/crm/branches/:id', getSingleBranchOpts)
     fastify.post('/crm/branches', postBranchUpOpts)
-    //fastify.put('/cms/branches/:id', putSingleBranchOpts)
+    fastify.put('/crm/branches/:id', putSingleBranchOpts)
     //fastify.delete('/cms/branches/:id', deleteSingleBranchOpts)
 
 done()

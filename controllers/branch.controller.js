@@ -45,10 +45,133 @@ const branchCreate = async function (req, reply){
 }
 
 const branchShow = async function (req, reply){
-    
+    const branch = await Branch.findOne({_id:req.params.id}).select('-createdAt -updatedAt -__v');
+    if (!branch){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'branch_not_found'
+        })        
+    } 
+   
+    let branchObj = await branch.toObject();        
+    reply.code(200).send({
+        status: 'success',
+        data: branchObj
+    })    
 }
 
 const branchUpdate = async function (req, reply){
+
+    //let loggedUser = await req.jwtVerify();
+    let error;
+    if(req.body.code!=null){
+        let branchCodeValidation = await Branch.findOne({code:req.body.code.toUpperCase(),isDeleted:false});
+        if (branchCodeValidation!=null && branchCodeValidation._id != req.params.id){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'code_already_registered'
+            })
+        }
+        if(req.body.code.indexOf(' ') >= 0){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'white_spaces_not_allowed_on_branch_code'
+            })
+        }
+    }
+
+
+    let currentBranch = await Branch.findOne({_id: req.params.id, isDeleted:false});
+    if(currentBranch == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'product_not_found'
+        })
+    }
+
+    let updatedBranch = await Branch.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+
+    // let branchNumberCheck = await Branch.findOne({branchNumber: req.body.branchNumber, isDeleted:false})
+
+    // if(branchNumberCheck!=null && String(branchNumberCheck._id) != String(currentBranch._id)){
+    //     reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'branch_number_already_registered'
+    //     })
+    // }
+
+    updatedBranch.code = req.body.code!=null ? req.body.code : updatedBranch.code;
+    updatedBranch.name = req.body.name!=null ? req.body.name : updatedBranch.name;
+    updatedBranch.location = req.body.location!=null ? req.body.location : updatedBranch.location;
+    if (req.body.password!=null && req.body.password!=""){
+        let plainPassword = req.body.password
+        let hash=bcrypt.hashSync(plainPassword, 12)
+        updatedBranch.password=hash;
+    }
+    //updatedBranch.categoryId = req.body.categoryId ? req.body.categoryId : updatedBranch.categoryId;
+    //updatedBranch.productCode = req.body.productCode!=null ? req.body.productCode : updatedBranch.name;
+    //updatedBranch.name = req.body.name ? req.body.name : updatedBranch.name;
+    //updatedBranch.shortName = req.body.shortName ? req.body.shortName : updatedBranch.shortName;
+    //updatedBranch.price = req.body.price!= null ? req.body.price : updatedBranch.price;
+    //updatedBranch.description = req.body.description ? req.body.description : updatedBranch.description;
+    //updatedBranch.options = req.body.options ? req.body.options : updatedBranch.options;
+    //updatedBranch.freeOptions = req.body.freeOptions!=null ? req.body.freeOptions : updatedBranch.freeOptions;
+    // if (req.body.image){
+
+    //     if(currentProduct.image){
+    //         let serverURL = process.env.APP_HOST;
+    //         serverURL = process.env.APP_LOCAL_PORT !=null ? serverURL + ":"+process.env.APP_LOCAL_PORT : serverURL;
+    //         if(req.body.image.full != currentProduct.image.full){
+    //             let currentFullImage = currentProduct.image.full.replace(serverURL,'');
+    //             currentFullImage = __dirname + currentFullImage;
+    //             currentFullImage = currentFullImage.replace('controllers/','');
+    //             let imageExists = await fileExists(currentFullImage)
+    //             if (imageExists==true){
+    //                 fs.remove(currentFullImage, err => {
+    //                     if (err) return console.error(err)
+    //                   })
+    //             }
+    //             updatedProduct.image.full =req.body.image.full;
+    //         }
+    //         if(req.body.image.thumbnail != currentProduct.image.thumbnail){
+    //             let currentThumbnail = currentProduct.image.thumbnail.replace(serverURL,'');
+    //             currentThumbnail = __dirname + currentThumbnail;
+    //             currentThumbnail = currentThumbnail.replace('controllers/','');
+    //             let imageExists = await fileExists(currentThumbnail);
+
+    //             if (imageExists==true){
+    //                 fs.remove(currentThumbnail, err => {
+    //                     if (err) return console.error(err)
+    //                   })
+    //             }
+    //             updatedProduct.image.thumbnail =req.body.image.thumbnail;
+    //         }
+    //     }
+    //     else{
+    //         updatedProduct.image={
+    //             full:req.body.image.full,
+    //             thumbnail:req.body.image.thumbnail
+    //         }
+    //     }
+
+
+    // }
+
+    // if(req.body.isEnabled!=null && req.body.isEnabled != currentProduct.isEnabled){
+    //         let productActive = req.body.isEnabled;
+    //         action = productActive == true ? "ENABLED" : "DISABLED"
+    // }
+    await updatedBranch.save();
+
+    let updatedBranchObj = await updatedBranch.toObject()
+    delete updatedBranchObj.password
+    delete updatedBranchObj.__v
+   
+    reply.code(200).send({
+        status: 'success',
+        data: updatedBranchObj           
+        
+    }) 
     
 }
 
