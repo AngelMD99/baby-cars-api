@@ -5,7 +5,7 @@ var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 
-const userLogin = async function (req, reply) {
+const userLogin = async function (req, reply) {    
     const user = await User.findOne({email: req.body.email, isDeleted:false});
 
     if(user == null){
