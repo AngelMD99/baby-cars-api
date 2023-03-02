@@ -16,7 +16,7 @@ let planSchema = new mongoose.Schema(
     }
   );
 
-const carsSchema = new mongoose.Schema({
+const carSchema = new mongoose.Schema({
     isDeleted: {
         type: Boolean,
         default: false
@@ -44,8 +44,8 @@ const carsSchema = new mongoose.Schema({
   }
 )
 
-userSchema.index({ name: "text" })
+carSchema.index({ name: "text" })
 
-userSchema.plugin(mongoosePaginate);
+carSchema.plugin(mongoosePaginate);
 
-module.exports = mongoose.model('Car', carsSchema)
+module.exports = mongoose.model('Car', carSchema)

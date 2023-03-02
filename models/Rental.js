@@ -29,10 +29,7 @@ const rentalSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Car", 
     },
-    plan:{
-        time:Number,
-        price:Number
-    },    
+    plan:planSchema,   
     paymentType: {
         type: String,
         required: true
@@ -43,8 +40,8 @@ const rentalSchema = new mongoose.Schema({
   }
 )
 
-userSchema.index({ name: "text" })
+rentalSchema.index({ name: "text" })
 
-userSchema.plugin(mongoosePaginate);
+rentalSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model('Rental', rentalSchema)

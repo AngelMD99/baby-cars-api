@@ -6,6 +6,11 @@ const branchSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    code:{
+        type:String,
+        required:true,
+        uppercase:true
+    },
     name: {
         type: String,
         required: true
@@ -24,8 +29,7 @@ const branchSchema = new mongoose.Schema({
   }
 )
 
-userSchema.index({ name: "text" })
+branchSchema.index({ name: "text" })
 
-userSchema.plugin(mongoosePaginate);
-
+branchSchema.plugin(mongoosePaginate);
 module.exports = mongoose.model('Branch', branchSchema)

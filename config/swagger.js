@@ -34,11 +34,12 @@ exports.options = {
         },
         branches: {
           type: 'object',
-          required: ['name','password'],
+          required: ['name','password','code'],
           properties: {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},
             name:{type:'string'},
+            code:{type:'string'},
             password:{type:'string'},
             location:{type:'string'},               
             createdAt:{type:'timestamp'},
