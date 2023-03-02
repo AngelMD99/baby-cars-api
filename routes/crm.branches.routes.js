@@ -151,6 +151,33 @@ const putSingleBranchOpts={
     
 }
 
+const deleteSingleBranchOpts={
+    schema: {
+         description:"Deletes the branch with the id provided.",
+         tags:['Branches'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: branchDelete,
+    
+}
+
 
 
 function crmBranchesRoutes(fastify, options, done) {
@@ -158,7 +185,7 @@ function crmBranchesRoutes(fastify, options, done) {
     fastify.get('/crm/branches/:id', getSingleBranchOpts)
     fastify.post('/crm/branches', postBranchUpOpts)
     fastify.put('/crm/branches/:id', putSingleBranchOpts)
-    //fastify.delete('/cms/branches/:id', deleteSingleBranchOpts)
+    fastify.delete('/crm/branches/:id', deleteSingleBranchOpts)
 
 done()
 }

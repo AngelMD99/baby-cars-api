@@ -12,14 +12,14 @@ const branchCreate = async function (req, reply){
     if(branchCode != null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'branch_code_already_in_use'
+            message: 'código_de_sucursal_en_uso'
         })
     }    
 
     if(req.body.code.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'white_spaces_not_allowed_on_branch_code'
+                message: 'no_se_permiten_espacios_en_blanco_en_el_código'
             })
     }
     
@@ -49,7 +49,7 @@ const branchShow = async function (req, reply){
     if (!branch){
         return reply.code(400).send({
             status: 'fail',
-            message: 'branch_not_found'
+            message: 'sucursal_no_encontrada'
         })        
     } 
    
@@ -61,21 +61,20 @@ const branchShow = async function (req, reply){
 }
 
 const branchUpdate = async function (req, reply){
-
     //let loggedUser = await req.jwtVerify();
-    let error;
+    //let error;
     if(req.body.code!=null){
         let branchCodeValidation = await Branch.findOne({code:req.body.code.toUpperCase(),isDeleted:false});
         if (branchCodeValidation!=null && branchCodeValidation._id != req.params.id){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'code_already_registered'
+                message: 'código_de_sucursal_en_uso'
             })
         }
         if(req.body.code.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'white_spaces_not_allowed_on_branch_code'
+                message: 'no_se_permiten_espacios_en_blanco_en_el_código'
             })
         }
     }
@@ -85,7 +84,7 @@ const branchUpdate = async function (req, reply){
     if(currentBranch == null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'product_not_found'
+            message: 'sucursal_no_encontrada'
         })
     }
 
@@ -176,6 +175,24 @@ const branchUpdate = async function (req, reply){
 }
 
 const branchDelete = async function (req, reply){
+    //let loggedUser = await req.jwtVerify();
+    let currentBranch = await Branch.findOne({_id: req.params.id, isDeleted:false});
+    if(currentBranch == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'sucursal_no_encontrada'
+        })
+    }
+
+    let updatedBranch = await Branch.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedBranch.isDeleted=true;
+    await updatedBranch.save();
+    reply.code(200).send({
+        status: 'success',
+        message: 'sucursal_eliminada'           
+        
+    }) 
+
     
 }
 
