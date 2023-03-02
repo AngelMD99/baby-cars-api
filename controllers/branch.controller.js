@@ -192,18 +192,117 @@ const branchDelete = async function (req, reply){
         message: 'sucursal_eliminada'           
         
     }) 
-
     
 }
 
 const branchList = async function (req, reply){
     
-}
+    let searchQuery = {
+        isDeleted: false,			
+    };
+    const options = {
+        select: `-isDeleted -__v -updatedAt -createdAt`, 
 
-const branchLogin = async function (req, reply){
+    }
+    if (req.query.page){
+        options.page = req.query.page;
+    }
+    if (req.query.page){
+        options.limit = req.query.perPage;
+    }
+    let branchesPaginated={};
+    if(!req.query.search){        
+        if(options.page!=null && options.limit!=null){
+            branchesPaginated = await Branch.paginate(searchQuery, options);
+        }
+        else{
+            branchesPaginated.docs = await Branch.find(searchQuery);
+        }       
+
+        
+    }
+    else{
+        // branchSearch = await Branch.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // branchesPaginated.totalDocs = branchSearch.length;
+        let diacriticSearch = diacriticSensitiveRegex(req.query.search);
+        let searchString = '.*'+diacriticSearch+'.*';
+
+  //    let searchString = '.*'+req.query.search+'.*';
+          delete options.select;
+          let aggregateQuery=[
+              {
+                '$match': {
+                  'isDeleted': false
+                }
+              }, {
+                '$project': {
+                  'code': 1,                   
+                  'name': 1, 
+                  'location': 1,                   
+                }
+              }, {
+                '$match': {
+                  '$or': [
+                    {
+                      'code': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    }, {
+                      'name': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+
+        let branchesSearch = await Branch.aggregate(aggregateQuery);
+        branchesPaginated.docs = branchesSearch;
+        branchesPaginated.totalDocs = branchesPaginated.docs.length
+
+        branchesPaginated.page=req.query.page ? req.query.page : 1;
+        branchesPaginated.perPage=req.query.perPage ? req.query.perPage :branchesPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : branchesPaginated.totalDocs;
+        let page = req.query.page ? req.query.page : 1;
+        branchesPaginated.docs=paginateArray(branchesSearch,limit,page);
+        branchesPaginated.totalPages = Math.ceil(branchesPaginated.totalDocs / branchesPaginated.perPage);
+
+    }
+
+    let docs = JSON.stringify(branchesPaginated.docs);
+    var branches = JSON.parse(docs);
+
+    reply.code(200).send({
+        status: 'success',
+        data: branches,
+        page: branchesPaginated.page,
+        perPage:branchesPaginated.perPage,
+        totalDocs: branchesPaginated.totalDocs,
+        totalPages: branchesPaginated.totalPages,
+
+    })
+    
     
 }
 
+// const branchLogin = async function (req, reply){
+    
+// }
+function paginateArray(array, limit, page) {
+    return array.slice((page - 1) * limit, page * limit);
+}
 
-module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList, branchLogin}
+function diacriticSensitiveRegex(string = '') {
+    return string.replace(/a/g, '[a,á,à,ä,â]')
+       .replace(/e/g, '[e,é,ë,è]')
+       .replace(/i/g, '[i,í,ï,ì]')
+       .replace(/o/g, '[o,ó,ö,ò]')
+       .replace(/u/g, '[u,ü,ú,ù]');
+}
+
+
+module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList }
 //module.exports = { branchList, branchData, branchIn, branchSchedules, branchOrders, branchChangeOrderStatus, branchDiscardOrder, branchProducts, branchOptions, getbranchProducts, branchProductsStatus, branchProductsOptions }

@@ -178,10 +178,45 @@ const deleteSingleBranchOpts={
     
 }
 
+const getBranchesOpts={
+    schema: {
+         description:"Retrieves the information of all the branches stored on the database.",
+         tags:['Branches'], 
+         headers:{
+            authorization:{type:'string'}
+        }, 
+        querystring:{
+            page:{type:'number'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:branchDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: branchList,
+    
+}
+
 
 
 function crmBranchesRoutes(fastify, options, done) {
-    //fastify.get('/cms/branches', getBranchesOpts)
+    fastify.get('/crm/branches', getBranchesOpts)
     fastify.get('/crm/branches/:id', getSingleBranchOpts)
     fastify.post('/crm/branches', postBranchUpOpts)
     fastify.put('/crm/branches/:id', putSingleBranchOpts)
