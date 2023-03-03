@@ -11,6 +11,7 @@ require("./config/db");
 fastify.register(require("./routes/base.routes"));
 fastify.register(require("./routes/crm.users.routes"));
 fastify.register(require("./routes/crm.branches.routes"));
+fastify.register(require("./routes/crm.cars.routes"));
 fastify.register(require("./routes/app.branches.routes"));
 // fastify.register(require("./routes/news.routes"));
 // fastify.register(require("./routes/subscription.routes"));

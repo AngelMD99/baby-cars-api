@@ -27,7 +27,7 @@ const carSchema = new mongoose.Schema({
     },
     ipAddress: {
         type: String,
-        required: true
+        required: false
     },
     name: {
         type: String,
@@ -35,7 +35,7 @@ const carSchema = new mongoose.Schema({
     },
     color: {
         type: String,
-        required: true
+        required: false
     },
     plans:[planSchema]
     

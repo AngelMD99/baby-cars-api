@@ -39,8 +39,7 @@ const branchCreate = async function (req, reply){
     reply.code(201).send({
         status: 'success',
         data: branchObj
-     }) 
-     
+     })      
 
 }
 
