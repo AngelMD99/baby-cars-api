@@ -33,4 +33,4 @@ const carStop = async function (req, reply){
 }
 
 
-module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStop}
+module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop}

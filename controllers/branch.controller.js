@@ -288,9 +288,81 @@ const branchList = async function (req, reply){
     
 }
 
-// const branchLogin = async function (req, reply){
+const branchLogin = async function (req, reply){
+    const branch = await Branch.findOne({code: req.body.code, isDeleted:false});
+
+    if(branch == null){
+        return reply.code(404).send({
+            status: 'fail',
+            message: 'sucursal_no_encontrada'
+        })
+    }
+
+    // if(user.isEnabled == false){
+    //     return reply.code(404).send({
+    //         status: 'fail',
+    //         message: 'user_disabled'
+    //     })
+    // }
+
+    if(!bcrypt.compareSync(req.body.password, branch.password)){
+
+
+
+        if(!branch.tempPassword || !branch.tempPasswordExpiration){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'contraseña_incorrecta'
+            })
+        }
+
+        let today = new Date();
+        let offset = await getOffsetSetting();              
+        today.setHours(today.getHours() - offset);
+        let expirationDate = new Date(user.tempPasswordExpiration)
+
+        if(!bcrypt.compareSync(req.body.password, branch.tempPassword)){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'contraseña_incorrecta'
+            })
+        }
+        else{
+            if(today>expirationDate){
+                return reply.code(401).send({
+                    status: 'fail',
+                    message: 'contraseña_temporal_expirada'
+                })
+
+            }
+        }
+
+
+    }
+
+    // if(req.body.cmsLogin == true){
+    //     let today = new Date();
+    //     user.lastCMSAccess = today;
+    //     await user.save();
     
-// }
+    // }
+
+    const timestamp = parseInt((new Date().getTime() / 1000).toFixed(0));
+    this.jwt.sign({_id: branch._id, isDeleted:branch.isDeleted, timestamp: timestamp}, async (err, token) => {
+        if (err) return reply.send(err)
+        let branchObj = branch.toObject()       
+        delete branchObj.password;       
+        reply.code(200).send({
+            status: 'success',
+            data: {
+                token: token,
+                branch: branchObj
+            }
+        }) 
+    })
+    
+}
+
 function paginateArray(array, limit, page) {
     return array.slice((page - 1) * limit, page * limit);
 }
@@ -304,5 +376,5 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList }
+module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList, branchLogin }
 //module.exports = { branchList, branchData, branchIn, branchSchedules, branchOrders, branchChangeOrderStatus, branchDiscardOrder, branchProducts, branchOptions, getbranchProducts, branchProductsStatus, branchProductsOptions }
