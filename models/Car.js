@@ -22,7 +22,7 @@ const carSchema = new mongoose.Schema({
         default: false
     },
     branchId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,              
         ref: "Branch", 
     },
     ipAddress: {

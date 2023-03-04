@@ -82,7 +82,7 @@ exports.options = {
             isDeleted:{type:'boolean'},                        
             branchId:{type:'string'},
             carId:{type:'string'},
-            plan:{
+            planType:{
                 type:'object',
                 properties:{
                     time:{type:'string'},

@@ -16,7 +16,7 @@ const authorizeFunc = async function (req, reply) {
         if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'invalid_crm_token'
+                message: 'token_de_usuario_no_valido'
             })
         }
     
@@ -25,7 +25,7 @@ const authorizeFunc = async function (req, reply) {
         if(user == null){
             return reply.code(404).send({
                 status: 'fail',
-                message: 'user_not_found'
+                message: 'usuario_no_encontrado'
             })
         }
         // if(user.isEnabled == false){

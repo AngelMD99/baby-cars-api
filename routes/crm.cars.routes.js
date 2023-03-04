@@ -61,6 +61,8 @@ const carDef = {
                 
              }
         },
+        branchName:{type:'string'},
+        branchCode:{type:'string'},
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -112,7 +114,7 @@ const postCarUpOpts = {
 const getSingleCarOpts={
     schema: {
          description:"Retrieves the information of a single car with the id provided.",
-         tags:['Branches'],
+         tags:['Cars'],
         //  headers:{
         //     authorization:{type:'string'}
         // },

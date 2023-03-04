@@ -29,7 +29,7 @@ const rentalSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Car", 
     },
-    plan:planSchema,   
+    planType:planSchema,   
     paymentType: {
         type: String,
         required: true

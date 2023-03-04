@@ -48,10 +48,19 @@ const carCreate = async function (req, reply){
     const car = new Car(req.body);    
     car._id = mongoose.Types.ObjectId();
     await car.save()
+    await car.populate('branchId', '_id name code'); 
+    
+    
 
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
 
     const carObj = await car.toObject()
+    if (carObj.branchId){
+        carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
+        carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
+        delete carObj.branchId;
+    }
+    delete carObj.__v
 
     reply.code(201).send({
         status: 'success',
@@ -61,7 +70,7 @@ const carCreate = async function (req, reply){
 }
 
 const carShow = async function (req, reply){
-    const car = await Car.findOne({_id:req.params.id}).select('-createdAt -updatedAt -__v');
+    const car = await Car.findOne({_id:req.params.id}).select('-createdAt -updatedAt -__v').populate('branchId', '_id name code');
     if (!car){
         return reply.code(400).send({
             status: 'fail',
@@ -69,8 +78,14 @@ const carShow = async function (req, reply){
         })        
     } 
     
-   
-    let carObj = await car.toObject();        
+    await car.populate('branchId', '_id name code');  
+    let carObj = await car.toObject();            
+    
+    if (carObj.branchId){
+        carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
+        carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
+        delete carObj.branchId;
+    }
     reply.code(200).send({
         status: 'success',
         data: carObj
@@ -121,7 +136,7 @@ const carUpdate = async function (req, reply){
     if(currentCar == null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'sucursal_no_encontrado'
+            message: 'carrito_no_encontrado'
         })
     }
 
@@ -184,8 +199,16 @@ const carUpdate = async function (req, reply){
     // }
 
     await updatedCar.save();
+    await updatedCar.populate('branchId', '_id name code');
+    console.log("UPDATED CAR: ",updatedCar)
+    
 
     let updatedCarObj = await updatedCar.toObject()    
+    if (updatedCarObj.branchId){
+        updatedCarObj.branchCode=updatedCarObj.branchId.code ? updatedCarObj.branchId.code :"";
+        updatedCarObj.branchName=updatedCarObj.branchId.name ? updatedCarObj.branchId.name :"";
+        delete updatedCarObj.branchId;
+    }
     delete updatedCarObj.__v
    
     reply.code(200).send({
@@ -236,12 +259,42 @@ const carList = async function (req, reply){
     }
     let carsPaginated={};
     if(!req.query.search){        
+        let allBranches = await Branch.find({});
         if(options.page!=null && options.limit!=null){
-            carsPaginated = await Car.paginate(searchQuery, options);
+            
+            let carsQuery = await Car.paginate(searchQuery, options);
+            carsQuery.forEach(car => {
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(car.branchId)
+                })
+                car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                delete car.branchId;
+                carsPaginated.push(car)
+
+                
+            });
         }
         else{
-            carsPaginated.docs = await Car.find(searchQuery);
-        }       
+            carsPaginated.docs=[]
+            let carsQuery = await Car.find(searchQuery).lean();
+            carsQuery.forEach(car => {
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(car.branchId)
+                })            
+                car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                delete car.branchId;                
+                carsPaginated.docs.push(car)
+                
+
+                
+            });
+        }
+        
+        
+        
+        
 
         
     }
@@ -258,13 +311,29 @@ const carList = async function (req, reply){
                 '$match': {
                   'isDeleted': false
                 }
-              }, {
+              }, 
+              {
+                '$lookup': {
+                  'from': 'branches', 
+                  'localField': 'branchId', 
+                  'foreignField': '_id', 
+                  'as': 'branchInfo'
+                }
+              },
+              {
                 '$project': {
                   'branchId': 1,                   
                   'ipAddress': 1, 
                   'name': 1,
                   'color':1,
-                  "plans":1                   
+                  "plans":1,
+                  'branchCode': {
+                    '$first': '$branchInfo.code'
+                  },
+                  'branchName': {
+                    '$first': '$branchInfo.name'
+                  } 
+
                 }
               }, {
                 '$match': {
@@ -282,6 +351,18 @@ const carList = async function (req, reply){
                     },
                     {
                         'ipAddress': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      {
+                        'branchCode': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      {
+                        'branchName': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
@@ -304,12 +385,13 @@ const carList = async function (req, reply){
 
     }
 
-    let docs = JSON.stringify(carsPaginated.docs);
-    var branches = JSON.parse(docs);
+    let docs = JSON.stringify(carsPaginated.docs);    
+    var cars = JSON.parse(docs);
+    
 
     reply.code(200).send({
         status: 'success',
-        data: branches,
+        data: cars,
         page: carsPaginated.page,
         perPage:carsPaginated.perPage,
         totalDocs: carsPaginated.totalDocs,
