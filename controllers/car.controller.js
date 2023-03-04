@@ -242,6 +242,10 @@ const carDelete = async function (req, reply){
     
 }
 
+const carBranchList = async function (req, reply){
+
+}
+
 const carList = async function (req, reply){
     let searchQuery = {
         isDeleted: false,			
@@ -260,19 +264,29 @@ const carList = async function (req, reply){
     if(!req.query.search){        
         let allBranches = await Branch.find({});
         if(options.page!=null && options.limit!=null){
-            
+            carsPaginated.docs=[];
             let carsQuery = await Car.paginate(searchQuery, options);
-            carsQuery.forEach(car => {
+            carsQuery.docs.forEach(car => {
+                let newObj={
+                    _id:car._id,
+                    isStarted:car.isStarted,
+                    ipAddress:car.ipAddress,
+                    name:car.name,
+                    color:car.color,
+                    plans:car.plans
+                }
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(car.branchId)
                 })
-                car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                newObj.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                newObj.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
                 delete car.branchId;
-                carsPaginated.push(car)
-
-                
+                carsPaginated.docs.push(newObj)                               
             });
+            carsPaginated.page=carsQuery.page;
+            carsPaginated.perPage=carsQuery.limit;
+            carsPaginated.totalDocs=carsQuery.totalDocs;
+            carsPaginated.totalPages=carsQuery.totalPages;
         }
         else{
             carsPaginated.docs=[]
@@ -429,4 +443,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop}
+module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchList}
