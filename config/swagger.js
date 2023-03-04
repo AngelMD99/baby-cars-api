@@ -52,6 +52,7 @@ exports.options = {
           properties: {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},            
+            isStarted:{type:'boolean'},            
             name:{type:'string'},          
             color:{type:'string'}, 
             plans:{

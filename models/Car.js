@@ -21,6 +21,10 @@ const carSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isStarted:{
+      type: Boolean,
+      default: false
+    },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Branch", 

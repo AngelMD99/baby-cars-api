@@ -200,7 +200,6 @@ const carUpdate = async function (req, reply){
 
     await updatedCar.save();
     await updatedCar.populate('branchId', '_id name code');
-    console.log("UPDATED CAR: ",updatedCar)
     
 
     let updatedCarObj = await updatedCar.toObject()    
@@ -322,6 +321,7 @@ const carList = async function (req, reply){
               },
               {
                 '$project': {
+                  'isStarted':1,
                   'branchId': 1,                   
                   'ipAddress': 1, 
                   'name': 1,
@@ -372,7 +372,7 @@ const carList = async function (req, reply){
               }
             ]
 
-        let carsSearch = await Cars.aggregate(aggregateQuery);
+        let carsSearch = await Car.aggregate(aggregateQuery);
         carsPaginated.docs = carsSearch;
         carsPaginated.totalDocs = carsPaginated.docs.length
 

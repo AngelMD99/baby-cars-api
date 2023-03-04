@@ -44,7 +44,8 @@ const authorizeFunc = async function (req, reply) {
 const carDef = { 
     type: 'object', 
     properties: {
-        _id: { type: 'string' },                
+        _id: { type: 'string' },
+        isStarted:{type:'string'}                ,
         branchId :{type:'string'},
         ipAddress: { type: 'string' },        
         name: { type: 'string'},
