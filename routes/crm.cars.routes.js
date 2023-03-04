@@ -68,15 +68,15 @@ const carDef = {
 
 const postCarUpOpts = {
     schema: {
-        description:'Allows to store a new branch on database.',
-        tags:['Branches'],
+        description:'Allows to store a new car on database.',
+        tags:['Cars'],
         // headers:{
         //     authorization:{type:'string'}
         // },
         body: {
             type: 'object',
             properties: {                
-                branchId:{type:'string', minLength:8},
+                branchId:{type:'string'},
                 ipAddress: { type: 'string' },
                 name: { type: 'string' }, 
                 color: { type: 'string'},                               
@@ -109,11 +109,139 @@ const postCarUpOpts = {
     handler: carCreate,
 }
 
+const getSingleCarOpts={
+    schema: {
+         description:"Retrieves the information of a single car with the id provided.",
+         tags:['Branches'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: carDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carShow,
+    
+}
+
+const putSingleCarOpts={
+    schema: {
+         description:"Allows to update the information of a single car with the id provided.",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         }, 
+         body: {
+            type: 'object',
+            properties: {                
+                code:{type:'string', minLength:8},
+                name: { type: 'string' },
+                password: { type: 'string' }, 
+                location: { type: 'string'}                               
+            },
+        },      
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:carDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carUpdate,
+    
+}
+
+const deleteSingleCarOpts={
+    schema: {
+         description:"Deletes the car with the id provided.",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carDelete,
+    
+}
+
+const getCarsOpts={
+    schema: {
+         description:"Retrieves the information of all the cars stored on the database.",
+         tags:['Cars'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'number'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:carDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carList,
+    
+}
+
 function crmCarsRoutes(fastify, options, done) {
     fastify.post('/crm/cars', postCarUpOpts)
-    //fastify.get('/crm/branches', getBranchesOpts)
-    //fastify.get('/crm/branches/:id', getSingleBranchOpts)    
-    //fastify.put('/crm/branches/:id', putSingleBranchOpts)
+    fastify.get('/crm/cars/:id', getSingleCarOpts)    
+    fastify.put('/crm/cars/:id', putSingleCarOpts)
+    fastify.delete('/crm/cars/:id', deleteSingleCarOpts)
+    fastify.get('/crm/cars', getCarsOpts)
+    
+    
     //fastify.delete('/crm/branches/:id', deleteSingleBranchOpts)
 
 done()

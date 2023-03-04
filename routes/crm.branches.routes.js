@@ -182,9 +182,9 @@ const getBranchesOpts={
     schema: {
          description:"Retrieves the information of all the branches stored on the database.",
          tags:['Branches'], 
-         headers:{
-            authorization:{type:'string'}
-        }, 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
         querystring:{
             page:{type:'number'},
             perPage:{type:'string'}
