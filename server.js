@@ -13,6 +13,7 @@ fastify.register(require("./routes/crm.users.routes"));
 fastify.register(require("./routes/crm.branches.routes"));
 fastify.register(require("./routes/crm.cars.routes"));
 fastify.register(require("./routes/crm.rentals.routes"));
+fastify.register(require("./routes/crm.reports.routes"));
 fastify.register(require("./routes/app.branches.routes"));
 fastify.register(require("./routes/app.rentals.routes"));
 fastify.register(require("./routes/app.cars.routes"));
