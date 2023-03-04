@@ -250,6 +250,9 @@ const carList = async function (req, reply){
     let searchQuery = {
         isDeleted: false,			
     };
+    if(req.params.id){
+        searchQuery['branchId']=req.params.id
+    }
     const options = {
         select: `-isDeleted -__v -updatedAt -createdAt`, 
 
