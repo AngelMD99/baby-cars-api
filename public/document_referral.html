@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Remisión</title>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<base href="http://localhost:3000/">
+	<link rel="stylesheet" href="./styles/styles.css" media="all" />
+</head>
+<body onLoad="fixedFoter()">
+	<div id="inner">
+		<div id="content" class="float-left">
+			<div id="company-info" class="info-width float-left">
+				<h1>{{companyTitle}}</h1>
+				<div class="separator" style="margin-top: 4px;"></div>
+				<div class="column float-left">
+					{{companyAddress}}<br />
+					{{companyNeighborhood}}<br />
+					{{companyCity}}, {{companyState}} {{companyCountry}}. C.P. {{companyZipCode}}.
+				</div>
+				<div class="column float-right">
+					<img src="./icons/icon_phone.png" class="icon"/> {{companyPhone | phone }}<br />
+					<img src="./icons/icon_email.png" class="icon"/> {{companyEmail}}
+					<div class="separator" style="margin-bottom: 4px;"></div>
+					<p class="line-spacing text-size-3mm">
+						<b>{{companyMessage}}</b>
+					</p>
+				</div>
+			</div>
+			<div id="company-logo" class="float-right">
+				<img src="{{companyLogo}}"/>
+			</div>
+			<div class="separator float-left" style="margin-top: 5mm;"></div>
+			<div class="info-width">
+				<div class="column float-left">
+					<h2>CLIENTE</h2>
+				</div>
+				<div class="column float-right">
+					<h2>REMISIÓN</h2>
+				</div>
+			</div>
+			<div class="separator float-left"></div>
+			<div id="document-info" class="info-width float-left">
+				<div class="column float-left">
+					{{clientTitle}}<br />
+					{{clientAddress}}<br />
+					{{clientNeighborhood}}<br />
+					{{clientCity}}, {{clientState}} {{clientCountry}}., C.P. {{clientZipCode}}.
+				</div>
+				<div class="column float-right">
+					<b>N.° de remisión: </b>{{folio}}<br />
+                    <b>N.° de pedido: </b>{{folio}}<br />
+					<b>Fecha de emisión: </b>{{createdAt | date: "%d/%m/%y"}}
+				</div>
+			</div>
+			<div id="sale-info" class="full float-left" style="margin-top: 5mm;">
+				<table>
+					<tr>
+						<th style="width: 4%;">
+							<h2>CANT.</h2>
+						</th>
+						<th style="width: 50%;">
+							<h2>CONCEPTO</h2>
+						</th>
+						<th style="width: 11%;" class="text-right">
+							<h2 class="line-spacing">CLAVE</h2>
+							<h2 class="line-spacing">SAT</h2>
+						</th>
+						<th style="width: 11%;" class="text-right">
+							<h2 class="line-spacing">CLAVE</h2>
+							<h2 class="line-spacing">UNIDAD</h2>
+						</th>
+						<th style="width: 10%;" class="text-right">
+							<h2 class="line-spacing">PRECIO</h2>
+							<h2 class="line-spacing">UNIT</h2>
+						</th>
+						<th style="width: 12%;" class="text-right">
+							<h2>IMPORTE</h2>
+						</th>
+					</tr>
+					{% for item in products %}
+					<tr class="break">
+						<td>{{ item.quantity }} </td>
+						<td>{{ item.name }} </td>
+						<td class="text-right">{{item.satCode}}</td>
+						<td class="text-right">{{item.satUnit}}</td>
+						<td class="text-right">{{item.basePrice | currency }}</td>
+						<td class="text-right line-spacing">
+							{% if item.iva == false %} <img src="./icons/icon_diamond.png"  class="icon-diamond"> {% endif %}
+							{{item.price | currency}}
+							<p class="text-size-3mm line-spacing">Dto. $0.00</p>
+						</td>
+					</tr>
+					{% endfor %}
+				</table>
+				<div class="details-width float-left ">
+					<p id="iva"> <img src="./icons/icon_diamond.png"  class="icon-diamond"> Producto/servicio no incluye IVA</p>
+					<p class="line-spacing">
+						<b>{{detailsMessage}}</b>
+					</p>
+				</div>
+				<div class="cost-width float-right subtotal-border break">
+					<h2 class="float-left">SUBTOTAL</h2>
+					<p class="float-right">{{subtotal | currency}}</p>
+				</div>
+				{% if discountProducts!="0" or discountOthers!="0"%} 
+				<div class="cost-width float-right discounts break">
+					{% if discountProducts!="0" and discountOthers!="0"%}
+						<h2 class="float-left transform">DESCUENTOS</h2>
+					{% else %}
+						<h2 class="float-left">DESCUENTOS</h2>
+					{% endif %}
+					<span class="cost-width float-right">
+						{% if discountProducts!="0"%} 
+						<div class="float-right" style="width: 100%;">
+							<p class="float-left other-width text-size-3mm">prod/serv:</p>
+							<p class="float-right">{{discountProducts | currency}}</p>
+						</div>
+						{% endif %}
+						{% if discountOthers !="0"%} 
+						<div class="float-right" style="width: 100%;">
+							<p class="float-left other-width text-size-3mm">otros:</p>
+							<p class="float-right">{{discountOthers | currency}}</p>
+						</div>
+						{% endif %}
+					</span>
+				</div>
+				{% endif %}
+				<div class="cost-width float-right discounts break">
+					<h2 class="float-left">IVA ({{ivaType}}%)</h2>
+					<p class="float-right">{{ivaAmount | currency}}</p>
+				</div>
+				<div class="cost-width float-right subtotal-border break">
+					<h2 class="float-left" >TOTAL</h2>
+					<p class="float-right">{{totalSale | currency}}</p>
+				</div>
+			</div>
+		</div>
+		
+		<div class="footer" id="footer">
+			<p class="line-spacing info-width footer-message">
+				{{footerMessage}}
+			</p>
+            <div class="float-left signature-box signature-box-left"><h2>ANOTACIONES</h2></div>
+            <div class="float-left signature-box signature-box-right"><h2>FIRMA DE RECIBO</h2></div>
+			<div class="separator" style="margin: 5mm auto; clear:both "></div>
+		</div>
+	</div>
+</body>
+<script src="footer.js"></script>
+</html>

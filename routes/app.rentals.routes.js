@@ -101,8 +101,9 @@ const postRentalUpOpts = {
     handler: rentalCreate,
 }
 
+
 function appRentalsRoutes(fastify, options, done) {
-    fastify.post('/crm/rentals', postRentalUpOpts)
+    fastify.post('/rentals', postRentalUpOpts)    
     // fastify.get('/crm/branches', getBranchesOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     

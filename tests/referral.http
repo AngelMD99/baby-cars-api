@@ -1,0 +1,48 @@
+POST http://127.0.0.1:3000/referral
+content-type: application/json
+
+{
+    "companyTitle": "Binmatter S DE RL DE CV",
+    "companyAddress": "Av. De las fuentes 1563",
+    "companyNeighborhood": "Fuentes del Valle",
+    "companyCity": "Juárez",
+    "companyState": "Chihuahua",
+    "companyCountry": "México",
+    "companyZipCode": "32500",
+    "companyPhone": "6563456123",
+    "companyEmail": "correo@binmatter.com",
+    "companyMessage":
+        "Maecenas tempus tellus eget condimentum rhoncus, sem quam semper libero, sit amet, adipiscing sem.",
+    "companyLogo": "https://placeholder.com/wp-content/uploads/2018/10/placeholder-1.png",
+    "clientTitle": "Empresa con nombre larga S.A. de C.V.",
+    "clientAddress": "Calle Marcela Bravos 5433",
+    "clientNeighborhood": "Fuentes del Valle",
+    "clientCity": "Juárez",
+    "clientState": "Chihuahua",
+    "clientCountry": "México",
+    "clientZipCode": "32500",
+    "folio": "6324578",
+    "createdAt": "2021-11-03T00:08:21.648+00:00",
+    "products": [
+        {
+            "quantity": "23",
+            "name":
+                "Concepto 1 super largo que ocupe mucho espacio de 2 lineas porque a veces pasa.",
+            "satCode": "58390468",
+            "satUnit": "23",
+            "basePrice": "55",
+            "iva": true,
+            "price": "1265"
+        }
+    ],
+    "detailsMessage":
+        "Curabitur ullamcorper ulticies nisi. Nam eget dui. Etian rhoncus.Maecenas tempus, tellus eget condimentum rhoncus, sem quam semperlibero, sit amet adipiscing sem neque sed ipsum.",
+    "subtotal": "34",
+    "discountProducts": "23",
+    "discountOthers": "235456.00",
+    "ivaAmount": "44",
+    "ivaType":"16",
+    "totalSale": "23",
+    "footerMessage": 
+        "Curabitur ullamcorper ulticies nisi. Nam eget dui. Etiam rhoncus.Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum."
+}

@@ -426,4 +426,4 @@ function dateTimeHHSS(timestamp,offset){
 
 
 
-module.exports = { rentalsReport}
+module.exports = { rentalsReport }
