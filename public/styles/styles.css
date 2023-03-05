@@ -1,287 +1,54 @@
-:root {
-	--sans-serif-bold: 800 0px sans-serif;
-	--sans-serif-semi-bold: 600 0px sans-serif;
-	--sans-serif: 400 0px sans-serif;
-}
-
 * {
-	margin: 0;
-	padding: 0;
+    font-size: 12px;
+    font-family: 'Times New Roman';
 }
 
-html {
-	background: #111;
-	height: 100%;
-}
-
-body {
-	width: 1030px;
-	min-height: 100%;
-	background: white;
-	margin: 0 auto;
-	font: var(--sans-serif);
-	font-size: 3.5mm;
-}
-
-h1 {
-	font: var(--sans-serif-bold);
-	font-size: 0.45cm;
-}
-
-h2{
-	font: var(--sans-serif-semi-bold);
-	font-size: 3.8mm;
-}
-
+td,
+th,
+tr,
 table {
-	width: 100%;
-	border-collapse: separate;
-	border-spacing: 0 8px;
+    border-top: 1px solid black;
+    border-collapse: collapse;
 }
 
-table th {
-	text-align: left;
-	border: 1px solid #9c9c9c; 
-	padding: 4px 8px;
-	border-right: 0; 
-	border-left: 0;
+td.description,
+th.description {
+    width: 75px;
+    max-width: 75px;
 }
 
-table th:first-child, table td:first-child { 
-	border-top-left-radius: 8px;
-	border-bottom-left-radius: 8px;
+td.quantity,
+th.quantity {
+    width: 48px;
+    max-width: 48px;
+    word-break: break-all;
 }
 
-table th:first-child{
-	border-left: 1px #9c9c9c solid;
-	border-right: 0.01cm white solid;
-	border-right: none;
+td.price,
+th.price {
+    width: 40px;
+    max-width: 40px;
+    word-break: break-all;
 }
 
-table th:last-child{
-	border-right: 1px #9c9c9c solid;
-	border-left: 0.01cm white solid;
-	border-left: none;
+.centered {
+    text-align: center;
+    align-content: center;
 }
 
-table th:last-child, table td:last-child { 
-	border-top-right-radius: 8px; 
-	border-bottom-right-radius: 8px; 
+.ticket {
+    width: 155px;
+    max-width: 155px;
 }
 
-table tr {
-	line-height: 1;
-
+img {
+    max-width: inherit;
+    width: inherit;
 }
-
-table td {
-	background: #f3f3f3;
-	padding: 8px 8px;
-}
-
-footer{
-	margin-top: 23px;
-}
-
-#inner {
-	width: calc(100% - 14mm);
-	margin: 0 auto;
-	padding: 0;
-	overflow: hidden;
-}
-
-#company-logo {
-	width: 25%;
-	height: 32mm;
-	text-align: center;
-	line-height: 30mm;
-	overflow: hidden;
-}
-
-#company-logo img{
-    max-height: 100%;
-    max-width: 100%;
-	vertical-align: middle;
-}
-
-#iva{
-    border: 1px solid #c8d8ff;
-    color: #4075ff;
-    width: 53%;
-	padding: 3px 4px;
-    border-radius: 8px;
-	margin-bottom: 2rem;
-}
-
-.info-width {
-	width: 73%;
-}
-
-.float-left {
-	float: left;
-}
-
-.float-right {
-	float: right;
-}
-
-.column {
-	width: 49%;
-}
-
-.full {
-	width: 100%;
-}
-
-.separator {
-	width: 100%;
-	border-bottom: 1px solid #9c9c9c;
-	margin: 8px 0;
-}
-
-.icon{
-	height: 12px;
-	width: 12px;
-	margin: 0px 5px 4px 0px;
-	vertical-align: middle;
-}
-
-.icon-diamond{
-	padding: 0px 5px;
-	height: 10px;
-}
-
-.line-spacing{
-	line-height: 1;
-}
-
-.column-table-width-5{
-	width: 5%;
-}
-
-.column-table-width-10{
-	width: 10%;
-}
-
-.column-table-width-11{
-	width: 11%;
-}
-
-.column-table-width-50{
-	width: 50%;
-}
-
-.text-right{
-	text-align: end;
-}
-
-.text-size-3mm{
-	font-size: 3mm;
-}
-
-.details-width{
-	width: 45%;
-}
-
-.cost-width{
-	width: 50%;
-}
-
-.other-width{
-	width: 45%;
-	text-align: end;
-}
-
-.subtotal-border{
-	border: 1px solid #9c9c9c;
-    border-radius: 8px;
-    padding: 8px;
-	margin-bottom: 2mm;
-}
-
-.discounts{
-	background: #f3f3f3;
-    border-radius: 8px;
-    padding: 8px;
-	margin-bottom: 2mm;
-}
-
-.footer-message{
-	text-align: center;
-	margin: 0 auto;
-}
-
-.break{
-	page-break-inside: avoid;
-}
-
-.footer{
-	clear:both;
-	width: 95%;
-}
-
-.signature-box{
-	border: 1px solid #9c9c9c;
-	padding: 5px 0px 80px 8px;
-	margin: 5mm 0;
-	width: 48.9%;
-}
-
-.signature-box-left{
-	border-top-left-radius: 5px;
-	border-bottom-left-radius: 5px;
-}
-
-.signature-box-right{
-	border-top-right-radius: 5px;
-	border-bottom-right-radius: 5px;
-}
-
-.qr-code{
-	width: 140px;
-}
-
-.info-sat{
-	line-height: 1;
-    width: 84%;
-	word-break: break-all;
-    text-align: justify;
-}
-
-.date-info-sat{
-	margin: 3mm 0;
-	width: 45%;
-	font-size: 3.5mm;
-}
-
-.transform{
-	transform: translateY(50%);
-}
-
 
 @media print {
-	@page {
-		margin-top: .5cm!important;
-		margin-bottom: 1.45cm!important;
-		margin-left: 0cm!important;
-		margin-right: 0cm!important;
-		padding: 0;
-	}
-
-	html,
-	body {
-		background: white;
-		-webkit-print-color-adjust:exact;
-        print-color-adjust:exact;
-		margin: 0;
-		padding: 0;
-	}
-
-	#inner {
-		margin: 0 7mm;
-	}
-
-	.break{
-		page-break-inside: avoid;
-	}
+    .hidden-print,
+    .hidden-print * {
+        display: none !important;
+    }
 }

@@ -44,7 +44,8 @@ const authorizeFunc = async function (req, reply) {
 const rentalDef = { 
     type: 'object',    
     properties: {
-        _id: { type: 'string' },                
+        _id: { type: 'string' },
+        folio:{type:'string'},
         branchCode :{type:'string'},
         branchName: { type: 'string' },        
         carName: { type: 'string'},

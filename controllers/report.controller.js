@@ -24,7 +24,7 @@ const rentalsReport = async function (req, reply){
     
     if (req.query.initialDate != null && req.query.lastDate != null){
         let initialDate = parseDate(req.query.initialDate);
-        let offset = req.header.offset ? Number(req.header.offset) : 6        
+        let offset = req.headers.offset ? Number(req.headers.offset) : 6        
 
         //initialDate.setHours(0,0,0,0);
         let lastDate = parseDate(req.query.lastDate);
@@ -61,6 +61,7 @@ const rentalsReport = async function (req, reply){
           },
          {
             '$project': {
+                'Folio':'$folio',
                 'Sucursal código':{
                     '$first': '$branchInfo.code'
                 },
@@ -131,7 +132,7 @@ const rentalsReport = async function (req, reply){
     //let wbRows = rentals.length+4;   
     wb.SheetNames.push("Rentas");
     //addig the titles rows
-    var ws_data = [['Sucursal','','','','','','','']]
+    var ws_data = [['Sucursal','','','','','','','','']]
     var ws = xlsx.utils.aoa_to_sheet(ws_data);       
     wb.Sheets["Rentas"] = ws;
     wb.Sheets["Rentas"]["A1"].s={        
@@ -141,7 +142,7 @@ const rentalsReport = async function (req, reply){
             },       
     }
     xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Carrito', '', '', '','','','','']
+            ['Carrito', '', '', '','','','','','']
           ],{origin: -1});
     wb.Sheets["Rentas"]["A2"].s={        
         font: {				  		
@@ -152,13 +153,13 @@ const rentalsReport = async function (req, reply){
     
     if(req.query.initialDate != null && req.query.lastDate !=null ){        
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Fecha inicial', '', '', '','','','','']
+            ['Fecha inicial', '', '', '','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Fecha final', '', '', '','','','','']
+            ['Fecha final', '', '', '','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['', '', '', '','','','','']
+            ['', '', '', '','','','','','']
           ], {origin: -1});
 
         wb.Sheets["Rentas"]["A3"].s={        
@@ -176,13 +177,13 @@ const rentalsReport = async function (req, reply){
     }
     else{
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Sin rango de fechas', '', '', '','','','','']
+            ['Sin rango de fechas', '', '', '','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['', '', '', '','','','','']
+            ['', '', '', '','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['', '', '', '','','','','']
+            ['', '', '', '','','','','','']
           ], {origin: -1});
         wb.Sheets["Rentas"]["A3"].s={        
             font: {				  		
@@ -193,7 +194,7 @@ const rentalsReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-        ['Fecha','Hora','Sucursal código','Sucursal nombre','Carrito','Tiempo','Costo','Tipo de pago']
+        ['Folio','Fecha','Hora','Sucursal código','Sucursal nombre','Carrito','Tiempo','Costo','Tipo de pago']
       ], {origin: -1});
     
     wb.Sheets["Rentas"]["A6"].s={        
@@ -239,6 +240,12 @@ const rentalsReport = async function (req, reply){
         }               
     }
     wb.Sheets["Rentas"]["H6"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Rentas"]["I6"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
@@ -303,7 +310,7 @@ const rentalsReport = async function (req, reply){
 //     wb.Sheets["Rentas"]["A2"]={};
     if(req.query.initialDate != null && req.query.lastDate !=null ){ 
         let initialDate = parseDate(req.query.initialDate);
-        let offset = req.header.offset ? Number(req.header.offset) : 6        
+        let offset = req.headers.offset ? Number(req.headers.offset) : 6        
         let lastDate = parseDate(req.query.lastDate);
 
         if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
@@ -321,19 +328,20 @@ const rentalsReport = async function (req, reply){
     if (rentals.length>0){
         for (let index = 0; index < rentals.length; index++) {
             xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-                ['A', 'B', 'C','D','E',0,0,'H']
+                ['A', 'B', 'C','D','E','F',0,0,'I']
               ], {origin: -1});                     
         }
         let currentRow=7;
         rentals.forEach(purchase=>{
-            wb.Sheets["Rentas"]["A"+String(currentRow)].v=purchase['Fecha'];
-            wb.Sheets["Rentas"]["B"+String(currentRow)].v=purchase['Hora'];
-            wb.Sheets["Rentas"]["C"+String(currentRow)].v=purchase['Sucursal código'];
-            wb.Sheets["Rentas"]["D"+String(currentRow)].v=purchase['Sucursal nombre'];
-            wb.Sheets["Rentas"]["E"+String(currentRow)].v=purchase['Carrito'];
-            wb.Sheets["Rentas"]["F"+String(currentRow)].v=purchase['Tiempo'];
-            wb.Sheets["Rentas"]["G"+String(currentRow)].v=purchase['Costo'];
-            wb.Sheets["Rentas"]["H"+String(currentRow)].v=purchase['Tipo de pago'];            
+            wb.Sheets["Rentas"]["A"+String(currentRow)].v=purchase['Folio'];
+            wb.Sheets["Rentas"]["B"+String(currentRow)].v=purchase['Fecha'];
+            wb.Sheets["Rentas"]["C"+String(currentRow)].v=purchase['Hora'];
+            wb.Sheets["Rentas"]["D"+String(currentRow)].v=purchase['Sucursal código'];
+            wb.Sheets["Rentas"]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
+            wb.Sheets["Rentas"]["F"+String(currentRow)].v=purchase['Carrito'];
+            wb.Sheets["Rentas"]["G"+String(currentRow)].v=purchase['Tiempo'];
+            wb.Sheets["Rentas"]["H"+String(currentRow)].v=purchase['Costo'];            
+            wb.Sheets["Rentas"]["I"+String(currentRow)].v=purchase['Tipo de pago'];            
             currentRow ++;
            // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
 
@@ -341,12 +349,13 @@ const rentalsReport = async function (req, reply){
         })
     }
 
-     headers=["Fecha","Hora","Sucursal código","Sucursal nombre","Carrito","Tiempo","Costo","Tipo de pago"]
+     headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Carrito","Tiempo","Costo","Tipo de pago"]
      //console.log(headers)
 
     // adjusting columns length added
      for (let i = 0; i < headers.length; i++) {  
          let columnWidth=headers[i].length;
+         columnWidth=headers[i]=='Folio' ? columnWidth+20 : columnWidth;
          columnWidth=headers[i]=='Fecha' ? columnWidth+15 : columnWidth;
          columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
          columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
@@ -361,9 +370,9 @@ const rentalsReport = async function (req, reply){
     wb.Sheets['Rentas']['!cols']=wscols;
     //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
     let row = 7;
-    while (wb.Sheets['Rentas']["F"+String(row)] != null) { 
-        wb.Sheets['Rentas']["F"+String(row)].z="0.00";
-        wb.Sheets['Rentas']["G"+String(row)].z="$0.00";
+    while (wb.Sheets['Rentas']["G"+String(row)] != null) { 
+        wb.Sheets['Rentas']["G"+String(row)].z="0.00";
+        wb.Sheets['Rentas']["H"+String(row)].z="$0.00";
         row+=1;
         
     }

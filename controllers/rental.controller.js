@@ -10,25 +10,24 @@ Moment().tz("Etc/Universal");
 
 const rentalCreate = async function (req, reply){
 
-    if(req.body.branchId!=null){        
-        let branchValidation= isValidObjectId(req.body.branchId)
+    
+    let branchValidation= isValidObjectId(req.body.branchId)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
                 message: 'sucursal_no_válida'
             })
-        }
-        else{
-            let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
-            if(!activeBranch){
+    }
+    
+    let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
+        if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
                     message: 'sucursal_no_encontrada'
                 })
 
-            }
         }
-    }
+       
     
     if(req.body.carId!=null){        
         let carValidation= isValidObjectId(req.body.carId)
@@ -52,6 +51,32 @@ const rentalCreate = async function (req, reply){
     
     const rental = new Rental(req.body);    
     rental._id = mongoose.Types.ObjectId();
+    let branchId = mongoose.Types.ObjectId(req.body.branchId)
+    let branchRentals = await Rental.find({branchId:branchId})
+    let offset = req.headers.offset ? req.headers.offset : 6
+    let date = new Date ();
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        date.setHours(offset,0,0,0);    
+        date.setHours(offset, 0, 0, 0);
+    }
+    else{
+        date.setHours(0,0,0,0);
+        date.setHours(0, 0, 0, 0);
+    }
+
+    let day = date.getDate();
+    let month = date.getMonth() + 1
+    let year = date.getFullYear();
+    let dayString = day > 9 ? day : "0"+day;
+    let monthString = month > 9 ? month : "0"+month;  
+    let nextFolio = branchRentals.length+1
+    nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+    nextFolio = nextFolio>10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+    nextFolio = nextFolio>100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+    let branchCode = activeBranch.code;
+    rental.folio = branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio)
+
+
     await rental.save()
     await rental.populate(
         [{path: 'branchId', select: 'name code'},
@@ -137,6 +162,7 @@ const rentalList = async function (req, reply){
             rentalsQuery.docs.forEach(rental => {
                 let newObj={
                     _id:rental._id,
+                    folio:rental.folio,
                     planType:rental.planType,
                     paymentType:rental.paymentType
                 }
@@ -220,7 +246,7 @@ const rentalList = async function (req, reply){
               },
               {
                 '$project': {
-                  
+                  "folio":1,
                   "planType":1,
                   "paymentType":1,
                   'branchCode': {

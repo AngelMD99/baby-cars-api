@@ -21,6 +21,10 @@ const rentalSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    folio:{
+      type:String,
+      required:true
+    },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Branch", 

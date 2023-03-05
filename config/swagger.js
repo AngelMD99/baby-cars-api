@@ -81,6 +81,7 @@ exports.options = {
           properties: {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},                        
+            folio:{type:'boolean'},
             branchId:{type:'string'},
             carId:{type:'string'},
             planType:{
