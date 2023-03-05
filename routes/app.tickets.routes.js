@@ -35,9 +35,11 @@ module.exports = function (fastify, opts, done) {
             "public/document_" + template + ".html",
             body
         );
-        var documentName = template + "." + uuid.v1() + ".pdf";
-        var documentLocation = path.join(__dirname, "public/docs/") + documentName;
-        // Uncomment line 41 and comment from 42 to 45 to run on Windows
+        var documentName = template + "." + uuid.v1() + ".pdf";        
+        let prePath = __dirname.replace('routes','')        
+        //var documentLocation = path.join(__dirname, "public/docs/") + documentName;
+        var documentLocation = path.join(prePath, "public/docs/") + documentName;        
+        // Uncomment line 43 and comment from 44 to 46 to run on Windows
         const browser = await puppeteer.launch();
         // const browser = await puppeteer.launch({
         //     executablePath: '/usr/bin/chromium-browser',
@@ -54,7 +56,10 @@ module.exports = function (fastify, opts, done) {
         });
         await browser.close();
 
-        return { path: "docs/" + documentName };
+        return { 
+
+            path: "docs/" + documentName 
+        };
     };
 
     done();
