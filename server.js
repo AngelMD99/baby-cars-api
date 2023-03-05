@@ -1,9 +1,9 @@
 const fastify = require('fastify')({logger: true});
 require('dotenv').config();
-fastify.register(require('@fastify/multipart'))
+fastify.register(require('fastify-multipart'))
 const swagger = require('./config/swagger');
 //fastify.register(require('@fastify/swagger'), swagger.options);
-fastify.register(require('@fastify/cors'), { 
+fastify.register(require('fastify-cors'), { 
 	origin:'*',
 	methods: ['GET','POST','PUT','HEAD','DELETE','OPTIONS']
 });
@@ -49,11 +49,15 @@ fastify.register(require("point-of-view"), {
 	},
 });
 
-// fastify.register(require("fastify-static"), {
+// fastify.register(require("@fastify/static"), {
 // 	root: path.join(__dirname, "public"),
 // 	prefix: "/",
 // });
 
+fastify.register(require("fastify-static"), {
+	root: path.join(__dirname, "public"),
+	prefix: "/",
+});
 
 fastify.register(require("./routes/base.routes"));
 fastify.register(require("./routes/crm.users.routes"));
@@ -68,7 +72,7 @@ fastify.register(require("./routes/app.tickets.routes"));
 // fastify.register(require("./routes/news.routes"));
 // fastify.register(require("./routes/subscription.routes"));
 
-fastify.register(require('@fastify/jwt'), { secret: process.env.APP_KEY });
+fastify.register(require('fastify-jwt'), { secret: process.env.APP_KEY });
 
 
 fastify.listen({
