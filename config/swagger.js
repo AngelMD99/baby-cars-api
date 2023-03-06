@@ -87,8 +87,8 @@ exports.options = {
             planType:{
                 type:'object',
                 properties:{
-                    time:{type:'string'},
-                    price:{type:'string'}
+                    time:{type:'number'},
+                    price:{type:'number'}
                 }
             },                    
             paymentType:{type:'string'},

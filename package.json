@@ -19,7 +19,6 @@
   },
   "homepage": "https://github.com/AngelMD99/baby-cars-api#readme",
   "dependencies": {
-    "@fastify/swagger": "^7.5.1",
     "axios": "^1.2.1",
     "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
@@ -28,6 +27,7 @@
     "fastify-jwt": "^4.2.0",
     "fastify-multipart": "^5.4.0",
     "fastify-static": "^4.5.0",
+    "fastify-swagger": "^5.2.0",
     "fs": "0.0.1-security",
     "liquidjs": "^9.28.5",
     "md5": "^2.3.0",
