@@ -62,18 +62,16 @@ module.exports = function (fastify, opts, done) {
         // }  
         var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
         let stringDate = date.toLocaleDateString('es-ES', options);
-        let stringTime = date.toLocaleTimeString('en-ES')
-        console.log("String Date: ",stringDate)
-        console.log("String Date: ",stringTime)
+        let stringTime = date.toLocaleTimeString('en-ES') 
+        rentalObj.planType.price=rentalObj.planType.price.toFixed(2)
+        rentalObj.planType.time=Math.ceil(rentalObj.planType.time)
         rentalObj.date = stringDate
-        rentalObj.time = stringTime
-        console.log("RENTAL: ",rentalObj);
+        rentalObj.time = stringTime        
         delete rentalObj.__v
         return generate("ticket", rentalObj );
     });
 
-    const generate = async function (template, body, footerText = '') {
-        console.log("BODY")
+    const generate = async function (template, body, footerText = '') {        
 
 
         // const footer = `
@@ -108,8 +106,10 @@ module.exports = function (fastify, opts, done) {
 
         await page.pdf({ 
             path: documentLocation, 
-            format: 'letter',
-            displayHeaderFooter: true,
+            //format: 'A6',
+            width:185,
+            height:600,
+            //displayHeaderFooter: true,
             //footerTemplate: footer
         });
         await browser.close();
