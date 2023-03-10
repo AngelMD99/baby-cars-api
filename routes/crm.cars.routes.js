@@ -45,7 +45,7 @@ const carDef = {
     type: 'object', 
     properties: {
         _id: { type: 'string' },
-        isStarted:{type:'string'}                ,
+        isStarted:{type:'boolean'}                ,
         branchId :{type:'string'},
         ipAddress: { type: 'string' },        
         name: { type: 'string'},
