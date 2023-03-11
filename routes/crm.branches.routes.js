@@ -186,7 +186,7 @@ const getBranchesOpts={
         //     authorization:{type:'string'}
         // }, 
         querystring:{
-            page:{type:'number'},
+            page:{type:'string'},
             perPage:{type:'string'}
         },
          response: {
