@@ -151,11 +151,12 @@ const putSingleCarOpts={
          }, 
          body: {
             type: 'object',
-            properties: {                
-                code:{type:'string', minLength:8},
-                name: { type: 'string' },
-                password: { type: 'string' }, 
-                location: { type: 'string'}                               
+            properties: {                                
+                name: { type: 'string' },                
+                color: { type: 'string' },              
+                ipAddress: { type: 'string' }, 
+                branchId: { type: 'string'}                
+
             },
         },      
          response: {
