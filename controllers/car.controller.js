@@ -25,8 +25,8 @@ const carCreate = async function (req, reply){
             })
     } 
 
-    if(req.body.branchId!=null){        
-        let branchValidation= isValidObjectId(req.body.branchId)
+    if(req.body.branchId!=null && req.body.branchId._id){        
+        let branchValidation= isValidObjectId(req.body.branchId._id)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -34,7 +34,7 @@ const carCreate = async function (req, reply){
             })
         }
         else{
-            let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
+            let activeBranch= await Branch.findOne({_id:req.body.branchId._id,isDeleted:false})
             if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
@@ -44,8 +44,13 @@ const carCreate = async function (req, reply){
             }
         }
     }  
-    
+    let branchId = req.body.branchId._id;
+    delete req.body.branchId;
+    if(branchId){
+        car.branchId=branchId;
+    }
     const car = new Car(req.body);    
+    
     car._id = mongoose.Types.ObjectId();
     await car.save()
     await car.populate('branchId', '_id name code'); 
@@ -55,10 +60,17 @@ const carCreate = async function (req, reply){
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
 
     const carObj = await car.toObject()
-    if (carObj.branchId){
-        carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
-        carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
-        delete carObj.branchId;
+    // if (carObj.branchId){
+    //     carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
+    //     carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
+    //     delete carObj.branchId;
+    // }
+    if(!carObj.branchId || !carObj.branchId._id){
+        carObj.branchId={
+            _id:null,
+            name:"",
+            code:"",
+        }
     }
     delete carObj.__v
 
@@ -81,10 +93,17 @@ const carShow = async function (req, reply){
     await car.populate('branchId', '_id name code');  
     let carObj = await car.toObject();            
     
-    if (carObj.branchId){
-        carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
-        carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
-        delete carObj.branchId;
+    // if (carObj.branchId){
+    //     carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
+    //     carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
+    //     delete carObj.branchId;
+    // }
+    if(!carObj.branchId || !carObj.branchId._id){
+        carObj.branchId={
+            _id:null,
+            name:"",
+            code:"",
+        }
     }
     reply.code(200).send({
         status: 'success',
@@ -112,8 +131,8 @@ const carUpdate = async function (req, reply){
         }
     }
 
-    if(req.body.branchId!=null){        
-        let branchValidation= isValidObjectId(req.body.branchId)
+    if(req.body.branchId!=null && req.body.branchId._id){        
+        let branchValidation= isValidObjectId(req.body.branchId._id)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -121,7 +140,7 @@ const carUpdate = async function (req, reply){
             })
         }
         else{
-            let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
+            let activeBranch= await Branch.findOne({_id:req.body.branchId._id,isDeleted:false})
             if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
@@ -130,7 +149,7 @@ const carUpdate = async function (req, reply){
 
             }
         }
-    }
+    }  
 
     let currentCar = await Car.findOne({_id: req.params.id, isDeleted:false});
     if(currentCar == null){
@@ -150,8 +169,8 @@ const carUpdate = async function (req, reply){
     //         message: 'branch_number_already_registered'
     //     })
     // }
-
-    updatedCar.branchId = req.body.branchId!=null ? req.body.branchId : updatedCar.branchId;
+    console.log("RECEIVED BRANCH ID ",req.body.branchId._id)
+    updatedCar.branchId = req.body.branchId && req.body.branchId._id? req.body.branchId._id : updatedCar.branchId;
     updatedCar.ipAddress = req.body.ipAddress!=null ? req.body.ipAddress : updatedCar.ipAddress;
     updatedCar.name = req.body.name!=null ? req.body.name : updatedCar.name;
     updatedCar.color = req.body.color!=null ? req.body.color : updatedCar.color;
@@ -203,10 +222,17 @@ const carUpdate = async function (req, reply){
     
 
     let updatedCarObj = await updatedCar.toObject()    
-    if (updatedCarObj.branchId){
-        updatedCarObj.branchCode=updatedCarObj.branchId.code ? updatedCarObj.branchId.code :"";
-        updatedCarObj.branchName=updatedCarObj.branchId.name ? updatedCarObj.branchId.name :"";
-        delete updatedCarObj.branchId;
+    // if (updatedCarObj.branchId){
+    //     updatedCarObj.branchCode=updatedCarObj.branchId.code ? updatedCarObj.branchId.code :"";
+    //     updatedCarObj.branchName=updatedCarObj.branchId.name ? updatedCarObj.branchId.name :"";
+    //     delete updatedCarObj.branchId;
+    // }
+    if(!updatedCarObj.branchId || !updatedCarObj.branchId._id){
+        updatedCarObj.branchId={
+            _id:null,
+            name:"",
+            code:"",
+        }
     }
     delete updatedCarObj.__v
    
@@ -281,8 +307,13 @@ const carList = async function (req, reply){
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(car.branchId)
                 })
-                newObj.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                newObj.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                newObj.branchId={
+                    _id:car.branchId ? car.branchId :null,
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                }
+                
                 delete car.branchId;
                 carsPaginated.docs.push(newObj)                               
             });
@@ -297,10 +328,16 @@ const carList = async function (req, reply){
             carsQuery.forEach(car => {
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(car.branchId)
-                })            
-                car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
-                delete car.branchId;                
+                }) 
+                let branchId={
+                    _id:car.branchId ? car.branchId :null,
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+                }  
+                car.branchId=branchId;         
+                // car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                // car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                // delete car.branchId;                
                 carsPaginated.docs.push(car)
                 
 
@@ -339,17 +376,21 @@ const carList = async function (req, reply){
               {
                 '$project': {
                   'isStarted':1,
-                  'branchId': 1,                   
+                  //'branchId': 1,                   
                   'ipAddress': 1, 
                   'name': 1,
                   'color':1,
                   "plans":1,
-                  'branchCode': {
-                    '$first': '$branchInfo.code'
+                  'branchId._id': {
+                    '$first': '$branchInfo._id'
                   },
-                  'branchName': {
+                  'branchId.code': {
+                    '$first': '$branchInfo.code'
+                  } ,
+                  'branchId.name': {
                     '$first': '$branchInfo.name'
                   } 
+
 
                 }
               }, {
@@ -373,13 +414,13 @@ const carList = async function (req, reply){
                         }
                       },
                       {
-                        'branchCode': {
+                        'branchId.code': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
                       },
                       {
-                        'branchName': {
+                        'branchId.name': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
@@ -398,6 +439,16 @@ const carList = async function (req, reply){
         let limit = req.query.perPage ? req.query.perPage : carsPaginated.totalDocs;
         let page = req.query.page ? req.query.page : 1;
         carsPaginated.docs=paginateArray(carsSearch,limit,page);
+        console.log("CARS PAGINATED DOCS: ",carsPaginated.docs)
+        carsPaginated.docs.forEach(doc=>{
+            if (!doc.branchId || !doc.branchId._id){
+                doc.branchId ={
+                    _id:null,
+                    code:"",
+                    name:""
+                }
+            }
+        })
         carsPaginated.totalPages = Math.ceil(carsPaginated.totalDocs / carsPaginated.perPage);
 
     }
@@ -425,6 +476,9 @@ const carStart = async function (req, reply){
 }
 const carStop = async function (req, reply){
     
+}
+function paginateArray(array, limit, page) {
+    return array.slice((page - 1) * limit, page * limit);
 }
 
 function isValidObjectId(id){

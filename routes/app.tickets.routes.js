@@ -95,8 +95,18 @@ module.exports = function (fastify, opts, done) {
         let prePath = __dirname.replace('routes','')        
         //var documentLocation = path.join(__dirname, "public/docs/") + documentName;
         var documentLocation = path.join(prePath, "public/docs/") + documentName;        
-        // Uncomment line 43 and comment from 44 to 46 to run on Windows
+        // Uncomment line 99 and comment from 100 to 103 to run on Windows
+        // const browser = await puppeteer.launch();
+        const browserFetcher = puppeteer.createBrowserFetcher();
+        let revisionInfo = await browserFetcher.download('1095492');
         const browser = await puppeteer.launch();
+
+        // const browser =await puppeteer.launch({
+        //   executablePath: revisionInfo.executablePath,
+        //   ignoreDefaultArgs: ['--disable-extensions'],
+        //   headless: true,
+        //   args: ['--no-sandbox', "--disabled-setupid-sandbox"]
+        // });
         // const browser = await puppeteer.launch({
         //     executablePath: '/usr/bin/chromium-browser',
         //     args: ['--no-sandbox']

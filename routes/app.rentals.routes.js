@@ -46,9 +46,21 @@ const rentalDef = {
     properties: {
         _id: { type: 'string' },
         folio:{type:'string'},
-        branchCode :{type:'string'},
-        branchName: { type: 'string' },        
-        carName: { type: 'string'},
+        branchId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                code:{type:'string'},
+                name:{type:'string'}
+            }
+        },
+        // branchCode :{type:'string'},
+        // branchName: { type: 'string' },        
+        carId:{
+            _id:{type:'string'},
+            name:{type:'string'}
+        },
+        //carName: { type: 'string'},
         planType: { 
             type: 'object',
             properties:{
@@ -73,8 +85,21 @@ const postRentalUpOpts = {
             type: 'object',
             required: ['branchId','carId','planType','paymentType'], 
             properties: {                
-                branchId:{type:'string'},
-                carId: { type: 'string' },                                                               
+                branchId:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},
+                        code:{type:'string'},
+                        name:{type:'string'}
+                    }
+                },
+                carId:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},                        
+                        name:{type:'string'}
+                    }
+                },
                 planType: {
                       type:'object',
                          properties:{

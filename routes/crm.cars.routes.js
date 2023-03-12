@@ -46,7 +46,14 @@ const carDef = {
     properties: {
         _id: { type: 'string' },
         isStarted:{type:'boolean'}                ,
-        branchId :{type:'string'},
+        branchId :{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                code:{type:'string'},
+                name:{type:'string'},
+            }
+        },
         ipAddress: { type: 'string' },        
         name: { type: 'string'},
         color: { type: 'string'},
@@ -62,8 +69,8 @@ const carDef = {
                 
              }
         },
-        branchName:{type:'string'},
-        branchCode:{type:'string'},
+        // branchName:{type:'string'},
+        // branchCode:{type:'string'},
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -79,7 +86,14 @@ const postCarUpOpts = {
         body: {
             type: 'object',
             properties: {                
-                branchId:{type:'string'},
+                branchId: { 
+                    type: 'object',
+                    properties:{
+                        _id:{type:'string'},
+                        code:{type:'string'},
+                        name:{type:'string'}
+                    }
+                },
                 ipAddress: { type: 'string' },
                 name: { type: 'string' }, 
                 color: { type: 'string'},                               
@@ -155,7 +169,14 @@ const putSingleCarOpts={
                 name: { type: 'string' },                
                 color: { type: 'string' },              
                 ipAddress: { type: 'string' }, 
-                branchId: { type: 'string'}                
+                branchId: { 
+                    type: 'object',
+                    properties:{
+                        _id:{type:'string'},
+                        code:{type:'string'},
+                        name:{type:'string'}
+                    }
+                }                
 
             },
         },      

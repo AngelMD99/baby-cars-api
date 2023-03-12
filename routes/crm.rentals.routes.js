@@ -44,8 +44,22 @@ const rentalDef = {
     properties: {
         _id: { type: 'string' },                
         branchCode :{type:'string'},
-        branchName: { type: 'string' },        
-        carName: { type: 'string'},
+        branchId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                code:{type:'string'},
+                name:{type:'string'},
+            }
+        },
+        carId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'}
+
+            }
+        },
         planType: { 
             type: 'object',
             properties:{

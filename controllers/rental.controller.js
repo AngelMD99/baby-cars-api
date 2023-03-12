@@ -11,7 +11,7 @@ Moment().tz("Etc/Universal");
 const rentalCreate = async function (req, reply){
 
     
-    let branchValidation= isValidObjectId(req.body.branchId)
+    let branchValidation= isValidObjectId(req.body.branchId._id)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -19,7 +19,7 @@ const rentalCreate = async function (req, reply){
             })
     }
     
-    let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
+    let activeBranch= await Branch.findOne({_id:req.body.branchId._id,isDeleted:false})
         if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
@@ -30,7 +30,7 @@ const rentalCreate = async function (req, reply){
        
     
     if(req.body.carId!=null){        
-        let carValidation= isValidObjectId(req.body.carId)
+        let carValidation= isValidObjectId(req.body.carId._id)
         if (carValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -38,7 +38,7 @@ const rentalCreate = async function (req, reply){
             })
         }
         else{
-            let activeCar= await Car.findOne({_id:req.body.carId,isDeleted:false})
+            let activeCar= await Car.findOne({_id:req.body.carId._id,isDeleted:false})
             if(!activeCar){
                 return reply.code(400).send({
                     status: 'fail',
@@ -48,10 +48,15 @@ const rentalCreate = async function (req, reply){
             }
         }
     }
-    
+    let branchId = mongoose.Types.ObjectId(req.body.branchId._id);
+    let carId= mongoose.Types.ObjectId(req.body.carId._id);
+    delete req.body.branchId;
+    delete req.bodycarId;
     const rental = new Rental(req.body);    
     rental._id = mongoose.Types.ObjectId();
-    let branchId = mongoose.Types.ObjectId(req.body.branchId)
+    rental.carId = carId;
+    rental.branchId = branchId;
+    //let branchId = mongoose.Types.ObjectId(req.body.branchId)
     let branchRentals = await Rental.find({branchId:branchId})
     let offset = req.headers.offset ? req.headers.offset : 6
     let date = new Date ();
@@ -84,17 +89,17 @@ const rentalCreate = async function (req, reply){
         ); 
       
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
-    const rentalObj = await rental.toObject()
-    if (rentalObj.branchId){
-        rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
-        rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
-        delete rentalObj.branchId;
-    }
+     const rentalObj = await rental.toObject()
+    // if (rentalObj.branchId){
+    //     rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
+    //     rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
+    //     delete rentalObj.branchId;
+    // }
 
-    if (rentalObj.carId){
-        rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
-        delete rentalObj.carId;
-    }
+    // if (rentalObj.carId){
+    //     rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
+    //     delete rentalObj.carId;
+    // }
     delete rentalObj.__v
 
     reply.code(201).send({
@@ -120,16 +125,16 @@ const rentalShow = async function (req, reply){
         ); 
         
     let rentalObj = await rental.toObject();            
-    if (rentalObj.branchId){
-        rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
-        rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
-        delete rentalObj.branchId;
-    }
+    // if (rentalObj.branchId){
+    //     rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
+    //     rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
+    //     delete rentalObj.branchId;
+    // }
 
-    if (rentalObj.carId){
-        rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
-        delete rentalObj.carId;
-    }
+    // if (rentalObj.carId){
+    //     rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
+    //     delete rentalObj.carId;
+    // }
     delete rentalObj.__v
     reply.code(200).send({
         status: 'success',
@@ -169,13 +174,21 @@ const rentalList = async function (req, reply){
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(rental.branchId)
                 })
-                newObj.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                newObj.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                newObj.branchId={
+                    _id : rental.branchId ? rental.branchId:"",
+                    name: branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                } 
                 delete rental.branchId;
                 let carInfo = allCars.find(branch=>{
                     return String(branch._id) == String(rental.carId)
                 })
-                newObj.carName = carInfo && carInfo.name ? carInfo.name : "",                
+                newObj.carId={
+                    _id: rental.carId ? rental.carId :"",
+                    name : carInfo && carInfo.name ? carInfo.name : "",                
+
+                }
                 delete rental.carId;
                
                 rentalsPaginated.docs.push(newObj)                
@@ -196,12 +209,23 @@ const rentalList = async function (req, reply){
                 let carInfo = allCars.find(branch=>{
                     return String(branch._id) == String(rental.carId)
                 })
-                rental.carName = carInfo && carInfo.name ? carInfo.name : "",                
-                delete rental.carId;
-                rentalsPaginated.docs.push(rental)            
-                rental.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                rental.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
-                delete rental.branchId;                
+                let carId = rental.carId;
+                let branchId = rental.branchId;
+                rental.carId={
+                    _id:carId? carId:"",
+                    name:carInfo && carInfo.name ? carInfo.name : "",
+                }
+                
+                //rentalsPaginated.docs.push(rental)            
+                rental.branchId={
+                    _id:branchId ? branchId :"",
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                }
+
+                
+                //delete rental.branchId;                
                 rentalsPaginated.docs.push(rental)                
 
                 
@@ -320,6 +344,10 @@ const rentalList = async function (req, reply){
     })
 
     
+}
+
+function paginateArray(array, limit, page) {
+    return array.slice((page - 1) * limit, page * limit);
 }
 
 function isValidObjectId(id){

@@ -52,7 +52,8 @@ exports.options = {
           properties: {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},            
-            isStarted:{type:'boolean'},            
+            isStarted:{type:'boolean'}, 
+            branchId:{type:'string'},
             name:{type:'string'},          
             color:{type:'string'}, 
             plans:{
