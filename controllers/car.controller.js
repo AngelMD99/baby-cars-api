@@ -169,7 +169,7 @@ const carUpdate = async function (req, reply){
     //         message: 'branch_number_already_registered'
     //     })
     // }
-    console.log("RECEIVED BRANCH ID ",req.body.branchId._id)
+    
     updatedCar.branchId = req.body.branchId && req.body.branchId._id? req.body.branchId._id : updatedCar.branchId;
     updatedCar.ipAddress = req.body.ipAddress!=null ? req.body.ipAddress : updatedCar.ipAddress;
     updatedCar.name = req.body.name!=null ? req.body.name : updatedCar.name;
@@ -439,7 +439,7 @@ const carList = async function (req, reply){
         let limit = req.query.perPage ? req.query.perPage : carsPaginated.totalDocs;
         let page = req.query.page ? req.query.page : 1;
         carsPaginated.docs=paginateArray(carsSearch,limit,page);
-        console.log("CARS PAGINATED DOCS: ",carsPaginated.docs)
+        
         carsPaginated.docs.forEach(doc=>{
             if (!doc.branchId || !doc.branchId._id){
                 doc.branchId ={

@@ -41,7 +41,21 @@ exports.options = {
             name:{type:'string'},
             code:{type:'string'},
             password:{type:'string'},
-            location:{type:'string'},               
+            location:{type:'string'},
+            plans:{
+              type:'array',
+              items:{ 
+                  type:'object',
+                  properties:{
+                      time:{
+                          type:'number'                        
+                      },
+                      price:{
+                          type:'number'                         
+                      }                       
+                  }
+              }
+          },                
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}
           }
@@ -55,21 +69,7 @@ exports.options = {
             isStarted:{type:'boolean'}, 
             branchId:{type:'string'},
             name:{type:'string'},          
-            color:{type:'string'}, 
-            plans:{
-                type:'array',
-                items:{ 
-                    type:'object',
-                    properties:{
-                        time:{
-                            type:'number'                        
-                        },
-                        price:{
-                            type:'number'                         
-                        }                       
-                    }
-                }
-            },         
+            color:{type:'string'},                    
             
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}

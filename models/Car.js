@@ -1,20 +1,20 @@
 const mongoose = require('mongoose')
 const mongoosePaginate = require('mongoose-paginate-v2');
 
-let planSchema = new mongoose.Schema(
-    {
-      time: {
-        type: Number        
-      },
-      price: {
-        type: Number,        
-      },
-    },
-    {
-      _id: false,
-      timestamps:false
-    }
-  );
+// let planSchema = new mongoose.Schema(
+//     {
+//       time: {
+//         type: Number        
+//       },
+//       price: {
+//         type: Number,        
+//       },
+//     },
+//     {
+//       _id: false,
+//       timestamps:false
+//     }
+//   );
 
 const carSchema = new mongoose.Schema({
     isDeleted: {
@@ -41,7 +41,7 @@ const carSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    plans:[planSchema]
+    // plans:[planSchema]
     
 },{
     timestamps: true,

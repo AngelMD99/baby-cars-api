@@ -48,6 +48,18 @@ const branchDef = {
         code :{type:'string'},
         name: { type: 'string' },        
         location: { type: 'string'},
+        plans:{
+            type:'array',
+            items:
+               {
+                type:'object',
+                 properties:{
+                   time:{type:'number'},
+                   price:{type:'number'}
+                 }        
+               
+            }
+       },
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -70,7 +82,19 @@ const postBranchUpOpts = {
                 code:{type:'string', minLength:8},
                 name: { type: 'string' },
                 password: { type: 'string' }, 
-                location: { type: 'string'}                               
+                location: { type: 'string'} ,
+                plans:{
+                    type:'array',
+                    items:
+                       {
+                        type:'object',
+                         properties:{
+                           time:{type:'number'},
+                           price:{type:'number'}
+                         }        
+                       
+                    }
+               },                              
             },
         },
         response: {
@@ -131,7 +155,19 @@ const putSingleBranchOpts={
                 code:{type:'string', minLength:8},
                 name: { type: 'string' },
                 password: { type: 'string' }, 
-                location: { type: 'string'}                               
+                location: { type: 'string'},
+                plans:{
+                    type:'array',
+                    items:
+                       {
+                        type:'object',
+                         properties:{
+                           time:{type:'number'},
+                           price:{type:'number'}
+                         }        
+                       
+                    }
+               },                              
             },
         },      
          response: {

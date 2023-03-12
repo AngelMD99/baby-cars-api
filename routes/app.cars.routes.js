@@ -56,18 +56,18 @@ const carDef = {
         ipAddress: { type: 'string' },        
         name: { type: 'string'},
         color: { type: 'string'},
-        plans:{
-             type:'array',
-             items:
-                {
-                 type:'object',
-                  properties:{
-                    time:{type:'number'},
-                    price:{type:'number'}
-                  }        
+        // plans:{
+        //      type:'array',
+        //      items:
+        //         {
+        //          type:'object',
+        //           properties:{
+        //             time:{type:'number'},
+        //             price:{type:'number'}
+        //           }        
                 
-             }
-        },
+        //      }
+        // },
         // branchName:{type:'string'},
         // branchCode:{type:'string'},
         createdAt:{type:'string'},
