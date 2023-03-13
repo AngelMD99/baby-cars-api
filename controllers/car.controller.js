@@ -44,12 +44,15 @@ const carCreate = async function (req, reply){
             }
         }
     }  
-    let branchId = req.body.branchId._id;
+    
+    let branchId = req.body.branchId ? req.body.branchId._id:null;    
+
     delete req.body.branchId;
     if(branchId){
         car.branchId=branchId;
     }
-    const car = new Car(req.body);    
+    const car = new Car(req.body); 
+    console.log("HERE")   
     
     car._id = mongoose.Types.ObjectId();
     await car.save()
@@ -117,13 +120,13 @@ const carUpdate = async function (req, reply){
     //let error;
     if(req.body.ipAddress!=null){
         let ipAddressValidation = await Car.findOne({ipAddress:req.body.ipAddress,isDeleted:false});
-        if (ipAddressValidation!=null && ipAddressValidation._id != req.params.id){
+        if (ipAddressValidation && ipAddressValidation._id != req.params.id){
             return reply.code(400).send({
                 status: 'fail',
                 message: 'direccion_ip_en_uso'
             })
         }
-        if(req.body.ipAddressValidation.indexOf(' ') >= 0){
+        if(req.body.ipAddressValidation && req.body.ipAddressValidation.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
                 message: 'no_se_permiten_espacios_en_blanco_en_la_dirección_ip'
