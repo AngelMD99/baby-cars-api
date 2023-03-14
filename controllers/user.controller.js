@@ -11,7 +11,7 @@ const userLogin = async function (req, reply) {
     if(user == null){
         return reply.code(404).send({
             status: 'fail',
-            message: 'usuario_no_encontrado'
+            message: 'Usuario no encontrado'
         })
     }
 
@@ -29,7 +29,7 @@ const userLogin = async function (req, reply) {
         if(!user.tempPassword || !user.tempPasswordExpiration){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'contraseña_incorrecta'
+                message: 'Contraseña incorrecta'
             })
         }
 
@@ -41,14 +41,14 @@ const userLogin = async function (req, reply) {
         if(!bcrypt.compareSync(req.body.password, user.tempPassword)){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'contraseña_incorrecta'
+                message: 'Contraseña incorrecta'
             })
         }
         else{
             if(today>expirationDate){
                 return reply.code(401).send({
                     status: 'fail',
-                    message: 'contraseña_temporal_expirada'
+                    message: 'Contraseña temporal expirada'
                 })
 
             }

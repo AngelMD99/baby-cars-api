@@ -14,14 +14,14 @@ const carCreate = async function (req, reply){
     if(ipValidation != null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'la_direccion_ip_ya_esta_en_uso'
+            message: 'La dirección IP ya esta en uso'
         })
     }    
 
     if(req.body.ipAddress.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'no_se_permiten_espacios_en_blanco_en_la_direccion_ip'
+                message: 'No se permiten espacios en blanco en la direccion IP'
             })
     } 
 
@@ -30,7 +30,7 @@ const carCreate = async function (req, reply){
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'sucursal_no_válida'
+                message: 'Sucursal no válida'
             })
         }
         else{
@@ -38,7 +38,7 @@ const carCreate = async function (req, reply){
             if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
-                    message: 'sucursal_no_encontrada'
+                    message: 'Sucursal no encontrada'
                 })
 
             }
@@ -89,7 +89,7 @@ const carShow = async function (req, reply){
     if (!car){
         return reply.code(400).send({
             status: 'fail',
-            message: 'carrito_no_encontrado'
+            message: 'Carrito no registrado'
         })        
     } 
     
@@ -129,7 +129,7 @@ const carUpdate = async function (req, reply){
         if(req.body.ipAddressValidation && req.body.ipAddressValidation.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'no_se_permiten_espacios_en_blanco_en_la_dirección_ip'
+                message: 'No se permiten espacios en blanco en la dirección ip'
             })
         }
     }
@@ -139,7 +139,7 @@ const carUpdate = async function (req, reply){
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'sucursal_no_válida'
+                message: 'Sucursal no válida'
             })
         }
         else{
@@ -147,7 +147,7 @@ const carUpdate = async function (req, reply){
             if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
-                    message: 'sucursal_no_encontrada'
+                    message: 'Sucursal no encontrada'
                 })
 
             }
@@ -158,7 +158,7 @@ const carUpdate = async function (req, reply){
     if(currentCar == null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'carrito_no_encontrado'
+            message: 'Carrito no registrado'
         })
     }
 
@@ -253,7 +253,7 @@ const carDelete = async function (req, reply){
     if(currentCar == null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'carrito_no_encontrado'
+            message: 'Carrito no registrado'
         })
     }
 
@@ -262,7 +262,7 @@ const carDelete = async function (req, reply){
     await updatedCar.save();
     reply.code(200).send({
         status: 'success',
-        message: 'carrito_eliminado_correctamente'           
+        message: 'Carrito eliminado correctamente'           
         
     }) 
     

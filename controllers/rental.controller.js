@@ -15,7 +15,7 @@ const rentalCreate = async function (req, reply){
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'sucursal_no_válida'
+                message: 'Sucursal no válida'
             })
     }
     
@@ -23,7 +23,7 @@ const rentalCreate = async function (req, reply){
         if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
-                    message: 'sucursal_no_encontrada'
+                    message: 'Sucursal no encontrada'
                 })
 
         }
@@ -34,7 +34,7 @@ const rentalCreate = async function (req, reply){
         if (carValidation==false){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'carrito_no_válido'
+                message: 'Carrito no válido'
             })
         }
         else{
@@ -42,7 +42,7 @@ const rentalCreate = async function (req, reply){
             if(!activeCar){
                 return reply.code(400).send({
                     status: 'fail',
-                    message: 'carrito_no_encontrado'
+                    message: 'Carrito no encontrado'
                 })
 
             }
@@ -115,7 +115,7 @@ const rentalShow = async function (req, reply){
     if (!rental){
         return reply.code(400).send({
             status: 'fail',
-            message: 'rental_no_encontrada'
+            message: 'Rental no encontrada'
         })        
     } 
     

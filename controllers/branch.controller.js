@@ -12,14 +12,14 @@ const branchCreate = async function (req, reply){
     if(branchCode != null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'código_de_sucursal_en_uso'
+            message: 'Código de sucursal en uso'
         })
     }    
 
     if(req.body.code.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'no_se_permiten_espacios_en_blanco_en_el_código'
+                message: 'No se permiten espacios en blanco en elcódigo'
             })
     }
     
@@ -48,7 +48,7 @@ const branchShow = async function (req, reply){
     if (!branch){
         return reply.code(400).send({
             status: 'fail',
-            message: 'sucursal_no_encontrada'
+            message: 'Sucursal no encontrada'
         })        
     } 
    
@@ -73,7 +73,7 @@ const branchUpdate = async function (req, reply){
         if(req.body.code.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'no_se_permiten_espacios_en_blanco_en_el_código'
+                message: 'No se permiten espacios en blanco en el código'
             })
         }
     }
@@ -83,7 +83,7 @@ const branchUpdate = async function (req, reply){
     if(currentBranch == null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'sucursal_no_encontrada'
+            message: 'Sucursal no encontrada'
         })
     }
 
@@ -179,7 +179,7 @@ const branchDelete = async function (req, reply){
     if(currentBranch == null){
         return reply.code(400).send({
             status: 'fail',
-            message: 'sucursal_no_encontrada'
+            message: 'Sucursal no encontrada'
         })
     }
 
@@ -188,7 +188,7 @@ const branchDelete = async function (req, reply){
     await updatedBranch.save();
     reply.code(200).send({
         status: 'success',
-        message: 'sucursal_eliminada'           
+        message: 'Sucursal eliminada correctamente'           
         
     }) 
     
@@ -293,7 +293,7 @@ const branchLogin = async function (req, reply){
     if(branch == null){
         return reply.code(404).send({
             status: 'fail',
-            message: 'sucursal_no_encontrada'
+            message: 'Sucursal no encontrada'
         })
     }
 
@@ -311,7 +311,7 @@ const branchLogin = async function (req, reply){
         if(!branch.tempPassword || !branch.tempPasswordExpiration){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'contraseña_incorrecta'
+                message: 'Contraseña incorrecta'
             })
         }
 
@@ -323,14 +323,14 @@ const branchLogin = async function (req, reply){
         if(!bcrypt.compareSync(req.body.password, branch.tempPassword)){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'contraseña_incorrecta'
+                message: 'Contraseña incorrecta'
             })
         }
         else{
             if(today>expirationDate){
                 return reply.code(401).send({
                     status: 'fail',
-                    message: 'contraseña_temporal_expirada'
+                    message: 'Contraseña temporal expirada'
                 })
 
             }
