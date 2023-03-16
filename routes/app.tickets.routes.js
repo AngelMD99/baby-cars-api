@@ -50,7 +50,7 @@ module.exports = function (fastify, opts, done) {
             rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
             delete rentalObj.carId;
         }
-        let offset=req.headers.offset ? req.headers.offset:6
+        let offset=req.headers.offset ? req.headers.offset:7
         let date = rental.createdAt
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         //     date.setHours(offset,0,0,0);    
@@ -145,14 +145,14 @@ function isValidObjectId(id){
 
 function dateDDMMAAAA(timestamp,offset){ 
     // console.log("timestamp:",timestamp.getHours())
-    // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-    //     date.setHours(offset,0,0,0);    
-    //     date.setHours(offset, 0, 0, 0);
-    //     }
-    //     else{
-    //         date.setHours(0,0,0,0);
-    //         date.setHours(0, 0, 0, 0);
-    //     }  
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        date.setHours(offset,0,0,0);    
+        date.setHours(offset, 0, 0, 0);
+        }
+        else{
+            date.setHours(0,0,0,0);
+            date.setHours(0, 0, 0, 0);
+        }  
     // if(offset!=null){
     //     timestamp.setHours(timestamp.getHours() + offset);
     // }
