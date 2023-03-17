@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+const { getOffsetSetting } = require('../controllers/base.controller')
+
 
 const userLogin = async function (req, reply) {    
     const user = await User.findOne({email: req.body.email, isDeleted:false});

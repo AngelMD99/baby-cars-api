@@ -4,6 +4,8 @@ const path = require("path");
 const Rental = require('../models/Rental');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
+const { getOffsetSetting } = require('../controllers/base.controller')
+
 
 module.exports = function (fastify, opts, done) {
     fastify.post("/rentals/ticket", async (req, reply) => {

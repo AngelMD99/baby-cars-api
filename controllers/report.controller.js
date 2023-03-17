@@ -8,9 +8,11 @@ let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 const xlsx = require('xlsx');
 const XLSXStyle  = require("xlsx-style");
+const { getOffsetSetting } = require('../controllers/base.controller')
 
-const rentalsReport = async function (req, reply){
+const rentalsReport = async function (req, reply){    
     let aggregateQuery=[];
+    let offset = await getOffsetSetting()
 
     if(req.query.branchId != null){
         let branchId = mongoose.Types.ObjectId(req.query.branchId)
@@ -24,7 +26,8 @@ const rentalsReport = async function (req, reply){
     
     if (req.query.initialDate != null && req.query.lastDate != null){
         let initialDate = parseDate(req.query.initialDate);
-        let offset = req.headers.offset ? Number(req.headers.offset) : 6        
+        //let offset = await getOffsetSetting();              
+        //let offset = req.headers.offset ? Number(req.headers.offset) : 6        
 
         //initialDate.setHours(0,0,0,0);
         let lastDate = parseDate(req.query.lastDate);
@@ -88,7 +91,8 @@ const rentalsReport = async function (req, reply){
         //   }
     )
 
-    let rentals = await Rental.aggregate(aggregateQuery);      
+    let rentals = await Rental.aggregate(aggregateQuery);
+    console.log("RENTALS: ",rentals)      
     rentals.forEach(rental=>{
         if(rental['Tipo de pago']){
             switch (rental['Tipo de pago']) {
@@ -104,9 +108,11 @@ const rentalsReport = async function (req, reply){
                     break;
             }
         }
-        if(rental.createdAt){
-            rental.Fecha=dateDDMMAAAA(rental.createdAt);
-            rental.Hora=dateTimeHHSS(rental.createdAt);
+        if(rental.createdAt){            
+            rental.createdAt = adjustTimeStamp (rental.createdAt);
+            rental.Fecha=dateDDMMAAAA(rental.createdAt);            
+            rental.Hora=dateTimeHHSS(rental.createdAt);  
+            
         }
     })
     
@@ -322,8 +328,8 @@ const rentalsReport = async function (req, reply){
             lastDate.setHours(0, 0, 0, 0);
     
         }      
-        wb.Sheets["Rentas"]["B2"].v=dateDDMMAAAA(initialDate,offset).substring(0,11);
-        wb.Sheets["Rentas"]["B3"].v=dateDDMMAAAA(lastDate,offset).substring(0,11);
+        wb.Sheets["Rentas"]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
+        wb.Sheets["Rentas"]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
     }
     if (rentals.length>0){
         for (let index = 0; index < rentals.length; index++) {
@@ -398,10 +404,22 @@ function addDays(date, days) {
     return newDate;
 }
 
-function dateDDMMAAAA(timestamp,offset){ 
-    if(offset!=null){
-        timestamp.setHours(timestamp.getHours() - offset);
+function adjustTimeStamp(timestamp,offset){
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        timestamp.setHours(timestamp.getHours() - offset)
     }
+
+    return timestamp
+    
+}
+
+function dateDDMMAAAA(timestamp){ 
+    // console.log("RECEIVED TIME STAMP DATE FUCN",timestamp)
+    // if(offset!=null){
+    //     timestamp.setHours(timestamp.getHours() - offset);
+    // }
+    // console.log("UPDATED TIME STAMP DATE FUCN",timestamp)
+
     let day = timestamp.getDate();
     let month = timestamp.getMonth() + 1
     let year = timestamp.getFullYear();
@@ -419,13 +437,21 @@ function dateDDMMAAAA(timestamp,offset){
     return stringDate
 }
 
-function dateTimeHHSS(timestamp,offset){
-    if(offset!=null){
-        timestamp.setHours(timestamp.getHours() - offset);
-    }    
+function dateTimeHHSS(timestamp){
+    //console.log("OFFSET: ",offset);
+    // console.log("RECEIVED TIME STAMP HOUR FUNCTION: ",timestamp)
+    // if(offset!=null){
+    //     timestamp.setHours(timestamp.getHours() - offset);
+    //     console.log("UPDATED TIME STAMP :",timestamp)
+    // }
+    
+
     let hours = timestamp.getHours();    
     let minutes = timestamp.getMinutes()
-    let hours12 = (hours % 12) || 12;    
+    let hours12 = (hours % 12) || 12; 
+    console.log("TIMESTAMP: ",timestamp)
+    console.log("HOURS:",hours)  
+    console.log("HOURS 12: ",hours12) 
     let stringMinutes = minutes < 10 ? "0"+minutes : minutes;
     let stringHours = hours12 < 10 ? "0"+hours12 : hours12;
     let stringDate = stringHours+":"+stringMinutes;

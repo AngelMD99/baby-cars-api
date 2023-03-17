@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+const { getOffsetSetting } = require('../controllers/base.controller')
 
 const rentalCreate = async function (req, reply){
 
@@ -58,7 +59,8 @@ const rentalCreate = async function (req, reply){
     rental.branchId = branchId;
     //let branchId = mongoose.Types.ObjectId(req.body.branchId)
     let branchRentals = await Rental.find({branchId:branchId})
-    let offset = req.headers.offset ? req.headers.offset : 6
+    // let offset = req.headers.offset ? req.headers.offset : 6
+    let offset = await getOffsetSetting();              
     let date = new Date ();
     if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         date.setHours(offset,0,0,0);    
