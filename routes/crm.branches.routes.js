@@ -271,11 +271,7 @@ const getAvailableBranchesOpts={
          tags:['Branches'], 
         //  headers:{
         //     authorization:{type:'string'}
-        // }, 
-        querystring:{
-            page:{type:'string'},
-            perPage:{type:'string'}
-        },
+        // },         
          response: {
             200: {
                   type: 'object',

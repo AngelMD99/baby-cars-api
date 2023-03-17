@@ -272,6 +272,34 @@ const carBranchList = async function (req, reply){
 
 }
 
+const carsAvailable = async function (req, reply){
+
+    let aggregateQuery=[
+        [
+            {
+              '$match': {
+                'isDeleted': false,
+                'branchId':ObjectId(req.params.id)
+              }
+            }, {
+              '$project': {
+                '_id': 0, 
+                'carId._id': '$_id', 
+                'carId.name': '$name'                 
+              }
+            }
+          ]
+    ]
+
+    let availableCars = await Car.aggregate(aggregateQuery);
+    reply.code(200).send({
+        status:'sucess',
+        data:availableCars
+    })
+}
+
+
+
 const carList = async function (req, reply){
     let searchQuery = {
         isDeleted: false,			
@@ -532,4 +560,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchList}
+module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchList, carsAvailable }
