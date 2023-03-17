@@ -1,5 +1,5 @@
 const Branch = require('../models/Branch');
-const { carList } = require('../controllers/car.controller');
+const { carList, carStart, carStop } = require('../controllers/car.controller');
 const bcrypt = require('bcrypt');
 const errResponse = {
     type: 'object',
@@ -110,8 +110,64 @@ const getCarsOpts={
     
 }
 
+const startSingleCarOpts={
+    schema: {
+         description:"Turns on the car with the id provided and set the isStarted field to true.",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carStart,
+    
+}
+
+const stopSingleCarOpts={
+    schema: {
+         description:"Turns off the car with the id provided and set the isStarted field to false.",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carStop,
+    
+}
+
 function appCarsRoutes(fastify, options, done) {
     fastify.get('/branches/:id/cars', getCarsOpts)    
+    fastify.put('/cars/:id/start', startSingleCarOpts)
+    fastify.put('/cars/:id/stop', stopSingleCarOpts)        
     
     //fastify.delete('/crm/branches/:id', getCarsOpts)
 

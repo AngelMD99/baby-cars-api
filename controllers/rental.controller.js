@@ -30,7 +30,7 @@ const rentalCreate = async function (req, reply){
         }
        
     
-    if(req.body.carId!=null){        
+    //if(req.body.carId!=null){        
         let carValidation= isValidObjectId(req.body.carId._id)
         if (carValidation==false){
             return reply.code(400).send({
@@ -38,17 +38,23 @@ const rentalCreate = async function (req, reply){
                 message: 'Carrito no válido'
             })
         }
-        else{
+        //else{
             let activeCar= await Car.findOne({_id:req.body.carId._id,isDeleted:false})
             if(!activeCar){
                 return reply.code(400).send({
                     status: 'fail',
                     message: 'Carrito no encontrado'
                 })
+            }
+            if(activeCar.isStarted){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'Carrito '+activeCar.name+' esta encendido'
+                })
 
             }
-        }
-    }
+        //}
+    //}
     let branchId = mongoose.Types.ObjectId(req.body.branchId._id);
     let carId= mongoose.Types.ObjectId(req.body.carId._id);
     delete req.body.branchId;
@@ -91,6 +97,8 @@ const rentalCreate = async function (req, reply){
         ); 
       
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
+    activeCar.isStarted=true;
+    await activeCar.save();
      const rentalObj = await rental.toObject()
     // if (rentalObj.branchId){
     //     rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";

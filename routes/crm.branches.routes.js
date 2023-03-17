@@ -1,4 +1,4 @@
-const { branchCreate, branchShow, branchDelete,branchList, branchUpdate } = require('../controllers/branch.controller');
+const { branchCreate, branchShow, branchDelete,branchList, branchUpdate, branchesAvailable } = require('../controllers/branch.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -38,6 +38,22 @@ const authorizeFunc = async function (req, reply) {
         return decoded
     } catch (err) {
       return reply.code(401).send(err)
+    }
+}
+
+const branchAvailableDef = { 
+    type: 'object', 
+    properties: {
+        branchId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},
+                code:{type:'string'},
+
+            }
+        }                
+        
     }
 }
 
@@ -249,9 +265,41 @@ const getBranchesOpts={
     
 }
 
+const getAvailableBranchesOpts={
+    schema: {
+         description:"Retrieves the available branches in order to be used on the forms control interfaces.",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:branchAvailableDef
+                  }
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: branchesAvailable,
+    
+}
+
 
 
 function crmBranchesRoutes(fastify, options, done) {
+    fastify.get('/crm/available/branches', getAvailableBranchesOpts)
     fastify.get('/crm/branches', getBranchesOpts)
     fastify.get('/crm/branches/:id', getSingleBranchOpts)
     fastify.post('/crm/branches', postBranchUpOpts)

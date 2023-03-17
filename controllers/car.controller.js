@@ -264,10 +264,7 @@ const carDelete = async function (req, reply){
         status: 'success',
         message: 'Carrito eliminado correctamente'           
         
-    }) 
-    
-
-
+    })   
     
 }
 
@@ -475,9 +472,41 @@ const carList = async function (req, reply){
 }
 
 const carStart = async function (req, reply){
+    let currentCar = await Car.findOne({_id: req.params.id, isDeleted:false});
+    if(currentCar == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Carrito no registrado'
+        })
+    }
+
+    let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedCar.isStarted=true;
+    await updatedCar.save();
+    reply.code(200).send({
+        status: 'success',
+        message: 'Carrito '+updatedCar.name+' encendido correctamente'           
+        
+    })  
     
 }
 const carStop = async function (req, reply){
+    let currentCar = await Car.findOne({_id: req.params.id, isDeleted:false});
+    if(currentCar == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Carrito no registrado'
+        })
+    }    
+
+    let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedCar.isStarted=false;
+    await updatedCar.save();
+    reply.code(200).send({
+        status: 'success',
+        message: 'Carrito '+updatedCar.name+' apagado correctamente'           
+        
+    })   
     
 }
 function paginateArray(array, limit, page) {

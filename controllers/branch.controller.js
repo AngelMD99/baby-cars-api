@@ -195,6 +195,33 @@ const branchDelete = async function (req, reply){
     
 }
 
+const branchesAvailable = async function (req, reply){
+
+    let aggregateQuery=[
+        [
+            {
+              '$match': {
+                'isDeleted': false
+              }
+            }, {
+              '$project': {
+                '_id': 0, 
+                'branchId._id': '$_id', 
+                'branchId.name': '$name', 
+                'branchId.code': '$code'
+              }
+            }
+          ]
+    ]
+
+    let availableBranches = await Branch.aggregate(aggregateQuery);
+    reply.code(200).send({
+        status:'sucess',
+        data:availableBranches
+    })
+
+}
+
 const branchList = async function (req, reply){
     
     let searchQuery = {
@@ -376,5 +403,5 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList, branchLogin }
+module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList, branchLogin, branchesAvailable }
 //module.exports = { branchList, branchData, branchIn, branchSchedules, branchOrders, branchChangeOrderStatus, branchDiscardOrder, branchProducts, branchOptions, getbranchProducts, branchProductsStatus, branchProductsOptions }
