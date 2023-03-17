@@ -1,5 +1,6 @@
 const Branch = require('../models/Branch');
-const { carList, carStart, carStop, carsAvailable } = require('../controllers/car.controller');
+const { carList, carStart, carStop, carsAvailable  } = require('../controllers/car.controller');
+const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');
 const errResponse = {
     type: 'object',
@@ -86,6 +87,49 @@ const carAvailableDef = {
             }
         }                        
     }
+}
+
+const planAvailableDef = { 
+    type: 'object', 
+    properties: {
+        planId: { 
+            type: 'object',
+            properties:{
+                time:{type:'number'},
+                price:{type:'number'}         
+            }
+        }                        
+    }
+}
+
+const getAvailablePlansOpts={
+    schema: {
+         description:"Retrieves the available plans for the branch in order to be used on the forms control interfaces.",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        params:{
+            id:{type:'string'}
+         }, 
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:planAvailableDef
+                  }
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: plansAvailable,
+    
 }
 
 const getAvailableCarsOpts={
@@ -210,6 +254,7 @@ const stopSingleCarOpts={
 function appCarsRoutes(fastify, options, done) {
     fastify.get('/branches/:id/cars', getCarsOpts)    
     fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
+    fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
     fastify.put('/cars/:id/start', startSingleCarOpts)
     fastify.put('/cars/:id/stop', stopSingleCarOpts)        
     

@@ -275,7 +275,7 @@ const carBranchList = async function (req, reply){
 const carsAvailable = async function (req, reply){
 
     let aggregateQuery=[
-        [
+        
             {
               '$match': {
                 'isDeleted': false,
@@ -288,7 +288,7 @@ const carsAvailable = async function (req, reply){
                 'carId.name': '$name'                 
               }
             }
-          ]
+        
     ]
 
     let availableCars = await Car.aggregate(aggregateQuery);

@@ -2,6 +2,7 @@ const Branch = require('../models/Branch');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
+const ObjectId = require('mongoose').Types.ObjectId;
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 const { getOffsetSetting } = require('../controllers/base.controller')
@@ -222,6 +223,37 @@ const branchesAvailable = async function (req, reply){
 
 }
 
+const plansAvailable = async function (req, reply){
+
+    let aggregateQuery=[
+        {
+          '$unwind': {
+            'path': '$plans', 
+            'preserveNullAndEmptyArrays': false
+          }
+        }, {
+          '$match': {
+            'isDeleted': false, 
+            '_id': ObjectId(req.params.id)
+          }
+        }, {
+          '$project': {
+            '_id': 0, 
+            'planId.time': '$plans.time', 
+            'planId.price': '$plans.price'
+          }
+        }
+      ]
+    
+
+    let availablePlans = await Branch.aggregate(aggregateQuery);
+    reply.code(200).send({
+        status:'sucess',
+        data:availablePlans
+    })
+
+}
+
 const branchList = async function (req, reply){
     
     let searchQuery = {
@@ -403,5 +435,5 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList, branchLogin, branchesAvailable }
+module.exports = { branchCreate, branchShow, branchUpdate, branchDelete, branchList, branchLogin, branchesAvailable, plansAvailable }
 //module.exports = { branchList, branchData, branchIn, branchSchedules, branchOrders, branchChangeOrderStatus, branchDiscardOrder, branchProducts, branchOptions, getbranchProducts, branchProductsStatus, branchProductsOptions }
