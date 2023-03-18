@@ -221,6 +221,14 @@ const branchesAvailable = async function (req, reply){
     ]
 
     let availableBranches = await Branch.aggregate(aggregateQuery);
+    availableBranches.unshift({
+        branchId:{
+            _id:"",
+            name:"<Sin sucursal>",
+            code:""
+
+        }
+    })
     reply.code(200).send({
         status:'sucess',
         data:availableBranches

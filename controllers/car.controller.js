@@ -122,7 +122,7 @@ const carUpdate = async function (req, reply){
         if (ipAddressValidation && ipAddressValidation._id != req.params.id){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'direccion_ip_en_uso'
+                message: 'La dirección IP ya esta en uso'
             })
         }
         if(req.body.ipAddressValidation && req.body.ipAddressValidation.indexOf(' ') >= 0){
@@ -161,7 +161,7 @@ const carUpdate = async function (req, reply){
         })
     }
 
-    let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    //let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
 
     // let branchNumberCheck = await Branch.findOne({branchNumber: req.body.branchNumber, isDeleted:false})
 
@@ -171,12 +171,24 @@ const carUpdate = async function (req, reply){
     //         message: 'branch_number_already_registered'
     //     })
     // }
+    let inputs={};
+    // if(!req.body.branchId || req.body.branchId=="" || !req.body.branchId._id || req.body.branchId._id==""){
+    //     await Car.updateOne({_id:req.params.id}, { $unset: { branchId: 1 } })
+        
+    // }  
+ 
+    inputs.ipAddress = req.body.ipAddress;
+    inputs.name = req.body.name;
+    inputs.color = req.body.color;    
+    let updatedCar = await Car.findByIdAndUpdate({_id: req.params.id},inputs,{
+        new:true,
+        overwrite:true
+    }).select('-__v');
+    // updatedCar.branchId = req.body.branchId && req.body.branchId._id? req.body.branchId._id : updatedCar.branchId;
+    // updatedCar.ipAddress = req.body.ipAddress!=null ? req.body.ipAddress : updatedCar.ipAddress;
+    // updatedCar.name = req.body.name!=null ? req.body.name : updatedCar.name;
+    // updatedCar.color = req.body.color!=null ? req.body.color : updatedCar.color;
     
-    updatedCar.branchId = req.body.branchId && req.body.branchId._id? req.body.branchId._id : updatedCar.branchId;
-    updatedCar.ipAddress = req.body.ipAddress!=null ? req.body.ipAddress : updatedCar.ipAddress;
-    updatedCar.name = req.body.name!=null ? req.body.name : updatedCar.name;
-    updatedCar.color = req.body.color!=null ? req.body.color : updatedCar.color;
-    updatedCar.plans = req.body.plans!=null ? req.body.plans : updatedCar.plans;
   
     // if (req.body.image){
 
