@@ -125,7 +125,7 @@ const rentalShow = async function (req, reply){
     if (!rental){
         return reply.code(400).send({
             status: 'fail',
-            message: 'Rental no encontrada'
+            message: 'Renta no encontrada'
         })        
     } 
     
@@ -157,8 +157,14 @@ const rentalList = async function (req, reply){
     let searchQuery = {
         isDeleted: false,			
     };
+    if (req.query.branchId){
+        searchQuery['branchId']=ObjectId(req.query.branchId)
+    }
+    if (req.query.carId){
+        searchQuery['carId']=ObjectId(req.query.carId)        
+    }
     const options = {
-        select: `-isDeleted -__v -updatedAt -createdAt`, 
+        select: `-isDeleted -__v`, 
 
     }
     if (req.query.page){
@@ -167,19 +173,31 @@ const rentalList = async function (req, reply){
     if (req.query.page){
         options.limit = req.query.perPage;
     }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"createdAt":-1}
+    }
+    console.log("OPTIONS: ",options)
     let rentalsPaginated={};
     if(!req.query.search){        
         let allBranches = await Branch.find({});
         let allCars = await Car.find({});
         if(options.page!=null && options.limit!=null){
             rentalsPaginated.docs=[]
-            let rentalsQuery = await Rental.paginate(searchQuery, options);            
+            let rentalsQuery = await Rental.paginate(searchQuery, options);             
             rentalsQuery.docs.forEach(rental => {
                 let newObj={
                     _id:rental._id,
                     folio:rental.folio,
                     planType:rental.planType,
-                    paymentType:rental.paymentType
+                    paymentType:rental.paymentType,
+                    createdAt:rental.createdAt,
+                    updatedAt:rental.updatedAt
                 }
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(rental.branchId)
@@ -210,8 +228,18 @@ const rentalList = async function (req, reply){
             
         }
         else{
+            let sortOrder = {}
+            if(req.query.column){
+                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    createdAt:-1
+                }
+            }
             rentalsPaginated.docs=[]
-            let rentalsQuery = await Rental.find(searchQuery).lean();
+            let rentalsQuery = await Rental.find(searchQuery).sort(sortOrder).lean();
             rentalsQuery.forEach(rental => {
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(rental.branchId)
@@ -255,61 +283,86 @@ const rentalList = async function (req, reply){
         let searchString = '.*'+diacriticSearch+'.*';
 
   //    let searchString = '.*'+req.query.search+'.*';
-          delete options.select;
-          let aggregateQuery=[
-              {
+        delete options.select;
+        let aggregateQuery=[{
+            '$match': {
+              'isDeleted': false
+            }
+        }];
+
+        if(req.query.branchId){
+            aggregateQuery.push({
                 '$match': {
-                  'isDeleted': false
+                  'branchId': ObjectId(req.query.branchId)
                 }
-              }, 
-              {
+            })
+        }
+
+        if(req.query.carId){
+            aggregateQuery.push({
+                '$match': {
+                  'branchId': ObjectId(req.query.carId)
+                }
+            })
+            
+        }
+        
+        aggregateQuery.push(
+           {
                 '$lookup': {
                   'from': 'branches', 
                   'localField': 'branchId', 
                   'foreignField': '_id', 
                   'as': 'branchInfo'
                 }
-              },
-              {
+            },
+            {
                 '$lookup': {
                   'from': 'cars', 
                   'localField': 'carId', 
                   'foreignField': '_id', 
                   'as': 'carInfo'
-                }
-              },
-              {
+            }
+            },
+            {
                 '$project': {
                   "folio":1,
                   "planType":1,
                   "paymentType":1,
-                  'branchCode': {
-                    '$first': '$branchInfo.code'
+                  'branchId._id': {
+                    '$first': '$branchInfo._id'
                   },
-                  'branchName': {
+                  'branchId.name': {
                     '$first': '$branchInfo.name'
                   },
-                  'carName': {
+                  'branchId.code': {
+                    '$first': '$branchInfo.code'
+                  },
+                  'carId._id': {
+                    '$first': '$carInfo._id'
+                  },
+                  'carId.name': {
                     '$first': '$carInfo.name'
-                  }  
+                  },
+                  'createdAt'  :1
 
-                }
-              }, {
-                '$match': {
-                  '$or': [
+              }
+            }, {
+              '$match': {
+                 '$or': [
                     {
-                      'branchCode': {
+                      'branchId.code': {
                         '$regex': searchString, 
                         '$options': 'i'
                       }
                     }, {
-                      'branchName': {
+                      'branchId.name': {
                         '$regex': searchString, 
                         '$options': 'i'
                       }
                     },
                     {
-                        'carName': {
+                        'carId.name': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
@@ -317,8 +370,22 @@ const rentalList = async function (req, reply){
                       
                   ]
                 }
-              }
-            ]
+            }
+        )
+        let sortQuery={
+            '$sort':{}
+        };
+        if (req.query.column){
+            let sortColumn = req.query.column;
+            let order = req.query.order == "desc" ? -1: 1
+            sortQuery['$sort'][sortColumn]=order;
+        }
+        else{
+            sortQuery['$sort']['createdAt']=-1;
+        }
+       
+        aggregateQuery.push(sortQuery)
+        
 
         let rentalsSearch = await Rental.aggregate(aggregateQuery);
         rentalsPaginated.docs = rentalsSearch;
