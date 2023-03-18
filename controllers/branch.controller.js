@@ -21,7 +21,7 @@ const branchCreate = async function (req, reply){
     if(req.body.code.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'No se permiten espacios en blanco en elcódigo'
+                message: 'No se permiten espacios en blanco en el código'
             })
     }
     
@@ -190,7 +190,7 @@ const branchDelete = async function (req, reply){
     await updatedBranch.save();
     reply.code(200).send({
         status: 'success',
-        message: 'Sucursal eliminada correctamente'           
+        message: 'Sucursal '+updatedBranch.name+' eliminada correctamente'           
         
     }) 
     

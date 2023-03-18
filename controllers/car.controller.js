@@ -261,7 +261,7 @@ const carDelete = async function (req, reply){
     await updatedCar.save();
     reply.code(200).send({
         status: 'success',
-        message: 'Carrito eliminado correctamente'           
+        message: 'Carrito '+updatedCar.name+'eliminado correctamente'           
         
     })   
     
