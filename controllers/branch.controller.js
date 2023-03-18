@@ -281,13 +281,32 @@ const branchList = async function (req, reply){
     if (req.query.page){
         options.limit = req.query.perPage;
     }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"name":1}
+    }
     let branchesPaginated={};
     if(!req.query.search){        
         if(options.page!=null && options.limit!=null){
             branchesPaginated = await Branch.paginate(searchQuery, options);
         }
         else{
-            branchesPaginated.docs = await Branch.find(searchQuery);
+            let sortOrder = {}
+            if(req.query.column){
+                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    name:1
+                }
+            }
+            branchesPaginated.docs = await Branch.find(searchQuery).sort(sortOrder).lean();
         }       
 
         
@@ -329,6 +348,18 @@ const branchList = async function (req, reply){
                 }
               }
             ]
+        let sortQuery={
+           '$sort':{}
+        };
+        if (req.query.column){
+           let sortColumn = req.query.column;
+           let order = req.query.order == "desc" ? -1: 1
+           sortQuery['$sort'][sortColumn]=order;
+        }
+        else{
+            sortQuery['$sort']['name']=1;
+        }
+        aggregateQuery.push(sortQuery)
 
         let branchesSearch = await Branch.aggregate(aggregateQuery);
         branchesPaginated.docs = branchesSearch;

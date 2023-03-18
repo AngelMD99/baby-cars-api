@@ -330,8 +330,7 @@ const carList = async function (req, reply){
         options.sort={"name":1}
     }
     let carsPaginated={};
-    if(!req.query.search){
-        console.log("OPTIONS: ",options)
+    if(!req.query.search){        
         //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
         if(options.page!=null && options.limit!=null){
@@ -365,7 +364,7 @@ const carList = async function (req, reply){
             carsPaginated.totalPages=carsQuery.totalPages;
         }
         else{
-            sortOrder = {}
+            let sortOrder = {}
             if(req.query.column){
                 
                 sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
@@ -375,7 +374,6 @@ const carList = async function (req, reply){
                     name:1
                 }
             }
-            console.log("SORT ORDER: ",sortOrder)
             carsPaginated.docs=[]
             let carsQuery = await Car.find(searchQuery).sort(sortOrder).lean();
             carsQuery.forEach(car => {
