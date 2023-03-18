@@ -211,7 +211,12 @@ const branchesAvailable = async function (req, reply){
                 'branchId.name': '$name', 
                 'branchId.code': '$code'
               }
-            }
+            },
+            {
+                '$sort' :{
+                 'branchId.name':1
+                }
+             }
           ]
     ]
 
@@ -242,11 +247,18 @@ const plansAvailable = async function (req, reply){
             'planId.time': '$plans.time', 
             'planId.price': '$plans.price'
           }
+        },{
+           '$sort' :{
+            'planId.time':1
+           }
         }
       ]
     
+    
+    
 
     let availablePlans = await Branch.aggregate(aggregateQuery);
+
     reply.code(200).send({
         status:'sucess',
         data:availablePlans

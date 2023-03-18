@@ -51,8 +51,7 @@ const carCreate = async function (req, reply){
     if(branchId){
         car.branchId=branchId;
     }
-    const car = new Car(req.body); 
-    console.log("HERE")   
+    const car = new Car(req.body);     
     
     car._id = mongoose.Types.ObjectId();
     await car.save()
@@ -287,7 +286,11 @@ const carsAvailable = async function (req, reply){
                 'carId._id': '$_id', 
                 'carId.name': '$name'                 
               }
-            }
+            },{
+                '$sort' :{
+                 'carId.name':1
+                }
+             }
         
     ]
 
@@ -317,8 +320,19 @@ const carList = async function (req, reply){
     if (req.query.page){
         options.limit = req.query.perPage;
     }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"name":1}
+    }
     let carsPaginated={};
-    if(!req.query.search){        
+    if(!req.query.search){
+        console.log("OPTIONS: ",options)
+        //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
         if(options.page!=null && options.limit!=null){
             carsPaginated.docs=[];
@@ -351,8 +365,19 @@ const carList = async function (req, reply){
             carsPaginated.totalPages=carsQuery.totalPages;
         }
         else{
+            sortOrder = {}
+            if(req.query.column){
+                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    name:1
+                }
+            }
+            console.log("SORT ORDER: ",sortOrder)
             carsPaginated.docs=[]
-            let carsQuery = await Car.find(searchQuery).lean();
+            let carsQuery = await Car.find(searchQuery).sort(sortOrder).lean();
             carsQuery.forEach(car => {
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(car.branchId)
@@ -457,6 +482,18 @@ const carList = async function (req, reply){
                 }
               }
             ]
+            let sortQuery={
+                '$sort':{}
+            };
+            if (req.query.column){
+                let sortColumn = req.query.column;
+                let order = req.query.order == "desc" ? -1: 1
+                sortQuery['$sort'][sortColumn]=order;
+            }
+            else{
+                sortQuery['$sort']['name']=1;
+            }
+            aggregateQuery.push(sortQuery)
 
         let carsSearch = await Car.aggregate(aggregateQuery);
         carsPaginated.docs = carsSearch;
