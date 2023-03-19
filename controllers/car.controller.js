@@ -25,8 +25,8 @@ const carCreate = async function (req, reply){
             })
     } 
 
-    if(req.body.branchId!=null && req.body.branchId._id){        
-        let branchValidation= isValidObjectId(req.body.branchId._id)
+    if(req.body.branchId!=null && req.body.branchId!=""){        
+        let branchValidation= isValidObjectId(req.body.branchId)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -34,7 +34,7 @@ const carCreate = async function (req, reply){
             })
         }
         else{
-            let activeBranch= await Branch.findOne({_id:req.body.branchId._id,isDeleted:false})
+            let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
             if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
@@ -45,13 +45,13 @@ const carCreate = async function (req, reply){
         }
     }  
     
-    let branchId = req.body.branchId ? req.body.branchId._id:null;    
+    let branchId = req.body.branchId;    
 
-    delete req.body.branchId;
+    delete req.body.branchId;    
+    const car = new Car(req.body);     
     if(branchId){
         car.branchId=branchId;
     }
-    const car = new Car(req.body);     
     
     car._id = mongoose.Types.ObjectId();
     await car.save()
@@ -114,7 +114,7 @@ const carShow = async function (req, reply){
     
 }
 
-const carUpdate = async function (req, reply){
+const carUpdate = async function (req, reply){    
         //let loggedUser = await req.jwtVerify();
     //let error;
     if(req.body.ipAddress!=null){
@@ -133,8 +133,8 @@ const carUpdate = async function (req, reply){
         }
     }
 
-    if(req.body.branchId!=null && req.body.branchId._id){        
-        let branchValidation= isValidObjectId(req.body.branchId._id)
+    if(req.body.branchId!=null && req.body.branchId!=""){        
+        let branchValidation= isValidObjectId(req.body.branchId)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -142,7 +142,7 @@ const carUpdate = async function (req, reply){
             })
         }
         else{
-            let activeBranch= await Branch.findOne({_id:req.body.branchId._id,isDeleted:false})
+            let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
             if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
@@ -176,8 +176,12 @@ const carUpdate = async function (req, reply){
     //     await Car.updateOne({_id:req.params.id}, { $unset: { branchId: 1 } })
         
     // }  
- 
-    inputs.ipAddress = req.body.ipAddress;
+    if(req.body.branchId && req.body.ipAddress!=""){
+        inputs.branchId = req.body.branchId;
+    }
+    if(req.body.ipAddress && req.body.ipAddress!=""){
+        inputs.ipAddress = req.body.ipAddress;
+    }    
     inputs.name = req.body.name;
     inputs.color = req.body.color;    
     let updatedCar = await Car.findByIdAndUpdate({_id: req.params.id},inputs,{

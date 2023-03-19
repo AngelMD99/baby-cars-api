@@ -86,14 +86,7 @@ const postCarUpOpts = {
         body: {
             type: 'object',
             properties: {                
-                branchId: { 
-                    type: 'object',
-                    properties:{
-                        _id:{type:'string'},
-                        code:{type:'string'},
-                        name:{type:'string'}
-                    }
-                },
+                branchId: {type:'string'},
                 ipAddress: { type: 'string' },
                 name: { type: 'string' }, 
                 color: { type: 'string'},                               
@@ -169,14 +162,7 @@ const putSingleCarOpts={
                 name: { type: 'string' },                
                 color: { type: 'string' },              
                 ipAddress: { type: 'string' }, 
-                branchId: { 
-                    type: 'object',
-                    properties:{
-                        _id:{type:'string'},
-                        code:{type:'string'},
-                        name:{type:'string'}
-                    }
-                }                
+                branchId: {type:'string'},              
 
             },
         },      
