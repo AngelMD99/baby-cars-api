@@ -1,4 +1,4 @@
-const { carCreate, carDelete, carShow, carStart, carStop, carUpdate, carList } = require('../controllers/car.controller');
+const { carCreate, carDelete, carShow, carStart, carStop, carUpdate, carList, carsAvailable } = require('../controllers/car.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -73,6 +73,19 @@ const carDef = {
         // branchCode:{type:'string'},
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
+    }
+}
+
+const carAvailableDef = { 
+    type: 'object', 
+    properties: {
+        carId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'}         
+            }
+        }                        
     }
 }
 
@@ -245,16 +258,48 @@ const getCarsOpts={
     
 }
 
+const getCarsAvailableOpts={
+    schema: {
+         description:"Retrieves the information of all the car options to use them in the form controls.",
+         tags:['Cars'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:carAvailableDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carsAvailable,
+    
+}
+
 function crmCarsRoutes(fastify, options, done) {
     fastify.post('/crm/cars', postCarUpOpts)
     fastify.get('/crm/cars/:id', getSingleCarOpts)    
     fastify.put('/crm/cars/:id', putSingleCarOpts)
     fastify.delete('/crm/cars/:id', deleteSingleCarOpts)
     fastify.get('/crm/cars', getCarsOpts)
-    
-    
-    //fastify.delete('/crm/branches/:id', deleteSingleBranchOpts)
-
+    fastify.get('/crm/cars/available', getCarsAvailableOpts)  
 done()
 }
 module.exports = crmCarsRoutes

@@ -289,26 +289,40 @@ const carBranchList = async function (req, reply){
 
 const carsAvailable = async function (req, reply){
 
+
     let aggregateQuery=[
         
             {
               '$match': {
-                'isDeleted': false,
-                'branchId':ObjectId(req.params.id)
+                'isDeleted': false,                
               }
-            }, {
-              '$project': {
-                '_id': 0, 
-                'carId._id': '$_id', 
-                'carId.name': '$name'                 
-              }
-            },{
-                '$sort' :{
-                 'carId.name':1
-                }
-             }
+            } 
         
     ]
+
+    if( req.params.id){
+        aggregateQuery.push(            {
+            '$match': {              
+              'branchId':ObjectId(req.params.id)
+            }
+        })
+    }
+
+    aggregateQuery.push(
+        {
+            '$project': {
+              '_id': 0, 
+              'carId._id': '$_id', 
+              'carId.name': '$name'                 
+            }
+          },{
+              '$sort' :{
+               'carId.name':1
+              }
+           }
+    )
+
+    
 
     let availableCars = await Car.aggregate(aggregateQuery);
     reply.code(200).send({
