@@ -102,6 +102,7 @@ const branchUpdate = async function (req, reply){
 
     updatedBranch.code = req.body.code!=null ? req.body.code : updatedBranch.code;
     updatedBranch.name = req.body.name!=null ? req.body.name : updatedBranch.name;
+    updatedBranch.plans = req.body.plans!=null ? req.body.plans : updatedBranch.plans;
     updatedBranch.location = req.body.location!=null ? req.body.location : updatedBranch.location;
     if (req.body.password!=null && req.body.password!=""){
         let plainPassword = req.body.password
