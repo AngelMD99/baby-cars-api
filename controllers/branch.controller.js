@@ -200,12 +200,7 @@ const branchDelete = async function (req, reply){
 const branchesAvailable = async function (req, reply){
 
     let aggregateQuery=[
-        [
-            {
-              '$match': {
-                'isDeleted': false
-              }
-            }, {
+        [  {
               '$project': {
                 '_id': 0, 
                 'branchId._id': '$_id', 

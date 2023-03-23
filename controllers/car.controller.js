@@ -292,17 +292,18 @@ const carsAvailable = async function (req, reply){
 
     let aggregateQuery=[
         
-            {
-              '$match': {
-                'isDeleted': false,                
-              }
-            } 
+            // {
+            //   '$match': {
+            //     'isDeleted': false,                
+            //   }
+            // } 
         
     ]
 
     if( req.params.id){
         aggregateQuery.push(            {
-            '$match': {              
+            '$match': {  
+              'isDeleted':false,              
               'branchId':ObjectId(req.params.id)
             }
         })

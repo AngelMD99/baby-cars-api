@@ -157,6 +157,7 @@ const rentalList = async function (req, reply){
     let searchQuery = {
         isDeleted: false,			
     };
+    console.log("RENTAL QUERY: ",req.query.branchId)
     if (req.query.branchId){
         searchQuery['branchId']=ObjectId(req.query.branchId)
     }
