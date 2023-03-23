@@ -188,7 +188,9 @@ const rentalList = async function (req, reply){
             })
         }
         let initialDay=new Date(req.query.initialDate);
-        let finalDay=new Date(req.query.finalDate);        
+        let finalDay= addDays(req.query.finalDate,1)
+        console.log("initialDay: ",initialDay)
+        console.log("finalDay: ",finalDay)
         searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
     }
     if (req.query.initialDate!=null){        
@@ -197,7 +199,7 @@ const rentalList = async function (req, reply){
 
     }
     if (req.query.finalDate!=null){
-        let finalDay=new Date(req.query.finalDate);
+        let finalDay= addDays(req.query.finalDate,1)
         searchQuery['createdAt']={"$lte": finalDay}
 
     }
@@ -456,6 +458,12 @@ const rentalList = async function (req, reply){
     })
 
     
+}
+
+function addDays(date, days) {
+    var newDate = new Date(date.valueOf());
+    newDate.setDate(newDate.getDate() + days);
+    return newDate;
 }
 
 function paginateArray(array, limit, page) {
