@@ -312,7 +312,7 @@ const carsAvailable = async function (req, reply){
     aggregateQuery.push(
         {
             '$project': {
-              '_id': 0, 
+              '_id': 0,              
               'carId._id': '$_id', 
               'carId.name': '$name'                 
             }

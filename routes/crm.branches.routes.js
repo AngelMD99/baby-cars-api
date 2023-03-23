@@ -48,6 +48,7 @@ const branchAvailableDef = {
             type: 'object',
             properties:{
                 _id:{type:'string'},
+                isDeleted:{type:'boolean'},
                 name:{type:'string'},
                 code:{type:'string'},
 

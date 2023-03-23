@@ -202,8 +202,9 @@ const branchesAvailable = async function (req, reply){
     let aggregateQuery=[
         [  {
               '$project': {
-                '_id': 0, 
+                '_id': 0,                 
                 'branchId._id': '$_id', 
+                'branchId.isDeleted':'$isDeleted',
                 'branchId.name': '$name', 
                 'branchId.code': '$code'
               }
@@ -220,11 +221,13 @@ const branchesAvailable = async function (req, reply){
     availableBranches.unshift({
         branchId:{
             _id:"",
+            isDeleted:false,
             name:"<Sin sucursal>",
             code:""
 
         }
     })
+
     reply.code(200).send({
         status:'sucess',
         data:availableBranches
