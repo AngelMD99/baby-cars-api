@@ -7,7 +7,8 @@ const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
-const { getOffsetSetting } = require('../controllers/base.controller')
+const { getOffsetSetting } = require('../controllers/base.controller');
+const { findOneAndDelete } = require('../models/Branch');
 
 const rentalCreate = async function (req, reply){
 
@@ -154,10 +155,21 @@ const rentalShow = async function (req, reply){
 }
 
 const rentalList = async function (req, reply){
+    // for (let [key, value] of Object.entries(req.query)) {
+                
+    //   if (value == "" || value==null) { 
+    //     delete req.query[key]
+    //   }      
+    // }
     let searchQuery = {
         isDeleted: false,			
     };
-    console.log("RENTAL QUERY: ",req.query.branchId)
+    
+    // let initialDate=new Date(req.query.initialDate)
+    // console.log("Initial Date: ",initialDate)
+    // console.log("FINAL DATE RECEIVED: ",req.query.finalDate)
+    // let finalDate=new Date(req.query.finalDate)
+    // console.log(finalDate)
     if (req.query.branchId){
         searchQuery['branchId']=ObjectId(req.query.branchId)
     }
@@ -166,8 +178,30 @@ const rentalList = async function (req, reply){
     }
     const options = {
         select: `-isDeleted -__v`, 
+    }
+    if (req.query.initialDate!=null && req.query.finalDate!=null){
+        console.log("BOTH DATES")
+        if(req.query.initialDate>req.query.finalDate){
+            reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
+        }
+        let initialDay=new Date(req.query.initialDate);
+        let finalDay=new Date(req.query.finalDate);        
+        searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
+    }
+    if (req.query.initialDate!=null){        
+        let initialDay=new Date(req.query.initialDate);
+        searchQuery['createdAt']={"$gte": initialDay}
 
     }
+    if (req.query.finalDate!=null){
+        let finalDay=new Date(req.query.finalDate);
+        searchQuery['createdAt']={"$lte": finalDay}
+
+    }
+
     if (req.query.page){
         options.page = req.query.page;
     }
