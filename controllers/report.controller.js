@@ -23,26 +23,55 @@ const rentalsReport = async function (req, reply){
         let carId = mongoose.Types.ObjectId(req.query.carId)
         aggregateQuery.push({ "$match": {"carId": carId }});        
     }
-    
-    if (req.query.initialDate != null && req.query.lastDate != null){
-        let initialDate = parseDate(req.query.initialDate);
-        //let offset = await getOffsetSetting();              
-        //let offset = req.headers.offset ? Number(req.headers.offset) : 6        
 
-        //initialDate.setHours(0,0,0,0);
-        let lastDate = parseDate(req.query.lastDate);
-        lastDate = addDays(lastDate, 1)
-        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-            initialDate.setHours(offset,0,0,0);    
-            lastDate.setHours(offset, 0, 0, 0);
+    let dateMatchStage={};
+    if (req.query.initialDate!=null && req.query.finalDate!=null){        
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
         }
-        else{
-            initialDate.setHours(0,0,0,0);
-            lastDate.setHours(0, 0, 0, 0);
+
+        let finalDay= addDays(finalDayToDate,1)        
+        dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+    if (req.query.initialDate!=null && req.query.finalDate==null){        
+        let initialDay=new Date(req.query.initialDate);
+        dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+    }
     
+    if (req.query.finalDate!=null && req.query.initialDate==null){
+        let finalDay= addDays(req.query.finalDate,1)
+        dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
         }
-        aggregateQuery.push({ "$match": {"createdAt": {"$gte": initialDate,"$lte":lastDate}}});        
-    }   
+
+    if(dateMatchStage['$match']!=null){
+        aggregateQuery.push(dateMatchStage)
+    }
+
+    
+    // if (req.query.initialDate != null && req.query.lastDate != null){
+    //     let initialDate = parseDate(req.query.initialDate);
+    //     //let offset = await getOffsetSetting();              
+    //     //let offset = req.headers.offset ? Number(req.headers.offset) : 6        
+
+    //     //initialDate.setHours(0,0,0,0);
+    //     let lastDate = parseDate(req.query.lastDate);
+    //     lastDate = addDays(lastDate, 1)
+    //     if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+    //         initialDate.setHours(offset,0,0,0);    
+    //         lastDate.setHours(offset, 0, 0, 0);
+    //     }
+    //     else{
+    //         initialDate.setHours(0,0,0,0);
+    //         lastDate.setHours(0, 0, 0, 0);
+    
+    //     }
+    //     aggregateQuery.push({ "$match": {"createdAt": {"$gte": initialDate,"$lte":lastDate}}});        
+    // }   
          
       
     aggregateQuery.push(
@@ -91,8 +120,7 @@ const rentalsReport = async function (req, reply){
         //   }
     )
 
-    let rentals = await Rental.aggregate(aggregateQuery);
-    console.log("RENTALS: ",rentals)      
+    let rentals = await Rental.aggregate(aggregateQuery);        
     rentals.forEach(rental=>{
         if(rental['Tipo de pago']){
             switch (rental['Tipo de pago']) {
@@ -448,10 +476,7 @@ function dateTimeHHSS(timestamp){
 
     let hours = timestamp.getHours();    
     let minutes = timestamp.getMinutes()
-    let hours12 = (hours % 12) || 12; 
-    console.log("TIMESTAMP: ",timestamp)
-    console.log("HOURS:",hours)  
-    console.log("HOURS 12: ",hours12) 
+    let hours12 = (hours % 12) || 12;     
     let stringMinutes = minutes < 10 ? "0"+minutes : minutes;
     let stringHours = hours12 < 10 ? "0"+hours12 : hours12;
     let stringDate = stringHours+":"+stringMinutes;
