@@ -179,30 +179,28 @@ const rentalList = async function (req, reply){
     const options = {
         select: `-isDeleted -__v`, 
     }
-    if (req.query.initialDate!=null && req.query.finalDate!=null){
-        console.log("BOTH DATES")
-        if(req.query.initialDate>req.query.finalDate){
-            reply.code(400).send({
+    if (req.query.initialDate!=null && req.query.finalDate!=null){      
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
                 status:'fail',
                 message:'La fecha inicial no puede ser mayor que la fecha final'
             })
         }
-        let initialDay=new Date(req.query.initialDate);
-        let finalDay= addDays(req.query.finalDate,1)
-        console.log("initialDay: ",initialDay)
-        console.log("finalDay: ",finalDay)
+
+        let finalDay= addDays(finalDayToDate,1)                
         searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
     }
-    if (req.query.initialDate!=null){        
+    if (req.query.initialDate!=null && req.query.finalDate==null){        
         let initialDay=new Date(req.query.initialDate);
         searchQuery['createdAt']={"$gte": initialDay}
 
     }
-    if (req.query.finalDate!=null){
+    if (req.query.finalDate!=null && req.query.initialDate==null){
         let finalDay= addDays(req.query.finalDate,1)
         searchQuery['createdAt']={"$lte": finalDay}
-
-    }
+    }  
 
     if (req.query.page){
         options.page = req.query.page;
@@ -319,13 +317,17 @@ const rentalList = async function (req, reply){
         let diacriticSearch = diacriticSensitiveRegex(req.query.search);
         let searchString = '.*'+diacriticSearch+'.*';
 
+
   //    let searchString = '.*'+req.query.search+'.*';
         delete options.select;
+        let dateMatchStage={};
         let aggregateQuery=[{
             '$match': {
               'isDeleted': false
             }
         }];
+
+        
 
         if(req.query.branchId){
             aggregateQuery.push({
@@ -342,6 +344,33 @@ const rentalList = async function (req, reply){
                 }
             })
             
+        }
+        if (req.query.initialDate!=null && req.query.finalDate!=null){        
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
+        }
+
+        let finalDay= addDays(finalDayToDate,1)        
+        dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+        if (req.query.initialDate!=null && req.query.finalDate==null){        
+            let initialDay=new Date(req.query.initialDate);
+            dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+
+        }
+        if (req.query.finalDate!=null && req.query.initialDate==null){
+            let finalDay= addDays(req.query.finalDate,1)
+            dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+
+        }
+
+        if(dateMatchStage['$match']!=null){
+            aggregateQuery.push(dateMatchStage)
         }
         
         aggregateQuery.push(
@@ -419,8 +448,8 @@ const rentalList = async function (req, reply){
         }
         else{
             sortQuery['$sort']['createdAt']=-1;
-        }
-       
+        }      
+        
         aggregateQuery.push(sortQuery)
         
 
