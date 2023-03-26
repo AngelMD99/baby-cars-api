@@ -217,7 +217,7 @@ const rentalList = async function (req, reply){
     else{
         options.sort={"createdAt":-1}
     }
-    console.log("OPTIONS: ",options)
+    
     let rentalsPaginated={};
     if(!req.query.search){        
         let allBranches = await Branch.find({});
@@ -468,7 +468,8 @@ const rentalList = async function (req, reply){
     //if(!req.query.page || !req.query.perPage){
 
         let docs = JSON.stringify(rentalsPaginated.docs);    
-        var cars = JSON.parse(docs);
+        var rentals = JSON.parse(docs);
+        
     //}
     // else{
     //     cars=rentalsPaginated.docs
@@ -478,7 +479,359 @@ const rentalList = async function (req, reply){
 
     reply.code(200).send({
         status: 'success',
-        data: cars,
+        data: rentals,
+        page: rentalsPaginated.page,
+        perPage:rentalsPaginated.perPage,
+        totalDocs: rentalsPaginated.totalDocs,
+        totalPages: rentalsPaginated.totalPages,
+
+    })
+
+    
+}
+
+const branchRentalsList = async function (req, reply){
+
+    let offset = await getOffsetSetting();              
+    let today = new Date ();
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        today.setHours(offset,0,0,0);    
+        today.setHours(offset, 0, 0, 0);
+    }
+    else{
+        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
+    }
+
+    let nextDay = addDays(today,1)
+    // console.log("TODAY: ",today);
+    // console.log("NEXT DAY: ",nextDay)
+    
+    let searchQuery = {
+        isDeleted: false,
+        branchId:ObjectId(req.params.id),
+        createdAt:{"$gte": today,"$lte":nextDay}			
+    };    
+    
+    // console.log("SEARCH QUERY: ",searchQuery);
+    // if (req.query.branchId){
+    //     searchQuery['branchId']=ObjectId(req.query.branchId)
+    // }
+    // if (req.query.carId){
+    //     searchQuery['carId']=ObjectId(req.query.carId)        
+    // }
+    const options = {
+        select: `-isDeleted -__v`, 
+    }
+    
+
+
+
+    // if (req.query.initialDate!=null && req.query.finalDate!=null){      
+    //     let initialDay=new Date(req.query.initialDate);
+    //     let finalDayToDate =new Date(req.query.finalDate)
+    //     if(initialDay.getTime() > finalDayToDate.getTime()){
+    //         return reply.code(400).send({
+    //             status:'fail',
+    //             message:'La fecha inicial no puede ser mayor que la fecha final'
+    //         })
+    //     }
+
+    //     let finalDay= addDays(finalDayToDate,1)                
+    //     searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
+    // }
+    // if (req.query.initialDate!=null && req.query.finalDate==null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     searchQuery['createdAt']={"$gte": initialDay}
+
+    // }
+    // if (req.query.finalDate!=null && req.query.initialDate==null){
+    //     let finalDay= addDays(req.query.finalDate,1)
+    //     searchQuery['createdAt']={"$lte": finalDay}
+    // }  
+
+    if (req.query.page){
+        options.page = req.query.page;
+    }
+    if (req.query.page){
+        options.limit = req.query.perPage;
+    }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"createdAt":-1}
+    }
+    let rentalsPaginated={};
+    if(!req.query.search){        
+        let allBranches = await Branch.find({});
+        let allCars = await Car.find({});
+        if(options.page!=null && options.limit!=null){
+            rentalsPaginated.docs=[]
+            let rentalsQuery = await Rental.paginate(searchQuery, options);             
+            rentalsQuery.docs.forEach(rental => {
+                let newObj={
+                    _id:rental._id,
+                    folio:rental.folio,
+                    planType:rental.planType,
+                    paymentType:rental.paymentType,
+                    createdAt:rental.createdAt,
+                    updatedAt:rental.updatedAt
+                }
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(rental.branchId)
+                })
+                newObj.branchId={
+                    _id : rental.branchId ? rental.branchId:"",
+                    name: branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                } 
+                delete rental.branchId;
+                let carInfo = allCars.find(branch=>{
+                    return String(branch._id) == String(rental.carId)
+                })
+                newObj.carId={
+                    _id: rental.carId ? rental.carId :"",
+                    name : carInfo && carInfo.name ? carInfo.name : "",                
+
+                }
+                delete rental.carId;
+               
+                rentalsPaginated.docs.push(newObj)                
+            });
+            rentalsPaginated.page=rentalsQuery.page;
+            rentalsPaginated.perPage=rentalsQuery.limit;
+            rentalsPaginated.totalDocs=rentalsQuery.totalDocs;
+            rentalsPaginated.totalPages=rentalsQuery.totalPages;
+            
+        }
+        else{
+            let sortOrder = {}
+            if(req.query.column){
+                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    createdAt:-1
+                }
+            }
+            rentalsPaginated.docs=[]
+            let rentalsQuery = await Rental.find(searchQuery).sort(sortOrder).lean();
+            rentalsQuery.forEach(rental => {
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(rental.branchId)
+                })
+                let carInfo = allCars.find(branch=>{
+                    return String(branch._id) == String(rental.carId)
+                })
+                let carId = rental.carId;
+                let branchId = rental.branchId;
+                rental.carId={
+                    _id:carId? carId:"",
+                    name:carInfo && carInfo.name ? carInfo.name : "",
+                }
+                
+                //rentalsPaginated.docs.push(rental)            
+                rental.branchId={
+                    _id:branchId ? branchId :"",
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                }
+
+                
+                //delete rental.branchId;                
+                rentalsPaginated.docs.push(rental)                
+
+                
+            });
+        }
+        
+        
+        
+        
+
+        
+    }
+    else{
+        // branchSearch = await Car.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // rentalsPaginated.totalDocs = branchSearch.length;
+        let diacriticSearch = diacriticSensitiveRegex(req.query.search);
+        let searchString = '.*'+diacriticSearch+'.*';
+
+
+  //    let searchString = '.*'+req.query.search+'.*';
+        delete options.select;
+        // let dateMatchStage={};
+        let aggregateQuery=[{
+            '$match': {
+              'isDeleted': false,
+              'branchId':ObjectId(req.params.id),
+              'createdAt':{"$gte": today,"$lte":nextDay}			
+            }
+        }];
+
+        
+
+        // if(req.query.branchId){
+        //     aggregateQuery.push({
+        //         '$match': {
+        //           'branchId': ObjectId(req.query.branchId)
+        //         }
+        //     })
+        // }
+
+        // if(req.query.carId){
+        //     aggregateQuery.push({
+        //         '$match': {
+        //           'branchId': ObjectId(req.query.carId)
+        //         }
+        //     })
+            
+        // }
+        // if (req.query.initialDate!=null && req.query.finalDate!=null){        
+        // let initialDay=new Date(req.query.initialDate);
+        // let finalDayToDate =new Date(req.query.finalDate)
+        // if(initialDay.getTime() > finalDayToDate.getTime()){
+        //     return reply.code(400).send({
+        //         status:'fail',
+        //         message:'La fecha inicial no puede ser mayor que la fecha final'
+        //     })
+        // }
+
+        // let finalDay= addDays(finalDayToDate,1)        
+        // dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+        // if (req.query.initialDate!=null && req.query.finalDate==null){        
+        //     let initialDay=new Date(req.query.initialDate);
+        //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+
+        // }
+        // if (req.query.finalDate!=null && req.query.initialDate==null){
+        //     let finalDay= addDays(req.query.finalDate,1)
+        //     dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+
+        // }
+
+        // if(dateMatchStage['$match']!=null){
+        //     aggregateQuery.push(dateMatchStage)
+        // }
+        
+        aggregateQuery.push(
+           {
+                '$lookup': {
+                  'from': 'branches', 
+                  'localField': 'branchId', 
+                  'foreignField': '_id', 
+                  'as': 'branchInfo'
+                }
+            },
+            {
+                '$lookup': {
+                  'from': 'cars', 
+                  'localField': 'carId', 
+                  'foreignField': '_id', 
+                  'as': 'carInfo'
+            }
+            },
+            {
+                '$project': {
+                  "isDeleted":1,  
+                  "folio":1,
+                  "planType":1,
+                  "paymentType":1,
+                  'branchId._id': {
+                    '$first': '$branchInfo._id'
+                  },
+                  'branchId.name': {
+                    '$first': '$branchInfo.name'
+                  },
+                  'branchId.code': {
+                    '$first': '$branchInfo.code'
+                  },
+                  'carId._id': {
+                    '$first': '$carInfo._id'
+                  },
+                  'carId.name': {
+                    '$first': '$carInfo.name'
+                  },
+                  'createdAt'  :1
+
+              }
+            }, {
+              '$match': {
+                 '$or': [
+                    {
+                      'branchId.code': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    }, {
+                      'branchId.name': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    },
+                    {
+                        'carId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      
+                  ]
+                }
+            }
+        )
+        let sortQuery={
+            '$sort':{}
+        };
+        if (req.query.column){
+            let sortColumn = req.query.column;
+            let order = req.query.order == "desc" ? -1: 1
+            sortQuery['$sort'][sortColumn]=order;
+        }
+        else{
+            sortQuery['$sort']['createdAt']=-1;
+        }      
+        
+        aggregateQuery.push(sortQuery)
+        console.log("AGGREGATE QUERY: ",aggregateQuery[0])
+        
+
+        let rentalsSearch = await Rental.aggregate(aggregateQuery);
+        rentalsPaginated.docs = rentalsSearch;
+        rentalsPaginated.totalDocs = rentalsPaginated.docs.length
+
+        rentalsPaginated.page=req.query.page ? req.query.page : 1;
+        rentalsPaginated.perPage=req.query.perPage ? req.query.perPage :rentalsPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : rentalsPaginated.totalDocs;
+        let page = req.query.page ? req.query.page : 1;
+        rentalsPaginated.docs=paginateArray(rentalsSearch,limit,page);
+        rentalsPaginated.totalPages = Math.ceil(rentalsPaginated.totalDocs / rentalsPaginated.perPage);
+
+    }
+    //if(!req.query.page || !req.query.perPage){
+
+        let docs = JSON.stringify(rentalsPaginated.docs);    
+        var rentals = JSON.parse(docs);
+        console.log(rentals[0])
+
+    //}
+    // else{
+    //     cars=rentalsPaginated.docs
+    // }
+        
+    
+
+    reply.code(200).send({
+        status: 'success',
+        data: rentals,
         page: rentalsPaginated.page,
         perPage:rentalsPaginated.perPage,
         totalDocs: rentalsPaginated.totalDocs,
@@ -518,4 +871,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { rentalCreate, rentalShow, rentalList}
+module.exports = { rentalCreate, rentalShow, rentalList, branchRentalsList}

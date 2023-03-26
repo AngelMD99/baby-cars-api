@@ -43,6 +43,7 @@ const rentalDef = {
     type: 'object',    
     properties: {
         _id: { type: 'string' },                
+        folio: { type: 'string' },                
         branchCode :{type:'string'},
         branchId:{
             type:'object',
