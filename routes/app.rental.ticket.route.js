@@ -41,6 +41,13 @@ module.exports = function (fastify, opts, done) {
                 message: 'El tipo de pago es requerido'
             })
         }
+
+        if(!req.body.planType || !req.body.planType.time || !req.body.planType.price){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El plan con costo y tiempo es requerido'
+            })
+        }
     
         
         let branchValidation= isValidObjectId(req.body.branchId)
