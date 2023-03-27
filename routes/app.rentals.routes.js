@@ -85,21 +85,8 @@ const postRentalUpOpts = {
             type: 'object',
             required: ['branchId','carId','planType','paymentType'], 
             properties: {                
-                branchId:{
-                    type:'object',
-                    properties:{
-                        _id:{type:'string'},
-                        code:{type:'string'},
-                        name:{type:'string'}
-                    }
-                },
-                carId:{
-                    type:'object',
-                    properties:{
-                        _id:{type:'string'},                        
-                        name:{type:'string'}
-                    }
-                },
+                branchId:{type:'string'},
+                carId:{type:'string'},
                 planType: {
                       type:'object',
                          properties:{
@@ -117,7 +104,8 @@ const postRentalUpOpts = {
                 type: 'object',
                 properties: {
                     status: { type: 'string' },
-                    data: rentalDef
+                    message: {type:'string'},
+                    path:{type:'string'}
                 }
             },
             400: errResponse
@@ -129,7 +117,7 @@ const postRentalUpOpts = {
 
 
 function appRentalsRoutes(fastify, options, done) {
-    fastify.post('/rentals', postRentalUpOpts)    
+    //fastify.post('/rentals', postRentalUpOpts)    
     // fastify.get('/crm/branches', getBranchesOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     

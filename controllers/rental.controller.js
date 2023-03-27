@@ -11,9 +11,29 @@ const { getOffsetSetting } = require('../controllers/base.controller');
 const { findOneAndDelete } = require('../models/Branch');
 
 const rentalCreate = async function (req, reply){
+    if(!req.body.branchId){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'La sucursal es requerida'
+        })
+    }
+
+    if(!req.body.carId){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El carrito es requerido'
+        })
+    }
+
+    if(!req.body.paymentType){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El tipo de pago es requerido'
+        })
+    }
 
     
-    let branchValidation= isValidObjectId(req.body.branchId._id)
+    let branchValidation= isValidObjectId(req.body.branchId)
         if (branchValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -21,7 +41,7 @@ const rentalCreate = async function (req, reply){
             })
     }
     
-    let activeBranch= await Branch.findOne({_id:req.body.branchId._id,isDeleted:false})
+    let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
         if(!activeBranch){
                 return reply.code(400).send({
                     status: 'fail',
@@ -32,7 +52,7 @@ const rentalCreate = async function (req, reply){
        
     
     //if(req.body.carId!=null){        
-        let carValidation= isValidObjectId(req.body.carId._id)
+        let carValidation= isValidObjectId(req.body.carId)
         if (carValidation==false){
             return reply.code(400).send({
                 status: 'fail',
@@ -40,7 +60,7 @@ const rentalCreate = async function (req, reply){
             })
         }
         //else{
-            let activeCar= await Car.findOne({_id:req.body.carId._id,isDeleted:false})
+            let activeCar= await Car.findOne({_id:req.body.carId,isDeleted:false})
             if(!activeCar){
                 return reply.code(400).send({
                     status: 'fail',
@@ -56,8 +76,9 @@ const rentalCreate = async function (req, reply){
             }
         //}
     //}
-    let branchId = mongoose.Types.ObjectId(req.body.branchId._id);
-    let carId= mongoose.Types.ObjectId(req.body.carId._id);
+    let branchId = mongoose.Types.ObjectId(req.body.branchId);
+    let carId= mongoose.Types.ObjectId(req.body.carId);
+    let createTicket = req.body.createTicket!=null ? req.body.createTicket : false
     delete req.body.branchId;
     delete req.bodycarId;
     const rental = new Rental(req.body);    
@@ -100,7 +121,7 @@ const rentalCreate = async function (req, reply){
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
     activeCar.isStarted=true;
     await activeCar.save();
-     const rentalObj = await rental.toObject()
+    const rentalObj = await rental.toObject()
     // if (rentalObj.branchId){
     //     rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
     //     rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
@@ -115,7 +136,7 @@ const rentalCreate = async function (req, reply){
 
     reply.code(201).send({
         status: 'success',
-        data: rentalObj
+        message: 'Renta creada correctamente'
      })      
 
 
