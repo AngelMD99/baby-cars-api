@@ -53,8 +53,16 @@ const carDef = {
                 code:{type:'string'},
                 name:{type:'string'}
             }
-        },
-        ipAddress: { type: 'string' },        
+        },        
+        ipAddress: { type: 'string' },
+        modelId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'}
+
+            }
+        },        
         name: { type: 'string'},
         color: { type: 'string'},
         // plans:{
@@ -83,7 +91,17 @@ const carAvailableDef = {
             type: 'object',
             properties:{
                 _id:{type:'string'},
-                name:{type:'string'}         
+                name:{type:'string'},
+                modelId:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},
+                        name:{type:'string'}
+        
+                    }
+                }, 
+                color:{type:'string'},
+
             }
         }                        
     }

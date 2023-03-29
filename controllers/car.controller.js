@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
+const Modelo = require('../models/Modelo');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 
@@ -44,18 +45,45 @@ const carCreate = async function (req, reply){
             }
         }
     }  
+
+    if(req.body.modelId!=null && req.body.modelId!=""){        
+        let modelValidation= isValidObjectId(req.body.modelId)
+        if (modelValidation==false){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'Modelo no valido'
+            })
+        }
+        else{
+            let activeModel= await Modelo.findOne({_id:req.body.modelId,isDeleted:false})
+            if(!activeModel){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'Modelo no encontrado'
+                })
+
+            }
+        }
+    }
     
     let branchId = req.body.branchId;    
+    let modelId = req.body.modelId;    
 
     delete req.body.branchId;    
     const car = new Car(req.body);     
     if(branchId){
         car.branchId=branchId;
     }
+    if(modelId){
+        car.modelId=modelId;
+    }
     
     car._id = mongoose.Types.ObjectId();
     await car.save()
-    await car.populate('branchId', '_id name code'); 
+    await car.populate([
+        {path:'branchId', select:'_id name code'},
+        {path:'modelId', select:'_id name'}
+    ]); 
     
     
 
@@ -72,6 +100,12 @@ const carCreate = async function (req, reply){
             _id:null,
             name:"",
             code:"",
+        }
+    }
+    if(!carObj.modelId || !carObj.modelId._id){
+        carObj.modelId={
+            _id:null,
+            name:"",            
         }
     }
     delete carObj.__v
@@ -92,7 +126,10 @@ const carShow = async function (req, reply){
         })        
     } 
     
-    await car.populate('branchId', '_id name code');  
+    await car.populate([
+        'branchId', '_id name code'
+        ]   
+        );  
     let carObj = await car.toObject();            
     
     // if (carObj.branchId){

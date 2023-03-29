@@ -60,6 +60,26 @@ exports.options = {
             updatedAt:{type:'timestamp'}
           }
         },
+        models:{
+          type: 'object',
+          required: ['name'],
+          properties: {
+            _id:{type:'string'},                                    
+            name:{type:'string'},          
+            colors:{
+              type:'array',
+              items:{
+                type:'string'
+              }
+            },                    
+            
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}
+          }
+
+        },
+
+
         cars: {
           type: 'object',
           required: ['ipAddress'],
@@ -67,10 +87,10 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},            
             isStarted:{type:'boolean'}, 
+            modelId:{type:'string'},
+            name:{type:'string'},         
+            color:{type:'string'},                   
             branchId:{type:'string'},
-            name:{type:'string'},          
-            color:{type:'string'},                    
-            
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}
           }

@@ -25,6 +25,10 @@ const carSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     },
+    modelId: {
+        type: mongoose.Schema.Types.ObjectId,              
+        ref: "Modelo", 
+    },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Branch", 

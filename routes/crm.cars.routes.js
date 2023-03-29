@@ -55,6 +55,13 @@ const carDef = {
             }
         },
         ipAddress: { type: 'string' },        
+        modelId :{
+            type:'object',
+            properties:{
+                _id:{type:'string'},             
+                name:{type:'string'},
+            }
+        },
         name: { type: 'string'},
         color: { type: 'string'},
         plans:{
@@ -83,7 +90,15 @@ const carAvailableDef = {
             type: 'object',
             properties:{
                 _id:{type:'string'},
-                name:{type:'string'}         
+                name:{type:'string'},
+                modelId :{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},             
+                        name:{type:'string'},
+                    }
+                },
+                color:{type:'string'}         
             }
         }                        
     }
@@ -99,10 +114,12 @@ const postCarUpOpts = {
         body: {
             type: 'object',
             properties: {                
+                modelId: {type:'string'},
+                name: { type: 'string' }, 
+                color: { type: 'string'},
                 branchId: {type:'string'},
                 ipAddress: { type: 'string' },
-                name: { type: 'string' }, 
-                color: { type: 'string'},                               
+                                               
                 plans:{
                     type:'array',
                     items:
@@ -175,7 +192,8 @@ const putSingleCarOpts={
                 name: { type: 'string' },                
                 color: { type: 'string' },              
                 ipAddress: { type: 'string' }, 
-                branchId: {type:'string'},              
+                branchId: {type:'string'}, 
+                modelId:{type:'string'},
 
             },
         },      
