@@ -104,47 +104,34 @@ const modelUpdate = async function (req, reply){
 
 
 const modelsAvailable = async function (req, reply){
-
-
     let aggregateQuery=[
-        
-            // {
-            //   '$match': {
-            //     'isDeleted': false,                
-            //   }
-            // } 
-        
-    ]
-
-    if( req.params.id){
-        aggregateQuery.push(            {
-            '$match': {  
-              'isDeleted':false,              
-              'branchId':ObjectId(req.params.id)
+        {
+            '$match':{
+                isDeleted:false
             }
-        })
-    }
-
+        }
+    ];
     aggregateQuery.push(
         {
             '$project': {
               '_id': 0,              
-              'carId._id': '$_id', 
-              'carId.name': '$name'                 
+              'modelId._id': '$_id', 
+              'modelId.name': '$name',                 
+              'modelId.colors': '$colors'
             }
           },{
               '$sort' :{
-               'carId.name':1
+               'modelId.name':1
               }
            }
     )
 
     
 
-    let availableCars = await Car.aggregate(aggregateQuery);
+    let availableModels = await Modelo.aggregate(aggregateQuery);
     reply.code(200).send({
         status:'sucess',
-        data:availableCars
+        data:availableModels
     })
 }
 
@@ -174,29 +161,26 @@ const modelList = async function (req, reply){
     else{
         options.sort={"name":1}
     }
-    let carsPaginated={};
+    let modelsPaginated={};
     if(!req.query.search){        
         //let sortOrder={name:1}       
     
         if(options.page!=null && options.limit!=null){
-            carsPaginated.docs=[];
-            let carsQuery = await Car.paginate(searchQuery, options);
-            carsQuery.docs.forEach(car => {
+            modelsPaginated.docs=[];
+            let modelsQuery = await Modelo.paginate(searchQuery, options);
+            modelsQuery.docs.forEach(item => {
                 let newObj={
-                    _id:car._id,
-                    isStarted:car.isStarted,
-                    ipAddress:car.ipAddress,
-                    name:car.name,
-                    color:car.color,
-                    plans:car.plans
+                    _id:item._id,                  
+                    name:item.name,
+                    colors:item.colors,                    
                 }
     
-                carsPaginated.docs.push(newObj)                               
+                modelsPaginated.docs.push(newObj)                               
             });
-            carsPaginated.page=carsQuery.page;
-            carsPaginated.perPage=carsQuery.limit;
-            carsPaginated.totalDocs=carsQuery.totalDocs;
-            carsPaginated.totalPages=carsQuery.totalPages;
+            modelsPaginated.page=modelsQuery.page;
+            modelsPaginated.perPage=modelsQuery.limit;
+            modelsPaginated.totalDocs=modelsQuery.totalDocs;
+            modelsPaginated.totalPages=modelsQuery.totalPages;
         }
         else{
             let sortOrder = {}
@@ -209,14 +193,14 @@ const modelList = async function (req, reply){
                     name:1
                 }
             }
-            carsPaginated.docs=[]
-            let carsQuery = await Car.find(searchQuery).sort(sortOrder).lean();
-            carsQuery.forEach(car => {
+            modelsPaginated.docs=[]
+            let modelsQuery = await Modelo.find(searchQuery).sort(sortOrder).lean();
+            modelsQuery.forEach(item => {
     
-                // car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                // car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
-                // delete car.branchId;                
-                carsPaginated.docs.push(car)
+                // item.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                // item.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                // delete item.branchId;                
+                modelsPaginated.docs.push(item)
                 
 
                 
@@ -231,7 +215,7 @@ const modelList = async function (req, reply){
     }
     else{
         // branchSearch = await Car.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
-        // carsPaginated.totalDocs = branchSearch.length;
+        // modelsPaginated.totalDocs = branchSearch.length;
         let diacriticSearch = diacriticSensitiveRegex(req.query.search);
         let searchString = '.*'+diacriticSearch+'.*';
 
@@ -245,13 +229,9 @@ const modelList = async function (req, reply){
               }, 
     
               {
-                '$project': {
-                  'isStarted':1,
-                  //'branchId': 1,                   
-                  'ipAddress': 1, 
+                '$project': {                  
                   'name': 1,
-                  'color':1,
-                  "plans":1,
+                  'colors':1,                  
     
 
                 }
@@ -264,29 +244,11 @@ const modelList = async function (req, reply){
                         '$options': 'i'
                       }
                     }, {
-                      'color': {
+                      'colors': {
                         '$regex': searchString, 
                         '$options': 'i'
                       }
-                    },
-                    {
-                        'ipAddress': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                      {
-                        'branchId.code': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                      {
-                        'branchId.name': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      }
+                    }
                   ]
                 }
               }
@@ -304,40 +266,31 @@ const modelList = async function (req, reply){
             }
             aggregateQuery.push(sortQuery)
 
-        let carsSearch = await Car.aggregate(aggregateQuery);
-        carsPaginated.docs = carsSearch;
-        carsPaginated.totalDocs = carsPaginated.docs.length
+        let modelSearch = await Modelo.aggregate(aggregateQuery);
+        modelsPaginated.docs = modelSearch;
+        modelsPaginated.totalDocs = modelsPaginated.docs.length
 
-        carsPaginated.page=req.query.page ? req.query.page : 1;
-        carsPaginated.perPage=req.query.perPage ? req.query.perPage :carsPaginated.totalDocs;
-        let limit = req.query.perPage ? req.query.perPage : carsPaginated.totalDocs;
+        modelsPaginated.page=req.query.page ? req.query.page : 1;
+        modelsPaginated.perPage=req.query.perPage ? req.query.perPage :modelsPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : modelsPaginated.totalDocs;
         let page = req.query.page ? req.query.page : 1;
-        carsPaginated.docs=paginateArray(carsSearch,limit,page);
-        
-        carsPaginated.docs.forEach(doc=>{
-            if (!doc.branchId || !doc.branchId._id){
-                doc.branchId ={
-                    _id:null,
-                    code:"",
-                    name:""
-                }
-            }
-        })
-        carsPaginated.totalPages = Math.ceil(carsPaginated.totalDocs / carsPaginated.perPage);
+        modelsPaginated.docs=paginateArray(modelSearch,limit,page);        
+
+        modelsPaginated.totalPages = Math.ceil(modelsPaginated.totalDocs / modelsPaginated.perPage);
 
     }
 
-    let docs = JSON.stringify(carsPaginated.docs);    
-    var cars = JSON.parse(docs);
+    let docs = JSON.stringify(modelsPaginated.docs);    
+    var models = JSON.parse(docs);
     
 
     reply.code(200).send({
         status: 'success',
-        data: cars,
-        page: carsPaginated.page,
-        perPage:carsPaginated.perPage,
-        totalDocs: carsPaginated.totalDocs,
-        totalPages: carsPaginated.totalPages,
+        data: models,
+        page: modelsPaginated.page,
+        perPage:modelsPaginated.perPage,
+        totalDocs: modelsPaginated.totalDocs,
+        totalPages: modelsPaginated.totalPages,
 
     })
 

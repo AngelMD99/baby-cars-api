@@ -271,9 +271,9 @@ function crmModelsRoutes(fastify, options, done) {
     fastify.get('/crm/models/:id', getSingleModelOpts)    
     fastify.delete('/crm/models/:id', deleteSingleModelOpts)
     fastify.put('/crm/models/:id', putSingleModelOpts)
-    
-    // fastify.get('/crm/models', getCarsOpts)
-    // fastify.get('/crm/models/available', getCarsAvailableOpts)  
+    fastify.get('/crm/models/available', getModelsAvailableOpts) 
+    fastify.get('/crm/models', getModelsOpts)
+     
 done()
 }
 module.exports = crmModelsRoutes
