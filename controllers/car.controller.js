@@ -127,9 +127,9 @@ const carShow = async function (req, reply){
     } 
     
     await car.populate([
-        'branchId', '_id name code'
-        ]   
-        );  
+        {path:'branchId', select:'_id name code'},
+        {path:'modelId', select:'_id name'}
+    ]);  
     let carObj = await car.toObject();            
     
     // if (carObj.branchId){
@@ -140,8 +140,13 @@ const carShow = async function (req, reply){
     if(!carObj.branchId || !carObj.branchId._id){
         carObj.branchId={
             _id:null,
-            name:"",
-            code:"",
+            name:"",            
+        }
+    }
+    if(!carObj.modelId || !carObj.model._id){
+        carObj.modelId={
+            _id:null,
+            name:""            
         }
     }
     reply.code(200).send({
@@ -218,6 +223,9 @@ const carUpdate = async function (req, reply){
     }
     if(req.body.ipAddress && req.body.ipAddress!=""){
         inputs.ipAddress = req.body.ipAddress;
+    } 
+    if(req.body.modelId && req.body.model!=""){
+        inputs.modelId = req.body.modelId;
     }    
     inputs.name = req.body.name;
     inputs.color = req.body.color;    
@@ -273,10 +281,12 @@ const carUpdate = async function (req, reply){
     // }
 
     await updatedCar.save();
-    await updatedCar.populate('branchId', '_id name code');
+    await updatedCar.populate([
+        {path:'branchId', select:'_id name code'},
+        {path:'modelId', select:'_id name'}
+    ]);  
+    let updatedCarObj = await updatedCar.toObject();            
     
-
-    let updatedCarObj = await updatedCar.toObject()    
     // if (updatedCarObj.branchId){
     //     updatedCarObj.branchCode=updatedCarObj.branchId.code ? updatedCarObj.branchId.code :"";
     //     updatedCarObj.branchName=updatedCarObj.branchId.name ? updatedCarObj.branchId.name :"";
@@ -285,10 +295,18 @@ const carUpdate = async function (req, reply){
     if(!updatedCarObj.branchId || !updatedCarObj.branchId._id){
         updatedCarObj.branchId={
             _id:null,
-            name:"",
-            code:"",
+            name:"",            
         }
     }
+    if(!updatedCarObj.modelId || !updatedCarObj.modelId._id){
+        updatedCarObj.modelId={
+            _id:null,
+            name:""            
+        }
+    }
+    
+
+
     delete updatedCarObj.__v
    
     reply.code(200).send({

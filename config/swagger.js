@@ -91,6 +91,8 @@ exports.options = {
             name:{type:'string'},         
             color:{type:'string'},                   
             branchId:{type:'string'},
+            startedAt:{type:'string'},
+            remainingTime:{type:'number'},
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}
           }
