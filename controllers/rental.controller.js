@@ -121,7 +121,9 @@ const rentalCreate = async function (req, reply){
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
     activeCar.isStarted=true;
     activeCar.startedAt = new Date();
-    
+    let expiration = addMinutes(activeCar.startedAt,rental.planType.time);
+    activeCar.expireDate = expiration;   
+
     await activeCar.save();
     const rentalObj = await rental.toObject()
     // if (rentalObj.branchId){
@@ -863,6 +865,11 @@ const branchRentalsList = async function (req, reply){
     })
 
     
+}
+function addMinutes(date, minutes) {
+    date.setMinutes(date.getMinutes() + minutes);
+  
+    return date;
 }
 
 function addDays(date, days) {
