@@ -120,6 +120,8 @@ const rentalCreate = async function (req, reply){
       
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
     activeCar.isStarted=true;
+    activeCar.startedAt = new Date();
+    
     await activeCar.save();
     const rentalObj = await rental.toObject()
     // if (rentalObj.branchId){

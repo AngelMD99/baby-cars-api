@@ -69,6 +69,10 @@ const rentalDef = {
             }
         },
         paymentType: { type: 'string'},
+        startDate:{type:'string'},
+        expireDate:{type:'string'},
+        remainingTime:{type:'string'},
+
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
