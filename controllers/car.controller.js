@@ -366,10 +366,28 @@ const carsAvailable = async function (req, reply){
 
     aggregateQuery.push(
         {
+            '$lookup': {
+                'from': 'modelos', 
+                'localField': 'modelId', 
+                'foreignField': '_id', 
+                'as': 'modelInfo'
+              }
+        },
+
+        {
             '$project': {
               '_id': 0,              
               'carId._id': '$_id', 
-              'carId.name': '$name'                 
+              'carId.name': '$name',
+              'carId.color':'$color',
+              'modelId._id': {
+                '$first': '$modelInfo._id'
+              },
+              'modelId.name': {
+                '$first': '$modelInfo.name'
+              } 
+              
+              
             }
           },{
               '$sort' :{
@@ -379,8 +397,18 @@ const carsAvailable = async function (req, reply){
     )
 
     
+           
+    let availableCars = await Car.aggregate(aggregateQuery);    
+    availableCars.forEach(car=>{
+        if(!car.modelId || !car.modelId._id ){
+            car.modelId={
+                _id:"",
+                name:"",
 
-    let availableCars = await Car.aggregate(aggregateQuery);
+            }
+
+        }
+    })
     reply.code(200).send({
         status:'sucess',
         data:availableCars

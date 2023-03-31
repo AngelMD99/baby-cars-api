@@ -91,19 +91,18 @@ const carAvailableDef = {
             type: 'object',
             properties:{
                 _id:{type:'string'},
-                name:{type:'string'},
-                modelId:{
-                    type:'object',
-                    properties:{
-                        _id:{type:'string'},
-                        name:{type:'string'}
-        
-                    }
-                }, 
-                color:{type:'string'},
-
+                name:{type:'string'},                
+                color:{type:'string'}         
             }
-        }                        
+        
+        },
+        modelId :{
+            type:'object',
+            properties:{
+                _id:{type:'string'},             
+                name:{type:'string'},
+            }
+        },
     }
 }
 
