@@ -421,9 +421,14 @@ const carList = async function (req, reply){
     let searchQuery = {
         isDeleted: false,			
     };
-    if(req.params.id){
+    if(req.params.id && !req.query.branchId){
         searchQuery['branchId']=req.params.id
     }
+
+    if(!req.params.id && req.query.branchId){
+        searchQuery['branchId']=req.query.branchId
+    }
+
     const options = {
         select: `-isDeleted -__v -updatedAt -createdAt`, 
 
@@ -444,9 +449,10 @@ const carList = async function (req, reply){
         options.sort={"name":1}
     }
     let carsPaginated={};
-    if(!req.query.search){        
+    if(!req.query.search){         
         //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
+        let allModels = await Modelo.find({});
         if(options.page!=null && options.limit!=null){
             carsPaginated.docs=[];
             let carsQuery = await Car.paginate(searchQuery, options);
@@ -456,8 +462,7 @@ const carList = async function (req, reply){
                     isStarted:car.isStarted,
                     ipAddress:car.ipAddress,
                     name:car.name,
-                    color:car.color,
-                    plans:car.plans
+                    color:car.color,                    
                 }
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(car.branchId)
@@ -468,8 +473,18 @@ const carList = async function (req, reply){
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
                 }
+                let modelInfo = allModels.find(modelo=>{
+                    return String(modelo._id) == String(car.modelId)
+                })
+                newObj.modelId={
+                    _id:car.modelId ? car.modelId :null,
+                    name : modelInfo && modelInfo.name ? modelInfo.name : "",
+                    code : modelInfo && modelInfo.code ? modelInfo.code : "",
+
+                }
                 
                 delete car.branchId;
+                delete car.modelId;                
                 carsPaginated.docs.push(newObj)                               
             });
             carsPaginated.page=carsQuery.page;
@@ -498,8 +513,16 @@ const carList = async function (req, reply){
                     _id:car.branchId ? car.branchId :null,
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
+                } 
+                let modelInfo = allModels.find(modelo=>{
+                    return String(modelo._id) == String(car.modelId)
+                }) 
+                let modelId={
+                    _id:car.modelId ? car.modelId :null,
+                    name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
                 }  
                 car.branchId=branchId;         
+                car.modelId=modelId;         
                 // car.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
                 // car.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
                 // delete car.branchId;                
@@ -524,7 +547,22 @@ const carList = async function (req, reply){
 
   //    let searchString = '.*'+req.query.search+'.*';
           delete options.select;
-          let aggregateQuery=[
+          let aggregateQuery=[];
+          if(req.params.id && !req.query.branchId){
+            aggregateQuery.push({
+                '$match':{
+                    branchId:new ObjectId(req.params.id)
+                }
+                })
+          }
+          if(!req.params.id && req.query.branchId){
+            aggregateQuery.push({
+                '$match':{
+                    branchId:new ObjectId(req.query.branchId)
+                }
+                })
+          }
+          aggregateQuery.push(
               {
                 '$match': {
                   'isDeleted': false
@@ -538,6 +576,15 @@ const carList = async function (req, reply){
                   'as': 'branchInfo'
                 }
               },
+              {
+                '$lookup': {
+                    'from': 'modelos', 
+                    'localField': 'modelId', 
+                    'foreignField': '_id', 
+                    'as': 'modelInfo'
+                  }
+             },
+              
               {
                 '$project': {
                   'isStarted':1,
@@ -554,6 +601,12 @@ const carList = async function (req, reply){
                   } ,
                   'branchId.name': {
                     '$first': '$branchInfo.name'
+                  },
+                  'modelId._id': {
+                    '$first': '$modelInfo._id'
+                  },
+                  'modelId.name': {
+                    '$first': '$modelInfo.name'
                   } 
 
 
@@ -589,11 +642,17 @@ const carList = async function (req, reply){
                           '$regex': searchString, 
                           '$options': 'i'
                         }
+                      },
+                      {
+                        'modelId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
                       }
                   ]
                 }
               }
-            ]
+            )
             let sortQuery={
                 '$sort':{}
             };
@@ -606,7 +665,7 @@ const carList = async function (req, reply){
                 sortQuery['$sort']['name']=1;
             }
             aggregateQuery.push(sortQuery)
-
+        console.log("AGGREGATE QUERY: ",aggregateQuery);
         let carsSearch = await Car.aggregate(aggregateQuery);
         carsPaginated.docs = carsSearch;
         carsPaginated.totalDocs = carsPaginated.docs.length
@@ -620,6 +679,13 @@ const carList = async function (req, reply){
         carsPaginated.docs.forEach(doc=>{
             if (!doc.branchId || !doc.branchId._id){
                 doc.branchId ={
+                    _id:null,
+                    code:"",
+                    name:""
+                }
+            }
+            if (!doc.modelId || !doc.modelId._id){
+                doc.modelId ={
                     _id:null,
                     code:"",
                     name:""
