@@ -1,5 +1,5 @@
 const Branch = require('../models/Branch');
-const { carList, carStart, carStop, carsAvailable  } = require('../controllers/car.controller');
+const { carList, carStart, carStop, carsAvailable,carBranchAutoOff  } = require('../controllers/car.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');
 const errResponse = {
@@ -79,6 +79,10 @@ const carDef = {
         // },
         // branchName:{type:'string'},
         // branchCode:{type:'string'},
+        startDate:{type:'string'},
+        expireDate:{type:'string'},
+        rentalTime:{type:'number'},
+        remainingTime:{type:'number'},
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -268,8 +272,36 @@ const stopSingleCarOpts={
     
 }
 
+const autoStopCars={
+    schema: {
+         description:"Turns off all the cars with rental time expired.",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: carBranchAutoOff
+    
+}
+
 function appCarsRoutes(fastify, options, done) {
-    fastify.get('/branches/:id/cars', getCarsOpts)    
+    fastify.get('/branches/:id/cars', getCarsOpts)
+    fastify.get('/branches/:id/auto-off', autoStopCars)        
     fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
     fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
     fastify.put('/cars/:id/start', startSingleCarOpts)

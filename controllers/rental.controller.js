@@ -67,18 +67,17 @@ const rentalCreate = async function (req, reply){
                     message: 'Carrito no encontrado'
                 })
             }
-            if(activeCar.isStarted){
-                return reply.code(400).send({
-                    status: 'fail',
-                    message: 'Carrito '+activeCar.name+' esta encendido'
-                })
+            // if(activeCar.isStarted){
+            //     return reply.code(400).send({
+            //         status: 'fail',
+            //         message: 'Carrito '+activeCar.name+' esta encendido'
+            //     })
 
-            }
+            // }
         //}
     //}
     let branchId = mongoose.Types.ObjectId(req.body.branchId);
-    let carId= mongoose.Types.ObjectId(req.body.carId);
-    let createTicket = req.body.createTicket!=null ? req.body.createTicket : false
+    let carId= mongoose.Types.ObjectId(req.body.carId);    
     delete req.body.branchId;
     delete req.bodycarId;
     const rental = new Rental(req.body);    
@@ -120,8 +119,10 @@ const rentalCreate = async function (req, reply){
       
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
     activeCar.isStarted=true;
-    activeCar.startedAt = new Date();
-    let expiration = addMinutes(activeCar.startedAt,rental.planType.time);
+    activeCar.startDate = new Date(); 
+    activeCar.rentalTime = rental.planType.time;   
+    let minutesDate = new Date ()
+    let expiration = addMinutes(minutesDate,rental.planType.time);
     activeCar.expireDate = expiration;   
 
     await activeCar.save();
@@ -136,11 +137,12 @@ const rentalCreate = async function (req, reply){
     //     rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
     //     delete rentalObj.carId;
     // }
+    
     delete rentalObj.__v
 
     reply.code(201).send({
         status: 'success',
-        message: 'Renta creada correctamente'
+        data:rentalObj
      })      
 
 
@@ -866,9 +868,9 @@ const branchRentalsList = async function (req, reply){
 
     
 }
-function addMinutes(date, minutes) {
-    date.setMinutes(date.getMinutes() + minutes);
-  
+function addMinutes(date, minutes) {    
+    date.setMinutes(date.getMinutes() + minutes);  
+ 
     return date;
 }
 

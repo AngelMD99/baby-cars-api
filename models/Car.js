@@ -47,7 +47,7 @@ const carSchema = new mongoose.Schema({
     },
     startDate:Date,
     expireDate:Date,
-
+    rentalTime:Number,
     remainingTime:Number
     // plans:[planSchema]
     

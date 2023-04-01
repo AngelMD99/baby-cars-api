@@ -13,7 +13,7 @@ Moment().tz("Etc/Universal");
 
 
 module.exports = function (fastify, opts, done) {
-    fastify.post("/rentals", async (req, reply) => {
+    fastify.post("/rentals/single-ticket", async (req, reply) => {
         if(!req.body){
             return reply.code(401).send({
                 status: 'fail',

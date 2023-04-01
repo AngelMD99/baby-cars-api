@@ -338,7 +338,31 @@ const carDelete = async function (req, reply){
     
 }
 
-const carBranchList = async function (req, reply){
+const carBranchAutoOff = async function (req, reply){
+    let branchCars= await Car.find({branchId:req.params.id,isDeleted:false})
+    for (let car of branchCars){
+
+        if(car.expireDate ){
+            let currenDate = new Date();
+            let remainingTime = minutesDiff(currenDate,car.expireDate)            
+            if(remainingTime<=0){
+                //send request to shelly rele
+                car.expireDate=undefined;
+                car.startDate=undefined;
+                car.isStarted = false;
+                await car.save()
+            }
+
+        }
+    }
+
+    reply.code(200).send({
+        status: 'success',
+        message: 'Señal de apagado enviada para carritos expirados'           
+        
+    })   
+    
+
 
 }
 
@@ -664,8 +688,7 @@ const carList = async function (req, reply){
             else{
                 sortQuery['$sort']['name']=1;
             }
-            aggregateQuery.push(sortQuery)
-        console.log("AGGREGATE QUERY: ",aggregateQuery);
+            aggregateQuery.push(sortQuery)        
         let carsSearch = await Car.aggregate(aggregateQuery);
         carsPaginated.docs = carsSearch;
         carsPaginated.totalDocs = carsPaginated.docs.length
@@ -695,7 +718,16 @@ const carList = async function (req, reply){
         carsPaginated.totalPages = Math.ceil(carsPaginated.totalDocs / carsPaginated.perPage);
 
     }
+    carsPaginated.docs.forEach(doc=>{
+        if(doc.isStarted== true && doc.expireDate){
+            let currentDate = new Date ()
+            let remainingTime = minutesDiff (currentDate,doc.expireDate);
+            doc.remainingTime=remainingTime
 
+        }
+        
+
+    })
     let docs = JSON.stringify(carsPaginated.docs);    
     var cars = JSON.parse(docs);
     
@@ -766,6 +798,19 @@ function isValidObjectId(id){
     return false;
 }
 
+function minutesDiff(dateTimeValue2, dateTimeValue1) {
+    let negativeResult = false
+    if(dateTimeValue2>dateTimeValue1){    
+        negativeResult=true;
+    }    
+    var differenceValue =(dateTimeValue1.getTime() - dateTimeValue2.getTime()) / 1000;
+    differenceValue /= 60;
+    let result = Math.abs(Math.round(differenceValue)); 
+    result = negativeResult==true? -result : result;
+    return result
+ }
+ 
+
 function diacriticSensitiveRegex(string = '') {
     return string.replace(/a/g, '[a,á,à,ä,â]')
        .replace(/e/g, '[e,é,ë,è]')
@@ -775,4 +820,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchList, carsAvailable }
+module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchAutoOff, carsAvailable }

@@ -12,6 +12,15 @@ const errResponse = {
 
 const authorizeFunc = async function (req, reply) {
     try {
+
+        if(!req.header.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'sesión_expirada'
+            })
+            
+        }
+
         const decoded = await req.jwtVerify()
         // if (!decoded._id || (decoded.role!='admin') ) {
         //     return reply.code(401).send({
@@ -23,7 +32,7 @@ const authorizeFunc = async function (req, reply) {
         const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
     
         if(branch == null){
-            return reply.code(404).send({
+            return reply.code(401).send({
                 status: 'fail',
                 message: 'sucursal_no_encontrada'
             })
@@ -68,11 +77,7 @@ const rentalDef = {
                 price:{type:'number'}
             }
         },
-        paymentType: { type: 'string'},
-        startDate:{type:'string'},
-        expireDate:{type:'string'},
-        remainingTime:{type:'string'},
-
+        paymentType: { type: 'string'},        
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -108,8 +113,8 @@ const postRentalUpOpts = {
                 type: 'object',
                 properties: {
                     status: { type: 'string' },
-                    message: {type:'string'},
-                    path:{type:'string'}
+                    data:rentalDef
+ 
                 }
             },
             400: errResponse
@@ -121,7 +126,7 @@ const postRentalUpOpts = {
 
 
 function appRentalsRoutes(fastify, options, done) {
-    //fastify.post('/rentals', postRentalUpOpts)    
+    fastify.post('/rentals', postRentalUpOpts)
     // fastify.get('/crm/branches', getBranchesOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     
