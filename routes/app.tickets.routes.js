@@ -15,45 +15,55 @@ module.exports = function (fastify, opts, done) {
                 message: 'es_necesario_enviar_un_objeto'
             })
         }
-        if(!req.body.rentalId){
+        let validTypes=['rental','balance']
+        if(!req.body.type || !validTypes.includes(req.body.type)){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'rentalId_no_recibido'
+                message: 'tipo de ticket no valido'
             })
-        }
-        if(!isValidObjectId(req.body.rentalId)){
-            return reply.code(401).send({
-                status: 'fail',
-                message: 'rentalId_no_valido'
-            })
-        }
-        const rental = await Rental.findOne({_id:req.body.rentalId}).select('-updatedAt -__v').populate('branchId', '_id name code');
 
-        if (!rental){
-            return reply.code(400).send({
+        }
+        if(!req.body.type=='rental' && !req.body.rentalId){
+            return reply.code(401).send({
                 status: 'fail',
-                message: 'renta_no_encontrada'
-            })        
-        } 
+                message: 'No se recibió el id de la renta'
+            })
+        }
+        if(req.body.rentalId && !isValidObjectId(req.body.rentalId)){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Id de renta no valido'
+            })
+        }
+
+        if(req.body.type=='rental'){
+            const rental = await Rental.findOne({_id:req.body.rentalId}).select('-updatedAt -__v').populate('branchId', '_id name code');
+
+            if (!rental){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'renta_no_encontrada'
+                })        
+            } 
         
-        await rental.populate(
-            [{path: 'branchId', select: 'name code'},
-            {path: 'carId', select: 'name'}]
+            await rental.populate(
+                [{path: 'branchId', select: 'name code'},
+                {path: 'carId', select: 'name'}]
             ); 
             
-        let rentalObj = await rental.toObject();            
-        if (rentalObj.branchId){
-            rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
-            rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
-            delete rentalObj.branchId;
-        }
+            let rentalObj = await rental.toObject();            
+            if (rentalObj.branchId){
+                rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
+                rentalObj.branchName=rentalObj.branchId.name ? rentalObj.branchId.name :"";
+                delete rentalObj.branchId;
+            }
     
-        if (rentalObj.carId){
-            rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
-            delete rentalObj.carId;
-        }
-        let offset=req.headers.offset ? req.headers.offset:7
-        let date = rental.createdAt
+            if (rentalObj.carId){
+                rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
+                delete rentalObj.carId;
+            }
+            let offset=req.headers.offset ? req.headers.offset:7
+            let date = rental.createdAt
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         //     date.setHours(offset,0,0,0);    
         //     date.setHours(offset, 0, 0, 0);
@@ -62,15 +72,45 @@ module.exports = function (fastify, opts, done) {
         //     date.setHours(0,0,0,0);
         //     date.setHours(0, 0, 0, 0);
         // }  
-        var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-        let stringDate = date.toLocaleDateString('es-ES', options);
-        let stringTime = date.toLocaleTimeString('en-ES') 
-        rentalObj.planType.price=rentalObj.planType.price.toFixed(2)
-        rentalObj.planType.time=Math.ceil(rentalObj.planType.time)
-        rentalObj.date = stringDate
-        rentalObj.time = stringTime        
-        delete rentalObj.__v
-        return generate("ticket", rentalObj );
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+            let stringDate = date.toLocaleDateString('es-ES', options);
+            let stringTime = date.toLocaleTimeString('en-ES') 
+            rentalObj.planType.price=rentalObj.planType.price.toFixed(2)
+            rentalObj.planType.time=Math.ceil(rentalObj.planType.time)
+            rentalObj.date = stringDate
+            rentalObj.time = stringTime        
+            delete rentalObj.__v
+            return generate("ticket", rentalObj );
+        }
+
+        else{
+            let balanceObj ={};             
+            balanceObj.branchCode=req.body.branchCode ? req.body.branchCode :"";
+            balanceObj.branchName=req.body.branchName ? req.body.branchName :"";                       
+            balanceObj.quantity=1;
+            balanceObj.bankName="BANAMEX";
+            balanceObj.accountNumber="144-44711547-4145";
+            balanceObj.concept="Rentas diarias en efectivo";        
+            balanceObj.total=req.body.total
+            
+            let offset=req.headers.offset ? req.headers.offset:7
+            let date = new Date()
+        // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        //     date.setHours(offset,0,0,0);    
+        //     date.setHours(offset, 0, 0, 0);
+        // }
+        // else{
+        //     date.setHours(0,0,0,0);
+        //     date.setHours(0, 0, 0, 0);
+        // }  
+            var options = { weekday: 'long', year: 'numeric', month: 'long' }
+            let stringDate = date.toLocaleDateString('es-ES', options);            
+            balanceObj.date = stringDate            
+            
+            return generate("balance", balanceObj );           
+
+        }
+        
     });
 
     const generate = async function (template, body, footerText = '') {        

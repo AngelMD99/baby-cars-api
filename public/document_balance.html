@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>DATOS PARA DEPOSITO</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <base href="http://127.0.0.1:4000/">
+        <link rel="stylesheet" href="styles/styles3.css" media="all"/>        
+    </head>
+    <body>
+        <div class="ticket">
+            <img src="./icons/logo.png" alt="Logo">
+            <p class="centered">SUCURSAL:                
+                <br>{{branchName}}
+                <br>
+                <br>BANCO PARA DEPOSITO:
+                <br>{{bankName}}
+                <br>
+                <br>NUMERO DE CUENTA
+                <br>{{accountNumber}}
+                <br>                                
+                <br>FECHA:
+                <br>{{date}}                
+            <table>
+                <thead>
+                    <tr>
+                        <th class="quantity">Cantidad</th>
+                        <th class="description">Descripción</th>
+                        <th class="price">Depositar($MXN)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="quantity">{{quantity}}</td>
+                        <td class="description">{{concept}}</td>
+                        <td class="price">$ {{total}}</td>
+                    </tr>
+                    
+                    
+
+                </tbody>
+            </table>
+            <br>
+        </div>
+        <!-- <button id="btnPrint" class="hidden-print">Print</button>
+        <script src="script.js"></script> -->
+    </body>
+</html>
