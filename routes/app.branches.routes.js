@@ -1,5 +1,5 @@
 const { branchLogin } = require('../controllers/branch.controller');
-const { branchRentalsList } = require('../controllers/rental.controller');
+const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
 
 const errResponse = {
     type: 'object',
@@ -30,6 +30,16 @@ const branchDef = {
        },
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
+    }
+}
+
+const balanceDef={
+    type:'object',
+    properties:{
+        rentalType:{type:'string'},
+        quantity:{type:'number'},
+        total:{type:'number'},
+        branchName:{type:'string'}
     }
 }
 
@@ -103,6 +113,35 @@ const getRentalsOpts={
     
 }
 
+const getBalanceOpts={
+    schema: {
+         description:"The total of the daily rentals paid in cash for the branch with the id in the URL",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:balanceDef
+
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    //preHandler: authorizeFunc,
+    handler: branchRentalCashBalance,
+    
+}
+
 const postBranchSignInOpts = {
     schema: {
         description:'Authenticates and creates a session for a branch',
@@ -139,6 +178,7 @@ const postBranchSignInOpts = {
 function appBranchesRoutes(fastify, options, done) {   
     fastify.post('/branches/in', postBranchSignInOpts) 
     fastify.get('/branches/:id/rentals', getRentalsOpts) 
+    fastify.get('/branches/:id/balance', getBalanceOpts) 
 
 
 done()

@@ -517,7 +517,83 @@ const rentalList = async function (req, reply){
     
 }
 
+const branchRentalCashBalance = async function (req,reply){
+    let branchInfo = await Branch.findOne({_id:req.params.id, isDeleted:false})
+    if(!branchInfo){
+        if (!branchInfo){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'sucursal_no_encontrada'
+            })        
+        } 
+    }
+
+    let offset = await getOffsetSetting();              
+    let today = new Date ();
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        today.setHours(offset,0,0,0);    
+        today.setHours(offset, 0, 0, 0);
+    }
+    else{
+        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
+    }
+
+    let nextDay = addDays(today,1)
+    // console.log("TODAY: ",today);
+    // console.log("NEXT DAY: ",nextDay)
+    
+    let searchQuery = {
+        isDeleted: false,
+        branchId:ObjectId(req.params.id),
+        createdAt:{"$gte": today,"$lte":nextDay}			
+    };
+    
+    let rentalsQuery = await Rental.find(searchQuery)    
+    let balanceObj={
+        rentalType:'Efectivo',        
+        quantity:0,
+        total:0,
+        branchName : branchInfo.name ? branchInfo.name :""
+
+    }
+
+    let cashRentals=[];
+    if (rentalsQuery.length>0){
+        cashRentals = rentalsQuery.filter(rental =>{
+            return rental.paymentType== "Efectivo"
+        })
+        if (cashRentals.length>0){
+            balanceObj.quantity=cashRentals.length
+            cashRentals.forEach(cashRental=>{
+                balanceObj.total = balanceObj.total + cashRental.planType.price
+            })
+            
+        }
+    }
+
+    return reply.code(200).send({
+        status: 'success',
+        data: balanceObj
+
+    })
+
+    
+
+
+
+}
+
 const branchRentalsList = async function (req, reply){
+    let branchInfo = await Branch.findOne({_id:req.params.id, isDeleted:false})
+    if(!branchInfo){
+        if (!branchInfo){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'sucursal_no_encontrada'
+            })        
+        } 
+    }
 
     let offset = await getOffsetSetting();              
     let today = new Date ();
@@ -827,9 +903,7 @@ const branchRentalsList = async function (req, reply){
             sortQuery['$sort']['createdAt']=-1;
         }      
         
-        aggregateQuery.push(sortQuery)
-        console.log("AGGREGATE QUERY: ",aggregateQuery[0])
-        
+        aggregateQuery.push(sortQuery)        
 
         let rentalsSearch = await Rental.aggregate(aggregateQuery);
         rentalsPaginated.docs = rentalsSearch;
@@ -903,4 +977,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { rentalCreate, rentalShow, rentalList, branchRentalsList}
+module.exports = { rentalCreate, rentalShow, rentalList, branchRentalsList, branchRentalCashBalance}

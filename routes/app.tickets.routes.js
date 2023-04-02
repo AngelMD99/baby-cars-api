@@ -103,7 +103,7 @@ module.exports = function (fastify, opts, done) {
         //     date.setHours(0,0,0,0);
         //     date.setHours(0, 0, 0, 0);
         // }  
-            var options = { weekday: 'long', year: 'numeric', month: 'long' }
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
             let stringDate = date.toLocaleDateString('es-ES', options);            
             balanceObj.date = stringDate            
             
