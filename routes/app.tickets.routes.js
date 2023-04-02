@@ -88,8 +88,8 @@ module.exports = function (fastify, opts, done) {
             balanceObj.branchCode=req.body.branchCode ? req.body.branchCode :"";
             balanceObj.branchName=req.body.branchName ? req.body.branchName :"";                       
             balanceObj.quantity=1;
-            balanceObj.bankName="BANAMEX";
-            balanceObj.accountNumber="144-44711547-4145";
+            balanceObj.bankName=process.env.BANK
+            balanceObj.accountNumber=process.env.BANK_ACCOUNT;
             balanceObj.concept="Rentas diarias en efectivo";        
             balanceObj.total=req.body.total
             

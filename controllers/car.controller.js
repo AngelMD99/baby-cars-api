@@ -350,6 +350,7 @@ const carBranchAutoOff = async function (req, reply){
                 //send request to shelly rele
                 car.expireDate=undefined;
                 car.startDate=undefined;
+                car.rentalTime=undefined;                   
                 car.isStarted = false;
                 turnedOffCars+=1;
                 await car.save()
