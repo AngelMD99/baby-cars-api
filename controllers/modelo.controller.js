@@ -9,8 +9,17 @@ Moment().tz("Etc/Universal");
 
 const modelCreate = async function (req, reply){        
     
-        
-    const modelo = new Modelo(req.body);     
+    
+    let input={
+        name:req.body.name,
+        colors:[]
+    }
+    if (req.body.modelColors && req.body.modelColors.length>0){
+        req.body.modelColors.forEach(item=>{
+            input.colors.push(item.color)
+        })
+    }
+    const modelo = new Modelo(input);     
     modelo._id = mongoose.Types.ObjectId();
     await modelo.save()      
 
@@ -73,11 +82,16 @@ const modelUpdate = async function (req, reply){
         })
     }
 
-    
+    let updatedColors=[];
     let inputs={};
     
     inputs.name = req.body.name ? req.body.name :currentModel.name;
-    inputs.colors = req.body.colors;    
+    if (req.body.modelColors && req.body.modelColors.length>0){
+        req.body.modelColors.forEach(item=>{
+            updatedColors.push(item.color)
+        })
+    }
+    inputs.colors = updatedColors.length>0 ? updatedColors : currentModel.colors;    
     let updatedModel = await Modelo.findByIdAndUpdate({_id: req.params.id},inputs,{
         new:true,
         overwrite:true

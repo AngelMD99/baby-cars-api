@@ -87,9 +87,14 @@ const postModelUpOpts = {
             required:['name'],
             properties:{                
                 name:{type:'string'},
-                colors:{
+                modelColors:{
                     type:'array',
-                    items:{type:'string'},
+                    items:{
+                       type:'object',
+                       properties:{
+                           color:{type:'string'}
+                       }
+                   },
                },
             }            
         },
@@ -150,9 +155,14 @@ const putSingleModelOpts={
             required:['name'],
             properties: {                                
                 name:{type:'string'},
-                colors:{
+                modelColors:{
                     type:'array',
-                    items:{type:'string'},
+                    items:{
+                       type:'object',
+                       properties:{
+                           color:{type:'string'}
+                       }
+                   },
                },
             },
         },      
