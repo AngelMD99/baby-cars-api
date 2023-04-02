@@ -340,6 +340,7 @@ const carDelete = async function (req, reply){
 
 const carBranchAutoOff = async function (req, reply){
     let branchCars= await Car.find({branchId:req.params.id,isDeleted:false})
+    let turnedOffCars=0;
     for (let car of branchCars){
 
         if(car.expireDate ){
@@ -350,6 +351,7 @@ const carBranchAutoOff = async function (req, reply){
                 car.expireDate=undefined;
                 car.startDate=undefined;
                 car.isStarted = false;
+                turnedOffCars+=1;
                 await car.save()
             }
 
@@ -358,7 +360,9 @@ const carBranchAutoOff = async function (req, reply){
 
     reply.code(200).send({
         status: 'success',
-        message: 'Señal de apagado enviada para carritos expirados'           
+        data: {
+            turnedOffCars:turnedOffCars
+        }
         
     })   
     
@@ -776,6 +780,9 @@ const carStop = async function (req, reply){
 
     let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedCar.isStarted=false;
+    updatedCar.expireDate=undefined;
+    updatedCar.startDate=undefined;
+    updatedCar.rentalTime=undefined;    
     await updatedCar.save();
     reply.code(200).send({
         status: 'success',

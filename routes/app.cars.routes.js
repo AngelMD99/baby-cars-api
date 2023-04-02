@@ -287,7 +287,9 @@ const autoStopCars={
                 type:'object',
                 properties:{
                     status:{type:'string'},
-                    message:{type:'string'}
+                    data:{
+                        turnedOffCars:{type:'number'}
+                    }
                 }
             },
             400: errResponse
