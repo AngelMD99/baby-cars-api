@@ -143,7 +143,7 @@ const carShow = async function (req, reply){
             name:"",            
         }
     }
-    if(!carObj.modelId || !carObj.model._id){
+    if(!carObj.modelId || !carObj.modelId._id){
         carObj.modelId={
             _id:null,
             name:""            
