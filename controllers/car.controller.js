@@ -387,7 +387,8 @@ const carsAvailable = async function (req, reply){
     if( req.params.id){
         aggregateQuery.push(            {
             '$match': {  
-              'isDeleted':false,              
+              'isDeleted':false,  
+              'isStarted' :false,
               'branchId':ObjectId(req.params.id)
             }
         })
@@ -438,9 +439,27 @@ const carsAvailable = async function (req, reply){
 
         }
     })
+    aggregateQuery.push( {
+        '$group': {
+        '_id': '$modelId._id', 
+        'name': {
+            '$first': '$modelId.name'
+            }, 
+        'count': {
+            '$sum': 1
+            }
+        }
+    })
+
+    let availableModels = await Car.aggregate(aggregateQuery)
+    let availableModelsObjects=availableModels.filter(item=>{
+        return item._id!=null
+    });
+     
     reply.code(200).send({
         status:'sucess',
-        data:availableCars
+        data:availableCars,
+        models:availableModelsObjects,
     })
 }
 

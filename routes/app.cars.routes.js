@@ -110,6 +110,15 @@ const carAvailableDef = {
     }
 }
 
+const modelAvailableDef = { 
+    type: 'object', 
+    properties: {
+        _id:{type:'string'},
+        name:{type:'string'},
+        count:{type:'number'}        
+    }
+}
+
 const planAvailableDef = { 
     type: 'object', 
     properties: {
@@ -171,7 +180,12 @@ const getAvailableCarsOpts={
                   data:{
                     type:'array',
                     items:carAvailableDef
+                  },
+                  models:{
+                    type:'array',
+                    items:modelAvailableDef
                   }
+
                 }               
             },
             400: errResponse
