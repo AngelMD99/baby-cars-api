@@ -394,6 +394,14 @@ const carsAvailable = async function (req, reply){
         })
     }
 
+    if (req.query.modelId){
+        aggregateQuery.push({
+            '$match':{
+                'modelId':ObjectId(req.query.modelId)
+            }
+        })
+    }
+
     aggregateQuery.push(
         {
             '$lookup': {
