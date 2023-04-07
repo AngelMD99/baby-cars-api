@@ -71,6 +71,7 @@ fastify.register(require("./routes/app.rentals.routes"));
 fastify.register(require("./routes/app.cars.routes"));
 fastify.register(require("./routes/app.tickets.routes"));
 fastify.register(require("./routes/app.rental.ticket.route"));
+fastify.register(require("./routes/app.modelos.routes"));
 // fastify.register(require("./routes/news.routes"));
 // fastify.register(require("./routes/subscription.routes"));
 
