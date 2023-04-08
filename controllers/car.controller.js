@@ -402,6 +402,16 @@ const carsAvailable = async function (req, reply){
         })
     }
 
+    if(req.query.color){ 
+        let colorMatch=req.query.color.toLowerCase()     
+        
+        aggregateQuery.push({
+            '$match':{
+                'color':colorMatch
+            }
+        })
+    }
+
     aggregateQuery.push(
         {
             '$lookup': {
@@ -459,7 +469,7 @@ const carsAvailable = async function (req, reply){
         }
     })
 
-    let availableModels = await Car.aggregate(aggregateQuery)
+    let availableModels = await Car.aggregate(aggregateQuery)    
     let availableModelsObjects=availableModels.filter(item=>{
         return item._id!=null
     });

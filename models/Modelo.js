@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 const mongoosePaginate = require('mongoose-paginate-v2');
+
+
 const modelSchema = new mongoose.Schema({
     isDeleted: {
         type: Boolean,
@@ -10,7 +12,12 @@ const modelSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    colors: [String],    
+    colors: [{
+        type:String,
+        lowercase:true
+    }
+        
+    ],    
     
     
 },{
