@@ -473,11 +473,25 @@ const carsAvailable = async function (req, reply){
     let availableModelsObjects=availableModels.filter(item=>{
         return item._id!=null
     });
+    let colors=[];
+    if(req.query.modelId){
+        availableCars.forEach(car=>{
+            if (car.carId && car.carId.color){
+                if(!colors.includes(car.carId.color)){
+                    colors.push(car.carId.color)
+                }
+            }
+        })
+    }
+        
+
+    console.log("COLORS: ",colors)
      
     reply.code(200).send({
         status:'sucess',
         data:availableCars,
         models:availableModelsObjects,
+        colors:colors.length>0 ? colors : undefined
     })
 }
 

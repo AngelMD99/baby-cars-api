@@ -183,7 +183,14 @@ const getAvailableCarsOpts={
                   },
                   models:{
                     type:'array',
-                    items:modelAvailableDef
+                    items:modelAvailableDef                    
+                  },
+                  colors:{
+                    type:'array',
+                    items:{
+                        type:'string'
+                    }
+
                   }
 
                 }               
