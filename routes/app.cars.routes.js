@@ -309,7 +309,13 @@ const autoStopCars={
                 properties:{
                     status:{type:'string'},
                     data:{
-                        turnedOffCars:{type:'number'}
+                        turnedOffCars:{type:'number'},
+                        carsIps:{
+                            type:'array',
+                            items:{
+                                type:'string'
+                            }
+                        }
                     }
                 }
             },

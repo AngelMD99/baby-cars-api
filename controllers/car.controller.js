@@ -341,6 +341,7 @@ const carDelete = async function (req, reply){
 const carBranchAutoOff = async function (req, reply){
     let branchCars= await Car.find({branchId:req.params.id,isDeleted:false})
     let turnedOffCars=0;
+    let carsIps=[];
     for (let car of branchCars){
 
         if(car.expireDate ){
@@ -353,6 +354,7 @@ const carBranchAutoOff = async function (req, reply){
                 car.rentalTime=undefined;                   
                 car.isStarted = false;
                 turnedOffCars+=1;
+                carsIps.push(car.ipAddress)
                 await car.save()
             }
 
@@ -362,7 +364,8 @@ const carBranchAutoOff = async function (req, reply){
     reply.code(200).send({
         status: 'success',
         data: {
-            turnedOffCars:turnedOffCars
+            turnedOffCars:turnedOffCars,
+            carsIp:carsIps
         }
         
     })   
