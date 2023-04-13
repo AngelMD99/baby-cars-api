@@ -11,20 +11,24 @@ Moment().tz("Etc/Universal");
 const carCreate = async function (req, reply){
         
     //let theCode = req.body.branchCode.toUpperCase();  
-    let ipValidation = await Car.findOne({ipAddress: req.body.ipAddress.toUpperCase(), isDeleted:false})
-    if(ipValidation != null){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'La dirección IP ya esta en uso'
-        })
-    }    
+    if(req.body.ipAddress){
+        let ipValidation = await Car.findOne({ipAddress: req.body.ipAddress.toUpperCase(), isDeleted:false})
+        if(ipValidation != null){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'La dirección IP ya esta en uso'
+            })
+        }    
 
-    if(req.body.ipAddress.indexOf(' ') >= 0){
+        if(req.body.ipAddress.indexOf(' ') >= 0){
             return reply.code(400).send({
                 status: 'fail',
                 message: 'No se permiten espacios en blanco en la direccion IP'
             })
-    } 
+        }         
+    }      
+
+    
 
     if(req.body.branchId!=null && req.body.branchId!=""){        
         let branchValidation= isValidObjectId(req.body.branchId)
