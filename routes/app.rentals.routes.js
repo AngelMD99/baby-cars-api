@@ -13,7 +13,7 @@ const errResponse = {
 const authorizeFunc = async function (req, reply) {
     try {
 
-        if(!req.header.authorization){
+        if(!req.headers.authorization){
             return reply.code(401).send({
                 status: 'fail',
                 message: 'sesión_expirada'
@@ -120,7 +120,7 @@ const postRentalUpOpts = {
             400: errResponse
         }
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: rentalCreate,
 }
 
