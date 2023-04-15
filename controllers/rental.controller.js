@@ -67,13 +67,13 @@ const rentalCreate = async function (req, reply){
                     message: 'Carrito no encontrado'
                 })
             }
-            // if(activeCar.isStarted){
-            //     return reply.code(400).send({
-            //         status: 'fail',
-            //         message: 'Carrito '+activeCar.name+' esta encendido'
-            //     })
+            if(activeCar.isStarted){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'Carrito con etiqueta '+activeCar.name+' esta encendido'
+                })
 
-            // }
+            }
         //}
     //}
     let branchId = mongoose.Types.ObjectId(req.body.branchId);

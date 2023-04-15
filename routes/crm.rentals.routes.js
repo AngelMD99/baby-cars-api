@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const { rentalShow, rentalList } = require('../controllers/rental.controller');
 const User = require('../models/User');
+
 const errResponse = {
     type: 'object',
     properties: {
@@ -10,11 +11,18 @@ const errResponse = {
 }
 const authorizeFunc = async function (req, reply) {
     try {
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+
         const decoded = await req.jwtVerify()
         if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'token_de_usuario_no_valido'
+                message: 'Token de usuario no válido'
             })
         }
     
@@ -23,7 +31,7 @@ const authorizeFunc = async function (req, reply) {
         if(user == null){
             return reply.code(404).send({
                 status: 'fail',
-                message: 'usuario_no_encontrado'
+                message: 'Usuario autentificado no encontrado'
             })
         }
         // if(user.isEnabled == false){
@@ -96,7 +104,7 @@ const getSingleRentalOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: rentalShow,
     
 }
@@ -131,7 +139,7 @@ const getRentalsOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: rentalList,
     
 }

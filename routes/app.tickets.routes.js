@@ -5,10 +5,52 @@ const Rental = require('../models/Rental');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const { getOffsetSetting } = require('../controllers/base.controller')
+const Branch = require('../models/Branch');
+
+const authorizeFunc = async function (req, reply) {
+    try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })
+            
+        }
+
+        const decoded = await req.jwtVerify()
+        // if (!decoded._id || (decoded.role!='admin') ) {
+        //     return reply.code(401).send({
+        //         status: 'fail',
+        //         message: 'invalid_crm_token'
+        //     })
+        // }
+    
+        const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(branch == null){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sucursal autentificada no existe'
+            })
+        }
+        // if(user.isEnabled == false){
+        //     return reply.code(404).send({
+        //         status: 'fail',
+        //         message: 'user_disabled'
+        //     })
+        // }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
+
 
 
 module.exports = function (fastify, opts, done) {
-    fastify.post("/rentals/ticket", async (req, reply) => {
+    fastify.post("/rentals/ticket", {preHandler:[authorizeFunc]}, async (req, reply) => {
         if(!req.body){
             return reply.code(401).send({
                 status: 'fail',

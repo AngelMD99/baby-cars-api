@@ -12,6 +12,15 @@ const errResponse = {
 
 const authorizeFunc = async function (req, reply) {
     try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })
+            
+        }
+
         const decoded = await req.jwtVerify()
         // if (!decoded._id || (decoded.role!='admin') ) {
         //     return reply.code(401).send({
@@ -23,9 +32,9 @@ const authorizeFunc = async function (req, reply) {
         const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
     
         if(branch == null){
-            return reply.code(404).send({
+            return reply.code(401).send({
                 status: 'fail',
-                message: 'sucursal_no_encontrada'
+                message: 'Sucursal autentificada no existe'
             })
         }
         // if(user.isEnabled == false){
@@ -157,7 +166,7 @@ const getAvailablePlansOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: plansAvailable,
     
 }
@@ -199,7 +208,7 @@ const getAvailableCarsOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carsAvailable,
     
 }
@@ -234,7 +243,7 @@ const getCarsOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carList,
     
 }
@@ -261,7 +270,7 @@ const startSingleCarOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carStart,
     
 }
@@ -288,7 +297,7 @@ const stopSingleCarOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carStop,
     
 }
@@ -323,7 +332,7 @@ const autoStopCars={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carBranchAutoOff
     
 }

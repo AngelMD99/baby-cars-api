@@ -1,3 +1,4 @@
+const Branch = require('../models/Branch');
 const { branchLogin } = require('../controllers/branch.controller');
 const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
 
@@ -6,6 +7,46 @@ const errResponse = {
     properties: {
         status: { type: 'string' },
         message: {type: 'string'}
+    }
+}
+
+const authorizeFunc = async function (req, reply) {
+    try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })
+            
+        }
+
+        const decoded = await req.jwtVerify()
+        // if (!decoded._id || (decoded.role!='admin') ) {
+        //     return reply.code(401).send({
+        //         status: 'fail',
+        //         message: 'invalid_crm_token'
+        //     })
+        // }
+    
+        const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(branch == null){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sucursal autentificada no existe'
+            })
+        }
+        // if(user.isEnabled == false){
+        //     return reply.code(404).send({
+        //         status: 'fail',
+        //         message: 'user_disabled'
+        //     })
+        // }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
     }
 }
 
@@ -108,7 +149,7 @@ const getRentalsOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: branchRentalsList,
     
 }
@@ -137,7 +178,7 @@ const getBalanceOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: branchRentalCashBalance,
     
 }

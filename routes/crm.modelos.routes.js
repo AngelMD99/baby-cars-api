@@ -12,11 +12,18 @@ const errResponse = {
 
 const authorizeFunc = async function (req, reply) {
     try {
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+
         const decoded = await req.jwtVerify()
         if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'invalid_crm_token'
+                message: 'Token de usuario no válido'
             })
         }
     
@@ -25,7 +32,7 @@ const authorizeFunc = async function (req, reply) {
         if(user == null){
             return reply.code(404).send({
                 status: 'fail',
-                message: 'user_not_found'
+                message: 'Usuario autentificado no encontrado'
             })
         }
         // if(user.isEnabled == false){
@@ -109,7 +116,7 @@ const postModelUpOpts = {
             400: errResponse
         }
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: modelCreate,
 }
 
@@ -135,7 +142,7 @@ const getSingleModelOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: modelShow,
     
 }
@@ -178,7 +185,7 @@ const putSingleModelOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: modelUpdate,
     
 }
@@ -205,7 +212,7 @@ const deleteSingleModelOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: modelDelete,
     
 }
@@ -240,7 +247,7 @@ const getModelsOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: modelList,
     
 }
@@ -271,7 +278,7 @@ const getModelsAvailableOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: modelsAvailable
     
 }

@@ -12,11 +12,18 @@ const errResponse = {
 
 const authorizeFunc = async function (req, reply) {
     try {
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+
         const decoded = await req.jwtVerify()
         if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'invalid_crm_token'
+                message: 'Token de usuario no válido'
             })
         }
     
@@ -25,7 +32,7 @@ const authorizeFunc = async function (req, reply) {
         if(user == null){
             return reply.code(404).send({
                 status: 'fail',
-                message: 'user_not_found'
+                message: 'Usuario autentificado no encontrado'
             })
         }
         // if(user.isEnabled == false){

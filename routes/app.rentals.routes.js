@@ -16,7 +16,7 @@ const authorizeFunc = async function (req, reply) {
         if(!req.headers.authorization){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'sesión_expirada'
+                message: 'Sesión expirada'
             })
             
         }
@@ -34,7 +34,7 @@ const authorizeFunc = async function (req, reply) {
         if(branch == null){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'sucursal_no_encontrada'
+                message: 'Sucursal autentificada no existe'
             })
         }
         // if(user.isEnabled == false){
