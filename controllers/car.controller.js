@@ -554,7 +554,12 @@ const carList = async function (req, reply){
                     isStarted:car.isStarted,
                     ipAddress:car.ipAddress,
                     name:car.name,
-                    color:car.color,                    
+                    color:car.color,
+                    startDate:car.startDate,
+                    expireDate:car.expireDate,
+                    rentalTime:car.rentalTime,
+                    remainingTime:car.remainingTime  
+
                 }
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(car.branchId)
@@ -699,7 +704,11 @@ const carList = async function (req, reply){
                   },
                   'modelId.name': {
                     '$first': '$modelInfo.name'
-                  } 
+                  }, 
+                  'startDate':1,
+                  'expireDate':1,
+                  'rentalTime':1,
+                  'remainingTime':1  
 
 
                 }
