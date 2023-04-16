@@ -921,7 +921,7 @@ const branchRentalsList = async function (req, reply){
 
         let docs = JSON.stringify(rentalsPaginated.docs);    
         var rentals = JSON.parse(docs);
-        console.log(rentals[0])
+        
 
     //}
     // else{
