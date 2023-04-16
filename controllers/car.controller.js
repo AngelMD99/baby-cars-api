@@ -71,7 +71,8 @@ const carCreate = async function (req, reply){
     }
     
     let branchId = req.body.branchId;    
-    let modelId = req.body.modelId;    
+    let modelId = req.body.modelId;  
+    let color = req.body.color  
 
     delete req.body.branchId;    
     const car = new Car(req.body);     
@@ -80,6 +81,10 @@ const carCreate = async function (req, reply){
     }
     if(modelId){
         car.modelId=modelId;
+    }
+
+    if (color){
+        car.color=color.toLowerCase()
     }
     
     car._id = mongoose.Types.ObjectId();
@@ -232,7 +237,7 @@ const carUpdate = async function (req, reply){
         inputs.modelId = req.body.modelId;
     }    
     inputs.name = req.body.name;
-    inputs.color = req.body.color;    
+    inputs.color = req.body.color? req.body.color.toLowerCase() : undefined;    
     let updatedCar = await Car.findByIdAndUpdate({_id: req.params.id},inputs,{
         new:true,
         overwrite:true
