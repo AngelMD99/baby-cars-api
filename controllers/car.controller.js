@@ -400,19 +400,19 @@ const carsAvailable = async function (req, reply){
         aggregateQuery.push(            {
             '$match': {  
               'isDeleted':false,  
-              'isStarted' :false,
+              //'isStarted' :false,
               'branchId':ObjectId(req.params.id)
             }
         })
     }
 
-    if (req.query.modelId){
-        aggregateQuery.push({
-            '$match':{
-                'modelId':ObjectId(req.query.modelId)
-            }
-        })
-    }
+    // if (req.query.modelId){
+    //     aggregateQuery.push({
+    //         '$match':{
+    //             'modelId':ObjectId(req.query.modelId)
+    //         }
+    //     })
+    // }
 
     if(req.query.color){ 
         let colorMatch=req.query.color.toLowerCase()     
@@ -440,6 +440,7 @@ const carsAvailable = async function (req, reply){
               'carId._id': '$_id', 
               'carId.name': '$name',
               'carId.color':'$color',
+              'carId.isStarted':'$isStarted',
               'modelId._id': {
                 '$first': '$modelInfo._id'
               },
@@ -495,20 +496,42 @@ const carsAvailable = async function (req, reply){
         item.branchAvailable= modelValidation ? true : false
     })
 
-    console.log(allModelsObjects[2])
+    //console.log(allModelsObjects[2])
 
     let availableModels = await Car.aggregate(aggregateQuery)    
     let availableModelsObjects=availableModels.filter(item=>{
         return item._id!=null
     });
     let colors=[];
+    // if(req.query.modelId){
+    //     availableCars.forEach(car=>{
+    //         if (car.carId && car.carId.color){
+    //             if(!colors.includes(car.carId.color)){
+    //                 colors.push(car.carId.color)
+    //             }
+    //         }
+    //     })
+    // }
     if(req.query.modelId){
-        availableCars.forEach(car=>{
-            if (car.carId && car.carId.color){
-                if(!colors.includes(car.carId.color)){
-                    colors.push(car.carId.color)
-                }
-            }
+        availableCars.forEach(car=>{  
+                let colorValidation = colors.find(element=>{
+                    return String(element.color).toLowerCase() == String (car.carId.color).toLowerCase()
+                })
+
+                if(!colorValidation){
+                    let newObj={
+                        color:car.carId.color
+                    }
+                    colors.push(newObj)
+                }            
+        })
+        colors.forEach(item=>{
+            let colorValidation = availableCars.find(element=>{
+                return element.modelId._id == req.query.modelId && String(item.color).toLowerCase() == String (element.carId.color).toLowerCase()
+
+            })
+            item.branchAvailable = colorValidation ? true : false
+
         })
     }
         

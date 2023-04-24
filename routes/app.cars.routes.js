@@ -105,7 +105,8 @@ const carAvailableDef = {
             properties:{
                 _id:{type:'string'},
                 name:{type:'string'},                
-                color:{type:'string'}         
+                color:{type:'string'},
+                isStarted:{type:'boolean'}         
             }
         
         },
@@ -198,7 +199,11 @@ const getAvailableCarsOpts={
                   colors:{
                     type:'array',
                     items:{
-                        type:'string'
+                        type:'object',
+                        properties:{
+                            color:{type:'string'},
+                            branchAvailable:{type:'boolean'}
+                        }
                     }
 
                   }
