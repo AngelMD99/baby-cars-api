@@ -124,7 +124,8 @@ const modelAvailableDef = {
     properties: {
         _id:{type:'string'},
         name:{type:'string'},
-        count:{type:'number'}        
+        count:{type:'number'},
+        branchAvailable:{type:'boolean'}        
     }
 }
 

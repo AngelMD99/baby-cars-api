@@ -481,6 +481,22 @@ const carsAvailable = async function (req, reply){
         }
     })
 
+    let allModels= await Modelo.find({isDeleted:false}).select('-createdAt -updatedAt -__v');
+    let allModelsObjects=[];
+    allModels.forEach(item=>{
+        let modelObj=item.toObject();
+        allModelsObjects.push(modelObj);
+        
+    })
+    allModelsObjects.forEach(item=>{
+        let modelValidation = availableCars.find(car=>{
+            return String(car.modelId._id)==String(item._id)            
+        })
+        item.branchAvailable= modelValidation ? true : false
+    })
+
+    console.log(allModelsObjects[2])
+
     let availableModels = await Car.aggregate(aggregateQuery)    
     let availableModelsObjects=availableModels.filter(item=>{
         return item._id!=null
@@ -502,7 +518,7 @@ const carsAvailable = async function (req, reply){
     reply.code(200).send({
         status:'sucess',
         data:availableCars,
-        models:availableModelsObjects,
+        models:allModelsObjects,
         colors:colors.length>0 ? colors : undefined
     })
 }
