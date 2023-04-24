@@ -515,6 +515,7 @@ const carList = async function (req, reply){
     };
     if(req.params.id && !req.query.branchId){
         searchQuery['branchId']=req.params.id
+        searchQuery['isStarted']=true
     }
 
     if(!req.params.id && req.query.branchId){
@@ -655,7 +656,8 @@ const carList = async function (req, reply){
           if(!req.params.id && req.query.branchId){
             aggregateQuery.push({
                 '$match':{
-                    branchId:new ObjectId(req.query.branchId)
+                    branchId:new ObjectId(req.query.branchId),
+                    isStarted:true
                 }
                 })
           }
