@@ -67,7 +67,8 @@ const rentalDef = {
         // branchName: { type: 'string' },        
         carId:{
             _id:{type:'string'},
-            name:{type:'string'}
+            name:{type:'string'},
+            ipAddress:{type:'string'}
         },
         //carName: { type: 'string'},
         planType: { 

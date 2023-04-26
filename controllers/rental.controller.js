@@ -114,7 +114,7 @@ const rentalCreate = async function (req, reply){
     await rental.save()
     await rental.populate(
         [{path: 'branchId', select: 'name code'},
-        {path: 'carId', select: 'name'}]
+        {path: 'carId', select: 'name ipAddress'}]
         ); 
       
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
