@@ -106,7 +106,8 @@ const carAvailableDef = {
                 _id:{type:'string'},
                 name:{type:'string'},                
                 color:{type:'string'},
-                isStarted:{type:'boolean'}         
+                isStarted:{type:'boolean'},
+                ipAddress:{type:'string'}         
             }
         
         },

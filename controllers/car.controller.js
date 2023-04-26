@@ -441,6 +441,7 @@ const carsAvailable = async function (req, reply){
               'carId.name': '$name',
               'carId.color':'$color',
               'carId.isStarted':'$isStarted',
+              'carId.ipAddress':'$ipAddress',
               'modelId._id': {
                 '$first': '$modelInfo._id'
               },
@@ -470,6 +471,7 @@ const carsAvailable = async function (req, reply){
 
         }
     })
+    
     aggregateQuery.push( {
         '$group': {
         '_id': '$modelId._id', 
@@ -536,7 +538,7 @@ const carsAvailable = async function (req, reply){
     }
         
 
-    console.log("COLORS: ",colors)
+    
      
     reply.code(200).send({
         status:'sucess',
