@@ -484,19 +484,36 @@ const carsAvailable = async function (req, reply){
         }
     })
 
-    let allModels= await Modelo.find({isDeleted:false}).select('-createdAt -updatedAt -__v');
+    //let allModels= await Modelo.find({isDeleted:false}).select('-createdAt -updatedAt -__v');
     let allModelsObjects=[];
-    allModels.forEach(item=>{
-        let modelObj=item.toObject();
-        allModelsObjects.push(modelObj);
-        
+    availableCars.forEach(car=>{
+        let uniqueModelValidation = allModelsObjects.find(item=>{
+            return String(item._id) == car.modelId._id
+        })
+        if(!uniqueModelValidation){
+            allModelsObjects.push({
+                _id:car.modelId._id,
+                name:car.modelId.name
+
+            })
+        }
     })
+    // allModels.forEach(item=>{
+    //     let modelObj=item.toObject();
+    //     allModelsObjects.push(modelObj);
+        
+    // })
+    console.log("All Models Object: ",allModelsObjects)
     allModelsObjects.forEach(item=>{
         let modelValidation = availableCars.find(car=>{
-            return String(car.modelId._id)==String(item._id)            
+            return String(car.modelId._id)==String(item._id)  && car.carId.isStarted==false;        
         })
         item.branchAvailable= modelValidation ? true : false
     })
+
+    allModelsObjects = allModelsObjects.filter(item=>{
+        return item._id!=""
+    });
 
     //console.log(allModelsObjects[2])
 
