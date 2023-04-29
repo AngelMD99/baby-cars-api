@@ -106,6 +106,11 @@ module.exports = function (fastify, opts, done) {
             }
             let offset=req.headers.offset ? req.headers.offset:7
             let date = rental.createdAt
+            
+            let expirationDate = new Date(rental.createdAt)            
+            expirationDate= addMinutes(expirationDate, rental.planType.time)
+            console.log("DATE: ",date)
+            console.log("EXPIRATION DATE: ",expirationDate)
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         //     date.setHours(offset,0,0,0);    
         //     date.setHours(offset, 0, 0, 0);
@@ -117,10 +122,22 @@ module.exports = function (fastify, opts, done) {
             var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
             let stringDate = date.toLocaleDateString('es-ES', options);
             let stringTime = date.toLocaleTimeString('en-ES') 
+            console.log("STRING DATE: ",stringDate)
+            console.log("STRING TIME: ",stringTime)
+            let stringExpirationDate = expirationDate.toLocaleDateString('es-ES', options);
+            let stringExpirationTime = expirationDate.toLocaleTimeString('en-ES') 
+            console.log("STRING EXPIRATION DATE: ",stringExpirationDate)
+            console.log("STRING EXPIRATION TIME: ",stringExpirationTime)
+
             rentalObj.planType.price=rentalObj.planType.price.toFixed(2)
             rentalObj.planType.time=Math.ceil(rentalObj.planType.time)
             rentalObj.date = stringDate
             rentalObj.time = stringTime        
+            rentalObj.expirationDate = stringExpirationDate
+            rentalObj.expirationTime = stringExpirationTime
+
+            console.log("RENTAL OBJ:", rentalObj)
+
             delete rentalObj.__v
             return generate("ticket", rentalObj );
         }
@@ -297,4 +314,11 @@ function dateDDMMAAAA(timestamp,offset){
     let stringDate = dayString + "-" + monthString + "-" + year + " "+stringHours+":"+stringMinutes;
     stringDate = hours >= 12 ? stringDate +" "+"PM" : stringDate +" "+"AM";
     return stringDate
+}
+
+function addMinutes(date, minutes) { 
+    console.log(date)   ;
+    date.setMinutes(date.getMinutes() + minutes);  
+ 
+    return date;
 }
