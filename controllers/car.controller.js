@@ -503,7 +503,7 @@ const carsAvailable = async function (req, reply){
     //     allModelsObjects.push(modelObj);
         
     // })
-    console.log("All Models Object: ",allModelsObjects)
+    
     allModelsObjects.forEach(item=>{
         let modelValidation = availableCars.find(car=>{
             return String(car.modelId._id)==String(item._id)  && car.carId.isStarted==false;        
