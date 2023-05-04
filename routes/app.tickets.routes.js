@@ -143,7 +143,7 @@ module.exports = function (fastify, opts, done) {
                 topic5:process.env.DISCLAIMER5,
             }
 
-            console.log("RENTAL OBJ:", rentalObj)
+            //console.log("RENTAL OBJ:", rentalObj)
 
             delete rentalObj.__v
             return generate("ticket", rentalObj );
@@ -179,9 +179,8 @@ module.exports = function (fastify, opts, done) {
         
     });
 
-    const generate = async function (template, body, footerText = '') {        
-
-
+    const generate = async function (template, body, footerText = '') {       
+        
         // const footer = `
         // <footer style="margin: 0 4mm; width: 100%; font-size: 2mm;">
         //     <p class="float-left" style="width: 33%; float: left">
@@ -221,12 +220,14 @@ module.exports = function (fastify, opts, done) {
         // });
         const page = await browser.newPage();
         await page.setContent(html);
+        let ticketHeight = template == 'ticket' ? 1200 : 550
+        //console.log("TICKET HEIGHT:",ticketHeight)
 
         await page.pdf({ 
             path: documentLocation, 
             //format: 'A6',
             width:185,
-            height:800,
+            height:ticketHeight,
             //displayHeaderFooter: true,
             //footerTemplate: footer
         });
@@ -324,7 +325,7 @@ function dateDDMMAAAA(timestamp,offset){
 }
 
 function addMinutes(date, minutes) { 
-    console.log(date)   ;
+    //console.log(date)   ;
     date.setMinutes(date.getMinutes() + minutes);  
  
     return date;
