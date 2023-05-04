@@ -109,8 +109,8 @@ module.exports = function (fastify, opts, done) {
             
             let expirationDate = new Date(rental.createdAt)            
             expirationDate= addMinutes(expirationDate, rental.planType.time)
-            console.log("DATE: ",date)
-            console.log("EXPIRATION DATE: ",expirationDate)
+            //console.log("DATE: ",date)
+            //console.log("EXPIRATION DATE: ",expirationDate)
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         //     date.setHours(offset,0,0,0);    
         //     date.setHours(offset, 0, 0, 0);
@@ -122,12 +122,12 @@ module.exports = function (fastify, opts, done) {
             var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
             let stringDate = date.toLocaleDateString('es-ES', options);
             let stringTime = date.toLocaleTimeString('en-ES') 
-            console.log("STRING DATE: ",stringDate)
-            console.log("STRING TIME: ",stringTime)
+            //console.log("STRING DATE: ",stringDate)
+            //console.log("STRING TIME: ",stringTime)
             let stringExpirationDate = expirationDate.toLocaleDateString('es-ES', options);
             let stringExpirationTime = expirationDate.toLocaleTimeString('en-ES') 
-            console.log("STRING EXPIRATION DATE: ",stringExpirationDate)
-            console.log("STRING EXPIRATION TIME: ",stringExpirationTime)
+            //console.log("STRING EXPIRATION DATE: ",stringExpirationDate)
+            //console.log("STRING EXPIRATION TIME: ",stringExpirationTime)
 
             rentalObj.planType.price=rentalObj.planType.price.toFixed(2)
             rentalObj.planType.time=Math.ceil(rentalObj.planType.time)
@@ -135,6 +135,13 @@ module.exports = function (fastify, opts, done) {
             rentalObj.time = stringTime        
             rentalObj.expirationDate = stringExpirationDate
             rentalObj.expirationTime = stringExpirationTime
+            rentalObj.disclaimer={
+                topic1:process.env.DISCLAIMER1,
+                topic2:process.env.DISCLAIMER2,
+                topic3:process.env.DISCLAIMER3,
+                topic4:process.env.DISCLAIMER4,
+                topic5:process.env.DISCLAIMER5,
+            }
 
             console.log("RENTAL OBJ:", rentalObj)
 
@@ -219,7 +226,7 @@ module.exports = function (fastify, opts, done) {
             path: documentLocation, 
             //format: 'A6',
             width:185,
-            height:600,
+            height:800,
             //displayHeaderFooter: true,
             //footerTemplate: footer
         });
