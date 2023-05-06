@@ -1,5 +1,5 @@
 * {
-    font-size: 12px;
+    font-size: 11px;
     font-family: 'Times New Roman';
 }
 
@@ -19,9 +19,10 @@ th.description {
 
 td.quantity,
 th.quantity {
-    width: 65px;
-    max-width: 65px;
+    width: 55px;
+    max-width: 55px;
     word-break: break-all;
+    
 }
 
 td.price,
@@ -37,8 +38,8 @@ th.price {
 }
 
 .ticket {
-    width: 180px;
-    max-width: 185px; 
+    width: 170px;
+    max-width: 170px; 
     /*was 155px before
     /* width: 170px;
     max-width: 170px; */
