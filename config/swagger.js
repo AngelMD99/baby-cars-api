@@ -119,7 +119,21 @@ exports.options = {
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}
           }
-        }
+        },
+        bankings:{
+          type: 'object',
+          required: ['bank','account'],
+          properties: {
+            _id:{type:'string'},                                    
+            bank:{type:'string'},          
+            account:{type:'string'},          
+            branchId:{type:'string'},         
+            reference:{type:'string'},                    
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}
+          }
+
+        },
         
       }
     }
