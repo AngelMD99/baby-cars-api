@@ -227,7 +227,7 @@ const carUpdate = async function (req, reply){
     //     await Car.updateOne({_id:req.params.id}, { $unset: { branchId: 1 } })
         
     // }  
-    if(req.body.branchId && req.body.ipAddress!=""){
+    if(req.body.branchId && req.body.branchId!=""){
         inputs.branchId = req.body.branchId;
     }
     if(req.body.ipAddress && req.body.ipAddress!=""){

@@ -70,12 +70,10 @@ function bankingRoutes(fastify, options, done) {
     fastify.get('/crm/bankings/:id', showBanking)    
     fastify.delete('/crm/bankings/:id', deleteBanking)    
     fastify.get('/crm/bankings', listBankings)
-
+    fastify.put('/crm/bankings/:id', updateBanking)    
     // fastify.delete('/crm/models/:id', deleteSingleModelOpts)
     // fastify.put('/crm/models/:id', putSingleModelOpts)
-    // fastify.get('/crm/models/available', getModelsAvailableOpts) 
-    
-     
-done()
+    // fastify.get('/crm/models/available', getModelsAvailableOpts)         
+    done()
 }
 module.exports = bankingRoutes

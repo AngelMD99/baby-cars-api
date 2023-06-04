@@ -363,7 +363,64 @@ const listBankings = async function (req, reply){
     
 }
 
-const updateBanking = async function (req, reply){}
+const updateBanking = async function (req, reply){    
+    //let loggedUser = await req.jwtVerify();
+    if(req.body.branchId!=null && req.body.branchId!=""){        
+        let branchValidation= isValidObjectId(req.body.branchId)
+        if (branchValidation==false){
+            return reply.code(400).send({
+            status: 'fail',
+            message: 'Sucursal no válida'
+        })
+    }
+    else{
+        let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
+        if(!activeBranch){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'Sucursal no encontrada'
+            })
+
+            }
+        }
+    }  
+    let currentBanking = await Banking.findOne({_id: req.params.id, isDeleted:false});
+    if(currentBanking == null){
+        return reply.code(400).send({
+        status: 'fail',
+        message: 'Cuenta bancaria no registrada'
+        })
+    }   
+    let inputs={};
+
+    if(req.body.branchId && req.body.branchId!=""){
+        inputs.branchId = req.body.branchId;
+    }
+    inputs.bank = req.body.bank;
+    inputs.account = req.body.account;
+    inputs.reference = req.body.reference;    
+    let updatedBanking = await Banking.findByIdAndUpdate({_id: req.params.id},inputs,{
+        new:true,
+        overwrite:true
+    }).select('-__v');    
+
+    await updatedBanking.save();
+    await updatedBanking.populate([
+        {path:'branchId', select:'_id name code'},
+    ]);  
+    let updatedBankingObj = await updatedBanking.toObject();            
+    if(!updatedBankingObj.branchId || !updatedBankingObj.branchId._id){
+        updatedBankingObj.branchId={
+            _id:null,
+            name:"",            
+        }
+    }  
+    delete updatedBankingObj.__v
+    reply.code(200).send({
+        status: 'success',
+        data: updatedBankingObj
+    }) 
+}
 
 
 function paginateArray(array, limit, page) {

@@ -27,15 +27,15 @@ const bankingSchema = new mongoose.Schema({
     },
     bank: {
         type: String,
-        required: true
+        required: false
     },
     account: {
         type: String,
-        required: true
+        required: false
     },
     reference: {
         type: String,
-        required: true
+        required: false
     },    
     
 },{
