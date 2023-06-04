@@ -124,7 +124,8 @@ exports.options = {
           type: 'object',
           required: ['bank','account'],
           properties: {
-            _id:{type:'string'},                                    
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
             bank:{type:'string'},          
             account:{type:'string'},          
             branchId:{type:'string'},         
