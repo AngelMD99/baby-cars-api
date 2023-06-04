@@ -384,7 +384,19 @@ const branchList = async function (req, reply){
 
     let docs = JSON.stringify(branchesPaginated.docs);
     var branches = JSON.parse(docs);
-
+    let allBankings = await Banking.find({isDeleted:false});    
+    branches.forEach(element => {
+        let bankingInfo = allBankings.find(banking=>{
+            return String(banking.branchId)==String(element._id)
+        })
+        element.banking={
+            _id:bankingInfo ? bankingInfo._id : "",
+            bank:bankingInfo ? bankingInfo.bank : "",
+            account:bankingInfo ? bankingInfo.account : "",
+            reference:bankingInfo ? bankingInfo.reference : "",
+        }
+        
+    });
     reply.code(200).send({
         status: 'success',
         data: branches,
