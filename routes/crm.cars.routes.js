@@ -153,7 +153,7 @@ const postCarUpOpts = {
             400: errResponse
         }
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carCreate,
 }
 
@@ -179,7 +179,7 @@ const getSingleCarOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carShow,
     
 }
@@ -217,7 +217,7 @@ const putSingleCarOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carUpdate,
     
 }
@@ -244,7 +244,7 @@ const deleteSingleCarOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carDelete,
     
 }
@@ -279,7 +279,7 @@ const getCarsOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carList,
     
 }
@@ -314,7 +314,7 @@ const getCarsAvailableOpts={
         }
          
     },
-    //preHandler: authorizeFunc,
+    preHandler: authorizeFunc,
     handler: carsAvailable,
     
 }

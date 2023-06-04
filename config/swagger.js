@@ -12,6 +12,7 @@ exports.options = {
         { name: 'Branches', description: 'Branches related end-points' } , 
         { name: 'Cars', description: 'Cars related end-points' } ,               
         { name: 'Rentals', description: 'Rentals related end-points' },            
+        { name: 'Banking accounts', description: 'Banking accounts related end-points' },            
                 
       ],
       definitions: {      
