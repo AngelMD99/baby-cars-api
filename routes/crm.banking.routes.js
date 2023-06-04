@@ -1,4 +1,4 @@
-const { create, show, deleteBanking, update, list } = require('../controllers/banking.controller');
+const { createBanking, showBanking, deleteBanking, updateBanking, listBankings } = require('../controllers/banking.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -66,12 +66,15 @@ const bankingDef = {
 }
 
 function bankingRoutes(fastify, options, done) {
-    // fastify.post('/crm/models', postModelUpOpts)
-    // fastify.get('/crm/models/:id', getSingleModelOpts)    
+    fastify.post('/crm/bankings', createBanking)
+    fastify.get('/crm/bankings/:id', showBanking)    
+    fastify.delete('/crm/bankings/:id', deleteBanking)    
+    fastify.get('/crm/bankings', listBankings)
+
     // fastify.delete('/crm/models/:id', deleteSingleModelOpts)
     // fastify.put('/crm/models/:id', putSingleModelOpts)
     // fastify.get('/crm/models/available', getModelsAvailableOpts) 
-    // fastify.get('/crm/models', getModelsOpts)
+    
      
 done()
 }

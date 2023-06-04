@@ -62,6 +62,7 @@ fastify.register(require("fastify-static"), {
 fastify.register(require("./routes/base.routes"));
 fastify.register(require("./routes/crm.users.routes"));
 fastify.register(require("./routes/crm.branches.routes"));
+fastify.register(require("./routes/crm.banking.routes"));
 fastify.register(require("./routes/crm.cars.routes"));
 fastify.register(require("./routes/crm.rentals.routes"));
 fastify.register(require("./routes/crm.reports.routes"));

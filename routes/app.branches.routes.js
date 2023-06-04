@@ -69,6 +69,15 @@ const branchDef = {
                
             }
        },
+       banking:{
+        type:'object',
+        properties:{
+            _id:{type:'string'},
+            bank:{type:'string'},          
+            account:{type:'string'},                              
+            reference:{type:'string'},            
+        }
+       },
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
