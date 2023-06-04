@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const Banking = require('../models/Banking');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
@@ -459,8 +460,26 @@ const branchLogin = async function (req, reply){
     const timestamp = parseInt((new Date().getTime() / 1000).toFixed(0));
     this.jwt.sign({_id: branch._id, isDeleted:branch.isDeleted, timestamp: timestamp}, async (err, token) => {
         if (err) return reply.send(err)
-        let branchObj = branch.toObject()       
-        delete branchObj.password;       
+        let branchObj = branch.toObject() 
+        let bankingInfo = await Banking.findOne({isDeleted:false, branchId:branch._id})      
+        if (bankingInfo){
+            branchObj.banking={
+                _id:bankingInfo._id,
+                bank:bankingInfo.bank,
+                account:bankingInfo.account,
+                reference:bankingInfo.reference
+            }
+        }
+        else{
+            branchObj.banking={
+                _id:"",
+                bank:"",
+                account:"",
+                reference:"",
+            }
+
+        }
+        delete branchObj.password;        
         reply.code(200).send({
             status: 'success',
             data: {
