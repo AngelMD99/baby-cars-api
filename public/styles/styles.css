@@ -26,8 +26,8 @@ th.quantity {
 
 td.price,
 th.price {
-    width: 50px;
-    max-width: 50px;
+    width: 45px;
+    max-width: 45px;
     word-break: break-all;
 }
 
@@ -37,8 +37,8 @@ th.price {
 }
 
 .ticket {
-    width: 170px;
-    max-width: 170px; 
+    width: 195px;
+    max-width: 195px; 
     /*was 155px before
     /* width: 170px;
     max-width: 170px; */

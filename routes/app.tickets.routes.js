@@ -223,13 +223,13 @@ module.exports = function (fastify, opts, done) {
         // });
         const page = await browser.newPage();
         await page.setContent(html);
-        let ticketHeight = template == 'ticket' ? 1200 : 550
+        let ticketHeight = template == 'ticket' ? 1400 : 550
         //console.log("TICKET HEIGHT:",ticketHeight)
 
         await page.pdf({ 
             path: documentLocation, 
             //format: 'A6',
-            width:185,
+            width:210,
             height:ticketHeight,
             //displayHeaderFooter: true,
             //footerTemplate: footer
