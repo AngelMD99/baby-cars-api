@@ -11,6 +11,13 @@ const { getOffsetSetting } = require('../controllers/base.controller')
 const branchCreate = async function (req, reply){
     //let loggedUser = await req.jwtVerify();
 
+    if(req.body.code.length<5){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El código debe tener al menos 5 caracteres'
+        })
+    }
+
     let branchCode = await Branch.findOne({code: req.body.code.toUpperCase(), isDeleted:false})
     if(branchCode != null){
         return reply.code(400).send({
@@ -66,6 +73,12 @@ const branchUpdate = async function (req, reply){
     //let loggedUser = await req.jwtVerify();
     //let error;
     if(req.body.code!=null){
+        if(req.body.code.length<5){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El código debe tener al menos 5 caracteres'
+            })
+        }
         let branchCodeValidation = await Branch.findOne({code:req.body.code.toUpperCase(),isDeleted:false});
         if (branchCodeValidation!=null && branchCodeValidation._id != req.params.id){
             return reply.code(400).send({
@@ -410,7 +423,7 @@ const branchList = async function (req, reply){
     
 }
 
-const branchLogin = async function (req, reply){
+const branchLogin = async function (req, reply){    
     const branch = await Branch.findOne({code: req.body.code, isDeleted:false});
 
     if(branch == null){
