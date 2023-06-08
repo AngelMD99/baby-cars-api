@@ -438,6 +438,7 @@ const carsAvailable = async function (req, reply){
             '$project': {
               '_id': 0,              
               'carId._id': '$_id', 
+              'carId.isDeleted':'$isDeleted',
               'carId.name': '$name',
               'carId.color':'$color',
               'carId.isStarted':'$isStarted',
@@ -552,10 +553,8 @@ const carsAvailable = async function (req, reply){
             item.branchAvailable = colorValidation ? true : false
 
         })
-    }
-        
-
-    
+    }     
+   
      
     reply.code(200).send({
         status:'sucess',

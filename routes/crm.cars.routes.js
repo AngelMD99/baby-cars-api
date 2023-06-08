@@ -98,7 +98,8 @@ const carAvailableDef = {
             properties:{
                 _id:{type:'string'},
                 name:{type:'string'},                
-                color:{type:'string'}         
+                color:{type:'string'},
+                isDeleted:{type:'boolean'}         
             }
         
         },
