@@ -1,6 +1,7 @@
 const Rental = require('../models/Rental');
 const Branch = require('../models/Branch');
 const Car = require('../models/Car');
+const Modelo = require('../models/Modelo');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
@@ -276,7 +277,9 @@ const rentalList = async function (req, reply){
                 })
                 newObj.carId={
                     _id: rental.carId ? rental.carId :"",
-                    name : carInfo && carInfo.name ? carInfo.name : "",                
+                    name : carInfo && carInfo.name ? carInfo.name : "",  
+                    color: carInfo && carInfo.color ? carInfo.color : "",  
+                    modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
 
                 }
                 delete rental.carId;
@@ -314,6 +317,8 @@ const rentalList = async function (req, reply){
                 rental.carId={
                     _id:carId? carId:"",
                     name:carInfo && carInfo.name ? carInfo.name : "",
+                    color: carInfo && carInfo.color ? carInfo.color : "",  
+                    modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
                 }
                 
                 //rentalsPaginated.docs.push(rental)            
@@ -437,6 +442,12 @@ const rentalList = async function (req, reply){
                   'carId.name': {
                     '$first': '$carInfo.name'
                   },
+                  'carId.color': {
+                    '$first': '$carInfo.color'
+                  },
+                  'carId.modelo': {
+                    '$first': '$carInfo.modelId'
+                  },
                   'createdAt'  :1
 
               }
@@ -496,7 +507,19 @@ const rentalList = async function (req, reply){
 
         let docs = JSON.stringify(rentalsPaginated.docs);    
         var rentals = JSON.parse(docs);
-        
+    
+        let allModels= await Modelo.find({})
+        rentals.forEach(rental=>{
+            if (rental.carId && rental.carId.modelo){
+                let modelInfo = allModels.find(modelo=>{
+                    return String(modelo._id)==rental.carId.modelo
+                })
+
+                rental.carId.modelo = modelInfo && modelInfo.name ? modelInfo.name :""
+
+            }
+            
+        })
     //}
     // else{
     //     cars=rentalsPaginated.docs
