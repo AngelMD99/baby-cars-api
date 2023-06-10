@@ -186,7 +186,7 @@ const putSingleBranchOpts={
          body: {
             type: 'object',
             properties: {                
-                code:{type:'string', minLength:8},
+                code:{type:'string'},
                 name: { type: 'string' },
                 password: { type: 'string' }, 
                 location: { type: 'string'},
