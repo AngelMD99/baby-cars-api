@@ -68,13 +68,13 @@ const rentalCreate = async function (req, reply){
                     message: 'Carrito no encontrado'
                 })
             }
-            if(activeCar.isStarted){
-                return reply.code(400).send({
-                    status: 'fail',
-                    message: 'Carrito con etiqueta '+activeCar.name+' esta encendido'
-                })
+            // if(activeCar.isStarted){
+            //     return reply.code(400).send({
+            //         status: 'fail',
+            //         message: 'Carrito con etiqueta '+activeCar.name+' esta encendido'
+            //     })
 
-            }
+            // }
         //}
     //}
     let branchId = mongoose.Types.ObjectId(req.body.branchId);
@@ -90,15 +90,19 @@ const rentalCreate = async function (req, reply){
     // let offset = req.headers.offset ? req.headers.offset : 6
     let offset = await getOffsetSetting();              
     let date = new Date ();
-    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-        date.setHours(offset,0,0,0);    
-        date.setHours(offset, 0, 0, 0);
-    }
-    else{
-        date.setHours(0,0,0,0);
-        date.setHours(0, 0, 0, 0);
-    }
-
+    console.log("NEW DATE UTC : ",date)
+    date.setHours(date.getHours() - offset);    
+    // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+    //     date.setHours(date.getHours() - offset);
+    //     console.log("DATE GMT ADJUSTED: ",date)
+    //     // date.setHours(offset,0,0,0);    
+    //     // date.setHours(offset, 0, 0, 0);
+    // }
+    // else{
+    //     date.setHours(0,0,0,0);
+    //     date.setHours(0, 0, 0, 0);
+    // }
+    console.log("CURRENT DATE AND TIME ZONE: ",date);
     let day = date.getDate();
     let month = date.getMonth() + 1
     let year = date.getFullYear();
@@ -208,8 +212,11 @@ const rentalList = async function (req, reply){
         select: `-isDeleted -__v`, 
     }
     if (req.query.initialDate!=null && req.query.finalDate!=null){      
+        
+        
         let initialDay=new Date(req.query.initialDate);
         let finalDayToDate =new Date(req.query.finalDate)
+        
         if(initialDay.getTime() > finalDayToDate.getTime()){
             return reply.code(400).send({
                 status:'fail',
@@ -217,7 +224,7 @@ const rentalList = async function (req, reply){
             })
         }
 
-        let finalDay= addDays(finalDayToDate,1)                
+        let finalDay= addDays(finalDayToDate,1)                        
         searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
     }
     if (req.query.initialDate!=null && req.query.finalDate==null){        
@@ -229,6 +236,8 @@ const rentalList = async function (req, reply){
         let finalDay= addDays(req.query.finalDate,1)
         searchQuery['createdAt']={"$lte": finalDay}
     }  
+
+    
 
     if (req.query.page){
         options.page = req.query.page;
@@ -563,8 +572,8 @@ const branchRentalCashBalance = async function (req,reply){
     }
 
     let nextDay = addDays(today,1)
-    // console.log("TODAY: ",today);
-    // console.log("NEXT DAY: ",nextDay)
+    console.log("TODAY: ",today);
+    console.log("NEXT DAY: ",nextDay)
     
     let searchQuery = {
         isDeleted: false,
@@ -632,6 +641,9 @@ const branchRentalsList = async function (req, reply){
     let nextDay = addDays(today,1)
     // console.log("TODAY: ",today);
     // console.log("NEXT DAY: ",nextDay)
+
+    console.log("TODAY: ",today)
+    console.log("NEXT DAY:",nextDay)
     
     let searchQuery = {
         isDeleted: false,

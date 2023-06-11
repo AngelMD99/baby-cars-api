@@ -36,7 +36,7 @@ const rentalsReport = async function (req, reply){
             })
         }
 
-        let finalDay= addDays(finalDayToDate,1)        
+        let finalDay= addDays(finalDayToDate,1)              
         dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
         
     if (req.query.initialDate!=null && req.query.finalDate==null){        
