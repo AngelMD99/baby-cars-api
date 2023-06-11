@@ -191,9 +191,13 @@ module.exports = function (fastify, opts, done) {
         //     date.setHours(0, 0, 0, 0);
         // }  
             var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-            let stringDate = date.toLocaleDateString('es-ES', options);            
+            let stringDate = date.toLocaleDateString('es-ES', options); 
+            let ticketDate = date.toLocaleDateString('es-ES')            
+            let pdfDate = ticketDate.replaceAll('/', '-')           
             balanceObj.date = stringDate            
-            let documentId = "balance." + uuid.v1() + ".pdf"
+            let documentId = "balance" 
+            documentId = balanceObj.branchCode && balanceObj.branchCode!="" ? documentId + "-" + balanceObj.branchCode:documentId;
+            documentId = documentId + "-" + pdfDate + ".pdf"
             return generate("balance", balanceObj,documentId );           
 
         }
