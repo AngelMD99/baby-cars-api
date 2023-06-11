@@ -15,7 +15,7 @@ const getOffsetSetting = async function(){
         return currentSetting.offset;        
     }
     else{
-        return 7
+        return 6
     }
 
 

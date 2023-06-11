@@ -104,7 +104,7 @@ module.exports = function (fastify, opts, done) {
                 rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
                 delete rentalObj.carId;
             }
-            let offset=req.headers.offset ? req.headers.offset:7
+            let offset=req.headers.offset ? req.headers.offset:6
             let date = rental.createdAt
             
             let expirationDate = new Date(rental.createdAt)            
@@ -162,7 +162,7 @@ module.exports = function (fastify, opts, done) {
             balanceObj.concept="Rentas diarias en efectivo";        
             balanceObj.total=req.body.total
             
-            let offset=req.headers.offset ? req.headers.offset:7
+            let offset=req.headers.offset ? req.headers.offset:6
             let date = new Date()
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         //     date.setHours(offset,0,0,0);    
