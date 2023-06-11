@@ -90,9 +90,14 @@ module.exports = function (fastify, opts, done) {
         
             await rental.populate(
                 [{path: 'branchId', select: 'name code'},
-                {path: 'carId', select: 'name'}]
-            ); 
+                {path: 'carId', select: 'name color modelId'}]
+            );  
             
+            await rental.populate([
+                { path:'carId.modelId', select:'name'}
+
+            ])
+                        
             let rentalObj = await rental.toObject();            
             if (rentalObj.branchId){
                 rentalObj.branchCode=rentalObj.branchId.code ? rentalObj.branchId.code :"";
@@ -101,7 +106,10 @@ module.exports = function (fastify, opts, done) {
             }
     
             if (rentalObj.carId){
-                rentalObj.carName=rentalObj.carId.name ? rentalObj.carId.name :"";        
+                rentalObj.carName = rentalObj.carId.modelId && rentalObj.carId.modelId.name ? rentalObj.carId.modelId.name:"";
+                rentalObj.carName = rentalObj.carId.color ? rentalObj.carName+" "+rentalObj.carId.color :rentalObj.carName;         
+                rentalObj.carName = rentalObj.carId.name ? rentalObj.carName +" "+rentalObj.carId.name : rentalObj.carName;
+                
                 delete rentalObj.carId;
             }
             let offset=req.headers.offset ? req.headers.offset:6
@@ -146,7 +154,8 @@ module.exports = function (fastify, opts, done) {
             //console.log("RENTAL OBJ:", rentalObj)
 
             delete rentalObj.__v
-            return generate("ticket", rentalObj );
+            let documentId = "ticket." + uuid.v1() + ".pdf"
+            return generate("ticket", rentalObj,documentId );
         }
 
         else{
@@ -175,14 +184,14 @@ module.exports = function (fastify, opts, done) {
             var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
             let stringDate = date.toLocaleDateString('es-ES', options);            
             balanceObj.date = stringDate            
-            
-            return generate("balance", balanceObj );           
+            let documentId = "balance." + uuid.v1() + ".pdf"
+            return generate("balance", balanceObj,documentId );           
 
         }
         
     });
 
-    const generate = async function (template, body, footerText = '') {       
+    const generate = async function (template, body, documentId = '') {       
         
         // const footer = `
         // <footer style="margin: 0 4mm; width: 100%; font-size: 2mm;">
@@ -201,7 +210,8 @@ module.exports = function (fastify, opts, done) {
             "public/document_" + template + ".html",
             body
         );
-        var documentName = template + "." + uuid.v1() + ".pdf";        
+        // var documentName = template + "." + uuid.v1() + ".pdf";        
+        var documentName = documentId;        
         let prePath = __dirname.replace('routes','')        
         //var documentLocation = path.join(__dirname, "public/docs/") + documentName;
         var documentLocation = path.join(prePath, "public/docs/") + documentName;        
