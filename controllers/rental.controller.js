@@ -224,7 +224,11 @@ const rentalList = async function (req, reply){
             })
         }
 
-        let finalDay= addDays(finalDayToDate,1)                        
+        let finalDay= addDays(finalDayToDate,1)
+        console.log("INITIAL DATE RECEIVED CRM RENTALS: ", req.query.initialDate);
+        console.log("INITIAL DATE ADJUSTED CRM RENTALS: ", initialDay);
+        console.log("FINAL DATE RECEIVED CRM RENTALS: ", req.query.finalDate);                       
+        console.log("FINAL DATE RECEIVED CRM RENTALS: ", finalDay);                       
         searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
     }
     if (req.query.initialDate!=null && req.query.finalDate==null){        
