@@ -110,7 +110,7 @@ module.exports = function (fastify, opts, done) {
                 rentalObj.carName = rentalObj.carId.color ? rentalObj.carName+" "+rentalObj.carId.color :rentalObj.carName;         
                 rentalObj.carName = rentalObj.carId.name ? rentalObj.carName +" "+rentalObj.carId.name : rentalObj.carName;
                 
-                delete rentalObj.carId;
+                //delete rentalObj.carId;
             }
             let offset=req.headers.offset ? req.headers.offset:6
             let date = rental.createdAt
@@ -154,7 +154,16 @@ module.exports = function (fastify, opts, done) {
             //console.log("RENTAL OBJ:", rentalObj)
 
             delete rentalObj.__v
-            let documentId = "ticket." + uuid.v1() + ".pdf"
+            let documentId = "ticket" 
+            documentId = rentalObj.branchCode ? documentId+"-"+rentalObj.branchCode:documentId;
+            if (rentalObj.carId){
+                documentId = rentalObj.carId.modelId && rentalObj.carId.modelId.name ? documentId +"-"+ rentalObj.carId.modelId.name:documentId;
+                documentId = rentalObj.carId.color ? documentId+"-"+rentalObj.carId.color :documentId;         
+                documentId = rentalObj.carId.name ? documentId +"-"+rentalObj.carId.name : documentId;                                //delete rentalObj.carId;
+            }
+            
+
+            documentId+=".pdf"
             return generate("ticket", rentalObj,documentId );
         }
 
