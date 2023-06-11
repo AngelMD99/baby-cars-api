@@ -117,6 +117,31 @@ module.exports = function (fastify, opts, done) {
             
             let expirationDate = new Date(rental.createdAt)            
             expirationDate= addMinutes(expirationDate, rental.planType.time)
+
+            let stringDate = "";
+            let stringTime = "";
+            let stringExpirationDate = "";
+            let stringExpirationTime = "";
+            
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+            console.log("ENVIRONMENT:",process.env.ENVIRONMENT)
+            if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+                date.setHours(date.getHours() - offset);
+                expirationDate.setHours(expirationDate.getHours() - offset);
+                stringDate = dateDDMMAAAA(date,'date')
+                stringTime = dateDDMMAAAA(date,'time')
+                stringExpirationDate = dateDDMMAAAA(expirationDate,'date');
+                stringExpirationTime = dateDDMMAAAA(expirationDate,'time');
+
+            }
+
+            else{
+                stringDate = date.toLocaleDateString('es-ES', options);
+                stringTime = date.toLocaleTimeString('en-ES')            
+                stringExpirationDate = expirationDate.toLocaleDateString('es-ES', options);
+                stringExpirationTime = expirationDate.toLocaleTimeString('en-ES')            
+            }
+
             //console.log("DATE: ",date)
             //console.log("EXPIRATION DATE: ",expirationDate)
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
@@ -127,15 +152,6 @@ module.exports = function (fastify, opts, done) {
         //     date.setHours(0,0,0,0);
         //     date.setHours(0, 0, 0, 0);
         // }  
-            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-            let stringDate = date.toLocaleDateString('es-ES', options);
-            let stringTime = date.toLocaleTimeString('en-ES') 
-            //console.log("STRING DATE: ",stringDate)
-            //console.log("STRING TIME: ",stringTime)
-            let stringExpirationDate = expirationDate.toLocaleDateString('es-ES', options);
-            let stringExpirationTime = expirationDate.toLocaleTimeString('en-ES') 
-            //console.log("STRING EXPIRATION DATE: ",stringExpirationDate)
-            //console.log("STRING EXPIRATION TIME: ",stringExpirationTime)
 
             rentalObj.planType.price=rentalObj.planType.price.toFixed(2)
             rentalObj.planType.time=Math.ceil(rentalObj.planType.time)
@@ -163,7 +179,7 @@ module.exports = function (fastify, opts, done) {
             }
             
 
-            documentId+=".pdf"
+            documentId=documentId+"-"+ uuid.v1()+".pdf"
             return generate("ticket", rentalObj,documentId );
         }
 
@@ -182,6 +198,33 @@ module.exports = function (fastify, opts, done) {
             
             let offset=req.headers.offset ? req.headers.offset:6
             let date = new Date()
+            let stringDate = "";
+            let stringTime = "";            
+            let ticketDate="";
+            let pdfDate="";
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }            
+            console.log("ENVIRONMENT:",process.env.ENVIRONMENT)
+            if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+                date.setHours(date.getHours() - offset);                
+                stringDate = dateDDMMAAAA(date,'date')
+                stringTime = dateDDMMAAAA(date,'time')
+                let day = date.getDate();
+                let month = date.getMonth() + 1   
+                let year = date.getFullYear();
+                let dayString = day > 9 ? day : "0"+day;
+                let monthString = month > 9 ? month : "0"+month;  
+                pdfDate = dayString + "-" + monthString + "-" + year          
+
+            }
+
+            else{
+                stringDate = date.toLocaleDateString('es-ES', options);
+                stringTime = date.toLocaleTimeString('en-ES')
+                ticketDate = date.toLocaleDateString('es-ES')            
+                pdfDate = ticketDate.replaceAll('/', '-')                                       
+            }
+
+
         // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
         //     date.setHours(offset,0,0,0);    
         //     date.setHours(offset, 0, 0, 0);
@@ -190,14 +233,12 @@ module.exports = function (fastify, opts, done) {
         //     date.setHours(0,0,0,0);
         //     date.setHours(0, 0, 0, 0);
         // }  
-            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-            let stringDate = date.toLocaleDateString('es-ES', options); 
-            let ticketDate = date.toLocaleDateString('es-ES')            
-            let pdfDate = ticketDate.replaceAll('/', '-')           
-            balanceObj.date = stringDate            
+            balanceObj.date = stringDate 
+            balanceObj.time = stringTime 
+
             let documentId = "balance" 
             documentId = balanceObj.branchCode && balanceObj.branchCode!="" ? documentId + "-" + balanceObj.branchCode:documentId;
-            documentId = documentId + "-" + pdfDate + ".pdf"
+            documentId = documentId + "-" + pdfDate + "-"+ uuid.v1()+ ".pdf"
             return generate("balance", balanceObj,documentId );           
 
         }
@@ -278,22 +319,11 @@ function isValidObjectId(id){
     return false;
 }
 
-function dateDDMMAAAA(timestamp,offset){ 
-    // console.log("timestamp:",timestamp.getHours())
-    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-        date.setHours(offset,0,0,0);    
-        date.setHours(offset, 0, 0, 0);
-        }
-        else{
-            date.setHours(0,0,0,0);
-            date.setHours(0, 0, 0, 0);
-        }  
-    // if(offset!=null){
-    //     timestamp.setHours(timestamp.getHours() + offset);
-    // }
+function dateDDMMAAAA(timestamp,type){ 
 
-    
+    console.log("DATE RECEIVED IN FUNCTION: ", timestamp)
     let day = timestamp.getDate();
+    let weekday =  timestamp.getDay();
     let month = timestamp.getMonth() + 1
     let year = timestamp.getFullYear();
     let hours = timestamp.getHours();
@@ -304,50 +334,93 @@ function dateDDMMAAAA(timestamp,offset){
     let monthString = "";
     switch (month) {
         case 1:
-            monthString ="ENE"            
+            monthString ="Enero"            
             break;
         case 2:
-            monthString ="FEB"            
+            monthString ="Febrero"            
             break;
         case 3:
-            monthString ="MAR"            
+            monthString ="Marzo"            
             break;
         case 4:
-            monthString ="ABR"            
+            monthString ="Abril"            
             break;
         case 5:
-            monthString ="MAY"            
+            monthString ="Mayo"            
             break;
         case 6:
-            monthString ="JUN"            
+            monthString ="Junio"            
             break;
         case 7:
-            monthString ="JUL"            
+            monthString ="Julio"            
             break;
         case 8:
-            monthString ="AGO"            
+            monthString ="Agosto"            
             break;
         case 9:
-            monthString ="SEP"            
+            monthString ="Septiembre"            
             break;
         case 10:
-            monthString ="OCT"            
+            monthString ="Octubre"            
             break;
         case 11:
-            monthString ="NOV"            
+            monthString ="Noviembre"            
             break;
         case 12:
-            monthString ="DIC"            
+            monthString ="Diciembre"            
             break;
         default:
             break;
     }
+
+    let stringDay=""
+    switch (weekday) {
+        case 0:
+            stringDay ="Domingo"            
+            break;
+        case 1:
+            stringDay ="Lunes"            
+            break;
+        case 2:
+            stringDay ="Martes"            
+            break;
+        case 3:
+            stringDay ="Miercoles"            
+            break;
+        case 4:
+            stringDay ="Jueves"            
+            break;
+        case 5:
+            stringDay ="Viernes"            
+            break;
+        case 6:
+            stringDay ="Sabado"            
+            break;
+        case 7:
+            stringDay ="Domingo"            
+            break;        
+        default:
+            break;
+    }
+
     let stringMinutes = minutes < 10 ? "0"+minutes : minutes;
-    let stringHours = hours12 < 10 ? "0"+hours12 : hours12;
+    let stringHours = hours12;
     //let stringDate = dayString + "-" + monthString + "-" + year 
-    let stringDate = dayString + "-" + monthString + "-" + year + " "+stringHours+":"+stringMinutes;
-    stringDate = hours >= 12 ? stringDate +" "+"PM" : stringDate +" "+"AM";
-    return stringDate
+    let stringDate = stringDay + " " + dayString + "-" + monthString + "-" + year;
+    let stringTime = stringHours+":"+stringMinutes;
+    stringTime = hours >= 12 ? stringTime +" "+"PM" : stringTime +" "+"AM";
+    console.log("DATE ADJUSTED IN FUNCTION: ",stringDate)
+    console.log("TIME ADJUSTED IN FUNCTION: ",stringTime)
+
+    if(type=='date'){
+        return stringDate
+    }
+
+    else{
+        return stringTime
+    }
+    
+    
 }
 
 function addMinutes(date, minutes) { 
