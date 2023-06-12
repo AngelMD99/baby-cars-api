@@ -132,8 +132,8 @@ const rentalCreate = async function (req, reply){
     let monthString = month > 9 ? month : "0"+month;  
     let nextFolio = branchRentals.length+1
     nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
-    nextFolio = nextFolio>10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
-    nextFolio = nextFolio>100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+    nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+    nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
     let branchCode = activeBranch.code;
     rental.folio = branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio)
 
