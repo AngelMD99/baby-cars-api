@@ -108,23 +108,31 @@ const rentalCreate = async function (req, reply){
     rental.carId = carId;
     rental.branchId = branchId;
     //let branchId = mongoose.Types.ObjectId(req.body.branchId)
-    let branchRentals = await Rental.find({branchId:branchId})
+    
     // let offset = req.headers.offset ? req.headers.offset : 6
     let offset = await getOffsetSetting();              
     let date = new Date ();
     console.log("NEW DATE UTC : ",date)
-    date.setHours(date.getHours() - offset);    
-    // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-    //     date.setHours(date.getHours() - offset);
-    //     console.log("DATE GMT ADJUSTED: ",date)
-    //     // date.setHours(offset,0,0,0);    
-    //     // date.setHours(offset, 0, 0, 0);
-    // }
-    // else{
-    //     date.setHours(0,0,0,0);
-    //     date.setHours(0, 0, 0, 0);
-    // }
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+         date.setHours(date.getHours() - offset);
+         console.log("DATE GMT ADJUSTED: ",date)
+         date.setHours(offset,0,0,0);    
+         // date.setHours(offset, 0, 0, 0);
+    }
+    else{
+         date.setHours(0,0,0,0);
+         date.setHours(0, 0, 0, 0);
+    }
     console.log("CURRENT DATE AND TIME ZONE: ",date);
+    let nextDay = addDays(date,1)
+
+    let branchRentals = await Rental.find({
+        isDeleted:false, 
+        branchId:branchId,
+        createdAt:{"$gte": date,"$lte":nextDay}
+    })    
+      
+
     let day = date.getDate();
     let month = date.getMonth() + 1
     let year = date.getFullYear();
