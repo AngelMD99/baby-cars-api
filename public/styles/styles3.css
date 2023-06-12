@@ -13,22 +13,22 @@ table {
 
 td.description,
 th.description {
-    width: 75px;
-    max-width: 75px;
+    width: 72px;
+    max-width: 72px;
 }
 
 td.quantity,
 th.quantity {
-    width: 62px;
-    max-width: 62px;
+    width: 60px;
+    max-width: 60px;
     word-break: break-all;
     
 }
 
 td.price,
 th.price {
-    width: 55px;
-    max-width: 55px;
+    width: 60px;
+    max-width: 60px;
     word-break: break-all;
 }
 
