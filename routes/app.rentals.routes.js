@@ -92,8 +92,7 @@ const postRentalUpOpts = {
         //     authorization:{type:'string'}
         // },
         body: {
-            type: 'object',
-            required: ['branchId','carId','planType','paymentType'], 
+            type: 'object',            
             properties: {                
                 branchId:{type:'string'},
                 carId:{type:'string'},

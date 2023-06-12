@@ -33,6 +33,28 @@ const rentalCreate = async function (req, reply){
         })
     }
 
+    if(!req.body.planType){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El plan es requerido'
+        })
+    }
+
+    if(!req.body.planType.time){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El tiempo del plan es requerido'
+        })
+    }
+
+    if(!req.body.planType.price){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El costo del plan es requerido'
+        })
+    }
+    
+
     
     let branchValidation= isValidObjectId(req.body.branchId)
         if (branchValidation==false){
