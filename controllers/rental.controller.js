@@ -567,6 +567,7 @@ const branchRentalCashBalance = async function (req,reply){
     let offset = await getOffsetSetting();              
     let today = new Date ();
     if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        today.setHours(today.getHours() - offset);    
         today.setHours(offset,0,0,0);    
         today.setHours(offset, 0, 0, 0);
     }
