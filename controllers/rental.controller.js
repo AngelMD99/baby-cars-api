@@ -633,9 +633,32 @@ const branchRentalsList = async function (req, reply){
 
     let offset = await getOffsetSetting();              
     let today = new Date ();
+    let today1 = new Date ();
+    let today2 = new Date ();
+    let today3 = new Date ();
+    let today4 = new Date ();
+    let today5 = new Date ();
     if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-        today.setHours(offset,0,0,0);    
-        today.setHours(offset, 0, 0, 0);
+        today.setHours(today.getHours() - offset);    
+        today1.setHours(today1.getHours() - offset);    
+        today2.setHours(today2.getHours() - offset);    
+        today3.setHours(today3.getHours() - offset);    
+        //today4.setHours(today4.getHours() - offset);
+        //today5.setHours(today5.getHours() - offset);        
+        console.log("TODAY: ", today);
+        console.log("TODAY 1: ", today1);                
+        console.log("TODAY 2: ", today2);                
+        console.log("TODAY 3: ", today3);                
+        //console.log("TODAY 4: ", today4);
+        //console.log("TODAY 5: ", today5);                                
+        today.setHours(offset,0,0,0);
+        console.log("TODAY: offset,0,0,0", today);    
+        today1.setHours(offset, 0, 0, 0);
+        console.log("TODAY 1: offset, 0, 0, 0", today);        
+        today2.setHours(0,0,0,0);
+        console.log("TODAY 2: 0,0,0,0", today);        
+        today3.setHours(0, 0, 0, 0);
+        console.log("TODAY 3: 0, 0, 0, 0", today);        
     }
     else{
         today.setHours(0,0,0,0);
