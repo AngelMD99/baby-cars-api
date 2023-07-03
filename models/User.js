@@ -11,6 +11,13 @@ const userSchema = new mongoose.Schema({
         required: true,
         enum:['admin', 'employee']
     },
+    branchId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Branch", 
+    },
+    username:{
+        type:String
+    },
     fullName: {
         type: String,
         required: true

@@ -136,6 +136,114 @@ exports.options = {
           }
 
         },
+
+        status:{
+          type: 'object',
+          required: ['carId'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            carId:{type:'string'}, 
+            records:{
+              type:'array',
+              items:{
+                type:'object',
+                properties:{
+                  value:{type:'number'},
+                  dateTime:{type:'timestamp'}
+
+                }
+              }
+            }                     
+          }
+        },
+
+        battery:{
+          type: 'object',
+          required: ['carId'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            carId:{type:'string'}, 
+            records:{
+              type:'array',
+              items:{
+                type:'object',
+                properties:{
+                  value:{type:'number'},
+                  dateTime:{type:'timestamp'}
+
+                }
+              }
+            }                     
+          }
+        },
+        inventory:{
+          type: 'object',
+          required: ['modelId'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            modelId:{type:'string'}, 
+            color:{type:'string'},
+            quantity:{type:'number'}            
+          }
+        },
+
+        sales: {
+          type: 'object',
+          required: ['branchId','saleType','modelId'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},                        
+            folio:{type:'boolean'},
+            clientId:{type:'string'},
+            branchId:{type:'string'},
+            modelId:{type:'string'},
+            color:{type:'string'},
+            reserveId:{type:'string'},
+            price:{type:'number'},                               
+            payments:{
+              type:'array',
+              items:{
+                type:'object',
+                properties:{
+                  amount:{type:'number'},
+                  paidOn:{type:'number'},
+                  paymentType:{type:'string'}
+
+                }
+              }
+            },
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}
+          }
+        },
+        
+        clients:{
+          type: 'object',
+          required: ['fullName','phone'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            fullName:{type:'string'}, 
+            phone:{type:'string'},            
+          }
+        },
+
+        reserves:{
+          type: 'object',
+          required: ['modelId','clientId'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            modelId:{type:'string'}, 
+            clientId:{type:'string'}, 
+            color:{type:'string'},            
+          }
+        },
+
+
         
       }
     }
