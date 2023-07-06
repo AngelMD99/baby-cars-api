@@ -1,7 +1,7 @@
-const Branch = require('../models/Branch');
-const { inventoryCreate, inventoryList, inventoryUpdate, inventoryDelete   } = require('../controllers/inventory.controller');
-const { plansAvailable } = require('../controllers/branch.controller')
+const { statusCreate, statusList, statusDelete, statusUpdate } = require('../controllers/status.controller');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
+
 const errResponse = {
     type: 'object',
     properties: {
@@ -12,29 +12,27 @@ const errResponse = {
 
 const authorizeFunc = async function (req, reply) {
     try {
-
         if(!req.headers.authorization){
             return reply.code(401).send({
                 status: 'fail',
                 message: 'Sesión expirada'
-            })
-            
+            })            
         }
 
         const decoded = await req.jwtVerify()
-        // if (!decoded._id || (decoded.role!='admin') ) {
-        //     return reply.code(401).send({
-        //         status: 'fail',
-        //         message: 'invalid_crm_token'
-        //     })
-        // }
-    
-        const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
-    
-        if(branch == null){
+        if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'Sucursal autentificada no existe'
+                message: 'Token de usuario no válido'
+            })
+        }
+    
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(user == null){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario autentificado no encontrado'
             })
         }
         // if(user.isEnabled == false){
@@ -50,7 +48,7 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
-function appInventoryRoutes(fastify, options, done) {
+function crmStatusRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
@@ -61,4 +59,4 @@ function appInventoryRoutes(fastify, options, done) {
 
 done()
 }
-module.exports = appInventoryRoutes
+module.exports = crmStatusRoutes

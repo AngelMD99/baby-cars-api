@@ -1,4 +1,4 @@
-const Inventory = require('../models/Inventory');
+const Status = require('../models/Status');
 const Branch = require('../models/Branch');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -8,19 +8,19 @@ const Modelo = require('../models/Modelo');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 
-const inventoryCreate = async function (req,reply){
+const statusCreate = async function (req,reply){
 
 }
 
-const inventoryList = async function (req,reply){
+const statusList = async function (req,reply){
 
 }
 
-const inventoryDelete = async function (req,reply){
+const statusDelete = async function (req,reply){
 
 }
 
-const inventoryUpdate = async function (req,reply){
+const statusUpdate = async function (req,reply){
 
 }
 
@@ -60,4 +60,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { inventoryCreate, inventoryDelete, inventoryList, inventoryUpdate }
+module.exports = { statusCreate, statusDelete, statusList, statusUpdate }

@@ -1,7 +1,7 @@
-const Branch = require('../models/Branch');
-const { inventoryCreate, inventoryList, inventoryUpdate, inventoryDelete   } = require('../controllers/inventory.controller');
-const { plansAvailable } = require('../controllers/branch.controller')
+const { clientCreate, clientSearch, clientDelete, clientUpdate   } = require('../controllers/client.controller');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
+
 const errResponse = {
     type: 'object',
     properties: {
@@ -50,7 +50,7 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
-function appInventoryRoutes(fastify, options, done) {
+function crmClientsRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
@@ -61,4 +61,4 @@ function appInventoryRoutes(fastify, options, done) {
 
 done()
 }
-module.exports = appInventoryRoutes
+module.exports = crmClientsRoutes

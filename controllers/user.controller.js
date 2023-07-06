@@ -70,6 +70,12 @@ const userLogin = async function (req, reply) {
     this.jwt.sign({_id: user._id, role:user.role, isDeleted:user.isDeleted, timestamp: timestamp}, async (err, token) => {
         if (err) return reply.send(err)
 
+        if (user.branchId){
+            await user.populate([
+                {path:'branchId', select:'_id name code'},
+            ]); 
+             
+        }
         let userObj = user.toObject()       
 
 
@@ -84,8 +90,56 @@ const userLogin = async function (req, reply) {
         }) 
     })
 }
-// const userCreate = async function (req, reply){
 
-// }
+const userCreate = async function (req, reply){
+
+}
+
+const userList = async function (req, reply){
+
+}
+
+const userDelete = async function (req, reply){
+
+}
+
+const userUpdate = async function (req, reply){
+
+}
+
+function paginateArray(array, limit, page) {
+    return array.slice((page - 1) * limit, page * limit);
+}
+
+function isValidObjectId(id){
+    
+    if(ObjectId.isValid(id)){
+        if((String)(new ObjectId(id)) === id)
+            return true;
+        return false;
+    }
+    return false;
+}
+
+function minutesDiff(dateTimeValue2, dateTimeValue1) {
+    let negativeResult = false
+    if(dateTimeValue2>dateTimeValue1){    
+        negativeResult=true;
+    }    
+    var differenceValue =(dateTimeValue1.getTime() - dateTimeValue2.getTime()) / 1000;
+    differenceValue /= 60;
+    let result = Math.abs(Math.round(differenceValue)); 
+    result = negativeResult==true? -result : result;
+    return result
+ }
+ 
+
+function diacriticSensitiveRegex(string = '') {
+    return string.replace(/a/g, '[a,á,à,ä,â]')
+       .replace(/e/g, '[e,é,ë,è]')
+       .replace(/i/g, '[i,í,ï,ì]')
+       .replace(/o/g, '[o,ó,ö,ò]')
+       .replace(/u/g, '[u,ü,ú,ù]');
+}
 
 module.exports = { userLogin }
