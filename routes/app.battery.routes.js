@@ -1,5 +1,5 @@
 const Branch = require('../models/Branch');
-const {  batteryCreate,batteryDelete, batteryList, batteryDelete  } = require('../controllers/battery.controller');
+const {  batteryCreate, batteryDelete, batteryList, batteryUpdate  } = require('../controllers/battery.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');
 const errResponse = {

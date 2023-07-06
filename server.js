@@ -60,19 +60,36 @@ fastify.register(require("fastify-static"), {
 });
 
 fastify.register(require("./routes/base.routes"));
-fastify.register(require("./routes/crm.users.routes"));
-fastify.register(require("./routes/crm.branches.routes"));
+fastify.register(require("./routes/app.battery.routes"));
+fastify.register(require("./routes/app.branches.routes"));
+fastify.register(require("./routes/app.cars.routes"));
+fastify.register(require("./routes/app.clients.routes"));
+fastify.register(require("./routes/app.inventory.routes"));
+fastify.register(require("./routes/app.modelos.routes"));
+fastify.register(require("./routes/app.rental.ticket.route"));
+fastify.register(require("./routes/app.rentals.routes"));
+fastify.register(require("./routes/app.sales.routes"));
+fastify.register(require("./routes/app.status.routes"));
+fastify.register(require("./routes/app.tickets.routes"));
+
 fastify.register(require("./routes/crm.banking.routes"));
+fastify.register(require("./routes/crm.battery.routes"));
+fastify.register(require("./routes/crm.branches.routes"));
 fastify.register(require("./routes/crm.cars.routes"));
+fastify.register(require("./routes/crm.clients.routes"));
+fastify.register(require("./routes/crm.inventory.routes"));
+fastify.register(require("./routes/crm.modelos.routes"));
 fastify.register(require("./routes/crm.rentals.routes"));
 fastify.register(require("./routes/crm.reports.routes"));
-fastify.register(require("./routes/crm.modelos.routes"));
-fastify.register(require("./routes/app.branches.routes"));
-fastify.register(require("./routes/app.rentals.routes"));
-fastify.register(require("./routes/app.cars.routes"));
-fastify.register(require("./routes/app.tickets.routes"));
-fastify.register(require("./routes/app.rental.ticket.route"));
-fastify.register(require("./routes/app.modelos.routes"));
+fastify.register(require("./routes/crm.sales.routes"));
+fastify.register(require("./routes/crm.status.routes"));
+fastify.register(require("./routes/crm.users.routes"));
+
+
+
+
+
+
 // fastify.register(require("./routes/news.routes"));
 // fastify.register(require("./routes/subscription.routes"));
 
