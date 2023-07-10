@@ -1,5 +1,5 @@
 const Branch = require('../models/Branch');
-const { carList, carStart, carStop, carsAvailable,carBranchAutoOff  } = require('../controllers/car.controller');
+const { carList, carStart, carStop, carsAvailable,carBranchAutoOff, carsTurnedOff  } = require('../controllers/car.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');
 const errResponse = {
@@ -220,6 +220,37 @@ const getAvailableCarsOpts={
     
 }
 
+const getInactiveCarsOpts={
+    schema: {
+         description:"Retrieves the turned off cars for the branch in order to be used to check the status of the rele",
+         tags:['Cars'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        params:{
+            id:{type:'string'}
+         }, 
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:carAvailableDef
+                  },                
+                  
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: carsTurnedOff,
+    
+}
+
 const getCarsOpts={
     schema: {
          description:"Retrieves the information of all the cars related to the branch with the id provided in URL stored on the database .",
@@ -348,6 +379,7 @@ function appCarsRoutes(fastify, options, done) {
     fastify.get('/branches/:id/cars', getCarsOpts)
     fastify.get('/branches/:id/auto-off', autoStopCars)        
     fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
+    fastify.get('/branches/:id/inactive/cars', getInactiveCarsOpts)
     fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
     fastify.put('/cars/:id/start', startSingleCarOpts)
     fastify.put('/cars/:id/stop', stopSingleCarOpts)        

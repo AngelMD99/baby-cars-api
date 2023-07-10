@@ -1,6 +1,10 @@
 const Branch = require('../models/Branch');
 const { branchLogin } = require('../controllers/branch.controller');
 const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
+const { statusCreate, statusDelete, statusList, statusUpdate } = require('../controllers/status.controller');
+const { batteryCreate } = require('../controllers/battery.controller');
+
+
 
 const errResponse = {
     type: 'object',
@@ -192,6 +196,84 @@ const getBalanceOpts={
     
 }
 
+const putBranchStatusOpt = {
+    schema: {
+        description:'Updates the status of the rele of the all the cars in the array received',
+        tags:['Branches'],        
+        body:{
+            type:'object',
+            required:['carsArray'],
+            properties:{
+                carsArray:{
+                    type:'array',
+                    items:{
+                        type:'object',
+                        properties:{
+                            carId:{type:'string'},
+                            value:{type:'string'},
+                            dateTime:{type:'string'}
+                            
+                        }
+                    }
+                },
+                
+            }
+        },      
+        response: {
+            200: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string' },
+                    message:{ type: 'string'}
+                }
+            },
+            400: errResponse
+        }
+    },
+    preHandler: authorizeFunc,
+    handler: statusCreate
+
+}
+
+const putBatteryStatusOpt = {
+    schema: {
+        description:'Updates the status of the rele of the all the cars in the array received',
+        tags:['Branches'],        
+        body:{
+            type:'object',
+            required:['carsArray'],
+            properties:{
+                carsArray:{
+                    type:'array',
+                    items:{
+                        type:'object',
+                        properties:{
+                            carId:{type:'string'},
+                            value:{type:'string'},
+                            dateTime:{type:'string'}
+                            
+                        }
+                    }
+                },
+                
+            }
+        },      
+        response: {
+            200: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string' },
+                    message:{ type: 'string'}
+                }
+            },
+            400: errResponse
+        }
+    },
+    preHandler: authorizeFunc,
+    handler: batteryCreate
+
+}
+
 const postBranchSignInOpts = {
     schema: {
         description:'Authenticates and creates a session for a branch',
@@ -229,6 +311,9 @@ function appBranchesRoutes(fastify, options, done) {
     fastify.post('/branches/in', postBranchSignInOpts) 
     fastify.get('/branches/:id/rentals', getRentalsOpts) 
     fastify.get('/branches/:id/balance', getBalanceOpts) 
+    fastify.put('/branches/:id/status', putBranchStatusOpt) 
+    fastify.put('/branches/:id/battery', putBatteryStatusOpt) 
+
 
 
 done()

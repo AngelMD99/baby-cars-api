@@ -55,7 +55,7 @@ function appStatusRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
     // fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
-    // fastify.put('/cars/:id/start', startSingleCarOpts)
+    //fastify.put('//:id/start', startSingleCarOpts)
     // fastify.put('/cars/:id/stop', stopSingleCarOpts)            
     //fastify.delete('/crm/branches/:id', getCarsOpts)
 

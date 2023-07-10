@@ -1,3 +1,4 @@
+const Car = require('../models/Car');
 const Battery = require('../models/Battery');
 const Branch = require('../models/Branch');
 const mongoose = require('mongoose');
@@ -9,7 +10,53 @@ let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 
 const batteryCreate = async function (req,reply){
-
+    let carsArray = req.body.carsArray;
+    for ( const car of carsArray){             
+        let carValidation = isValidObjectId(car.carId)
+        if (carValidation==false){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El id '+car.carId+' no es un id valido en la base de datos'
+            })
+        }
+        else{
+            let activeCar = await Car.findOne({_id:car.carId, isDeleted:false})
+            if (!activeCar){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'El id '+car.carId+' no existe'
+                })
+            }          
+          
+        }
+        let batteryValidation = await Battery.findOne({carId:car.carId, isDeleted:false})
+        if (batteryValidation){
+            batteryValidation.records.push({
+                value:car.value,
+                dateTime:car.dateTime
+            })
+            await batteryValidation.save()
+        }
+        else{
+            let newBattery={
+                isDeleted:false,
+                carId:car.carId,
+                records:[
+                    {
+                        value:car.value,
+                        dateTime:car.dateTime
+                    }
+                ]
+            }
+            const battery = new Battery(newBattery)
+            battery._id = mongoose.Types.ObjectId()
+            await battery.save();
+        }       
+    }
+    return  reply.code(201).send({
+        status: 'success',
+        message: 'Baterias actualizadas'
+     })  
 }
 
 const batteryList = async function (req,reply){

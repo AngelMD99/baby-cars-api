@@ -383,7 +383,44 @@ const carBranchAutoOff = async function (req, reply){
 
 }
 
+const carsTurnedOff = async function(req,reply){
+    let aggregateQuery=[ ]
+    if( req.params.id){
+        aggregateQuery.push(            {
+            '$match': {  
+              'isDeleted':false,  
+              'isStarted':false,
+              'branchId':ObjectId(req.params.id)
+            }
+        })
+        aggregateQuery.push(
+            {
+                '$project': {
+                  '_id': 0,              
+                  'carId._id': '$_id', 
+                  'carId.isDeleted':'$isDeleted',
+                  'carId.name': '$name',
+                  'carId.color':'$color',
+                  'carId.isStarted':'$isStarted',
+                  'carId.ipAddress':'$ipAddress',                               
+                  
+                }
+              }
+        )
+    }
+
+    let inactiveCars = await Car.aggregate(aggregateQuery);  
+    reply.code(200).send({
+        status:'sucess',
+        data:inactiveCars        
+    })  
+
+
+
+}
+
 const carsAvailable = async function (req, reply){
+
 
 
     let aggregateQuery=[
@@ -959,4 +996,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchAutoOff, carsAvailable }
+module.exports = { carCreate, carShow, carUpdate, carDelete, carList, carStart, carStop, carBranchAutoOff, carsAvailable, carsTurnedOff }
