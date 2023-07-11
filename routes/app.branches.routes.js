@@ -167,6 +167,8 @@ const getRentalsOpts={
     
 }
 
+
+
 const getBalanceOpts={
     schema: {
          description:"The total of the daily rentals paid in cash for the branch with the id in the URL",

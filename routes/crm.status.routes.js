@@ -47,9 +47,74 @@ const authorizeFunc = async function (req, reply) {
       return reply.code(401).send(err)
     }
 }
+const statusDef = { 
+    type: 'object',    
+    properties: {
+        _id: { type: 'string' },
+        records:{
+
+        },       
+        branchId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                code:{type:'string'},
+                name:{type:'string'},
+            }
+        },
+        carId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},
+                color:{type:'string'},
+                modelo:{type:'string'}
+
+            }
+        },        
+        createdAt:{type:'string'},
+        updatedAt:{type:'string'}        
+    }
+}
+
+const getRentalsOpts={
+    schema: {
+         description:"Retrieves the information of all the status of the reles stored on the database.",
+         tags:['Status'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:statusDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: statusList,
+    
+}
 
 function crmStatusRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
+    fastify.get('/crm/status', getRentalsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
     // fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)

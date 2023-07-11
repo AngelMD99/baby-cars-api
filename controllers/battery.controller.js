@@ -29,7 +29,7 @@ const batteryCreate = async function (req,reply){
             }          
           
         }
-        let batteryValidation = await Battery.findOne({carId:car.carId, isDeleted:false})
+        let batteryValidation = await Battery.findOne({carId:car.carId, isDeleted:false, branchId:req.params.id})
         if (batteryValidation){
             batteryValidation.records.push({
                 value:car.value,
@@ -41,6 +41,7 @@ const batteryCreate = async function (req,reply){
             let newBattery={
                 isDeleted:false,
                 carId:car.carId,
+                branchId:req.params.id,
                 records:[
                     {
                         value:car.value,
