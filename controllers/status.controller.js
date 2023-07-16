@@ -63,14 +63,13 @@ const statusCreate = async function (req,reply){
 const statusList = async function (req,reply){
     let searchQuery = {
         isDeleted: false,			
-    };
-
+    };    
     if (req.query.branchId){
         searchQuery['branchId']=ObjectId(req.query.branchId)
-    }
-
+    }    
     if(req.params.id){
-        searchQuery['branchId']=ObjectId(req.query.id)
+        
+        searchQuery['branchId']=ObjectId(req.params.id)
     }
 
     const options = {
@@ -102,7 +101,7 @@ const statusList = async function (req,reply){
             statusQuery.docs.forEach(status => {
                 let newObj={
                     _id:status._id,
-                    record:status.record,                    
+                    records:req.params.id? [status.records[0]]:status.records,                    
                     createdAt:status.createdAt,
                     updatedAt:status.updatedAt
                 }
@@ -170,6 +169,8 @@ const statusList = async function (req,reply){
             statusPaginated.docs=[]
             let statusQuery = await Status.find(searchQuery).sort(sortOrder).lean();
             statusQuery.forEach(status => {
+                status.records=req.params.id? [status.records[0]]:status.records;
+
                 let branchInfo = allBranches.find(branch=>{
                     return String(branch._id) == String(status.branchId)
                 })

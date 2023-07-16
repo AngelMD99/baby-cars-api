@@ -382,7 +382,9 @@ function appCarsRoutes(fastify, options, done) {
     fastify.get('/branches/:id/inactive/cars', getInactiveCarsOpts)
     fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
     fastify.put('/cars/:id/start', startSingleCarOpts)
-    fastify.put('/cars/:id/stop', stopSingleCarOpts)        
+    fastify.put('/cars/:id/stop', stopSingleCarOpts)  
+    
+
     
     //fastify.delete('/crm/branches/:id', getCarsOpts)
 

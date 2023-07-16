@@ -77,7 +77,7 @@ const statusDef = {
     }
 }
 
-const getRentalsOpts={
+const getStatusOpts={
     schema: {
          description:"Retrieves the information of all the status of the reles stored on the database.",
          tags:['Status'], 
@@ -114,7 +114,7 @@ const getRentalsOpts={
 
 function crmStatusRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
-    fastify.get('/crm/status', getRentalsOpts)
+    fastify.get('/crm/status', getStatusOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
     // fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
