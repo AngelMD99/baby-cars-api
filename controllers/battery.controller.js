@@ -31,9 +31,9 @@ const batteryCreate = async function (req,reply){
         }
         let batteryValidation = await Battery.findOne({carId:car.carId, isDeleted:false, branchId:req.params.id})
         if (batteryValidation){
-            batteryValidation.records.push({
+            batteryValidation.records.unshift({
                 value:car.value,
-                dateTime:car.dateTime
+                dateTime:new Date(car.dateTime)
             })
             await batteryValidation.save()
         }

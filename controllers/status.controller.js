@@ -31,9 +31,9 @@ const statusCreate = async function (req,reply){
         }
         let statusValidation = await Status.findOne({carId:car.carId, isDeleted:false, branchId:req.params.id})
         if (statusValidation){
-            statusValidation.records.push({
+            statusValidation.records.unshift({
                 value:car.value,
-                dateTime:car.dateTime
+                dateTime:new Date(car.dateTime)
             })
             await statusValidation.save()
         }
@@ -69,6 +69,10 @@ const statusList = async function (req,reply){
         searchQuery['branchId']=ObjectId(req.query.branchId)
     }
 
+    if(req.params.id){
+        searchQuery['branchId']=ObjectId(req.query.id)
+    }
+
     const options = {
         select: `-isDeleted -__v`, 
     }
@@ -89,7 +93,7 @@ const statusList = async function (req,reply){
         options.sort={"createdAt":-1}
     }
     let statusPaginated={};
-    if(!req.query.search){        
+    if(!req.query.search){     
         let allBranches = await Branch.find({});
         let allCars = await Car.find({});
         if(options.page!=null && options.limit!=null){
@@ -125,6 +129,27 @@ const statusList = async function (req,reply){
                
                 statusPaginated.docs.push(newObj)                
             });
+            if(req.query.modelId){
+                let filteredDocs = statusPaginated.docs.filter(doc=>{
+                    return String(doc.carId.modelo) == String(req.query.modelId)
+                })
+                statusPaginated.docs=filteredDocs
+
+            }
+            if(req.query.color){
+                let filteredDocs = statusPaginated.docs.filter(doc=>{
+                    return String(doc.carId.color).toLowerCase() == String(req.query.color).toLowerCase()
+                })
+                statusPaginated.docs=filteredDocs            
+                
+            }
+            if(req.query.name){
+                let filteredDocs = statusPaginated.docs.filter(doc=>{
+                    return String(doc.carId.name).toLowerCase() == String(req.query.name).toLowerCase()
+                })
+                statusPaginated.docs=filteredDocs
+                
+            }
             statusPaginated.page=statusQuery.page;
             statusPaginated.perPage=statusQuery.limit;
             statusPaginated.totalDocs=statusQuery.totalDocs;
@@ -170,6 +195,27 @@ const statusList = async function (req,reply){
                 //delete status.branchId;                
                 statusPaginated.docs.push(status)                                
             });
+            if(req.query.modelId){
+                let filteredDocs = statusPaginated.docs.filter(doc=>{
+                    return String(doc.carId.modelo) == String(req.query.modelId)
+                })
+                statusPaginated.docs=filteredDocs
+
+            }
+            if(req.query.color){
+                let filteredDocs = statusPaginated.docs.filter(doc=>{
+                    return String(doc.carId.color).toLowerCase() == String(req.query.color).toLowerCase()
+                })
+                statusPaginated.docs=filteredDocs            
+                
+            }
+            if(req.query.name){
+                let filteredDocs = statusPaginated.docs.filter(doc=>{
+                    return String(doc.carId.name).toLowerCase() == String(req.query.name).toLowerCase()
+                })
+                statusPaginated.docs=filteredDocs
+                
+            }
         }                         
     }
     else{        
@@ -192,13 +238,58 @@ const statusList = async function (req,reply){
             })
         }
 
+        if(req.query.branchId){
+            aggregateQuery.push({
+                '$match': {
+                  'branchId': ObjectId(req.query.branchId)
+                }
+            })
+        }
+
         if(req.query.carId){
             aggregateQuery.push({
                 '$match': {
                   'branchId': ObjectId(req.query.carId)
                 }
             })            
-        }        
+        } 
+        
+        
+        let projectQuery={
+            '$project': {
+              "isDeleted":1,
+              "records":1,                  
+              'branchId._id': {
+                '$first': '$branchInfo._id'
+              },
+              'branchId.name': {
+                '$first': '$branchInfo.name'
+              },
+              'branchId.code': {
+                '$first': '$branchInfo.code'
+              },
+              'carId._id': {
+                '$first': '$carInfo._id'
+              },
+              'carId.name': {
+                '$first': '$carInfo.name'
+              },
+              'carId.color': {
+                '$first': '$carInfo.color'
+              },
+              'carId.modelo': {
+                '$first': '$carInfo.modelId'
+              },
+              'createdAt'  :1
+
+          }
+        }
+
+        if (req.query.params.id){
+            projectQuery['$project']['records']={
+                '$first': 'records'
+              }
+        }
         
         aggregateQuery.push(
            {
@@ -217,59 +308,61 @@ const statusList = async function (req,reply){
                   'as': 'carInfo'
             }
             },
-            {
-                '$project': {
-                  "isDeleted":1,
-                  "records":1,                  
-                  'branchId._id': {
-                    '$first': '$branchInfo._id'
-                  },
-                  'branchId.name': {
-                    '$first': '$branchInfo.name'
-                  },
-                  'branchId.code': {
-                    '$first': '$branchInfo.code'
-                  },
-                  'carId._id': {
-                    '$first': '$carInfo._id'
-                  },
-                  'carId.name': {
-                    '$first': '$carInfo.name'
-                  },
-                  'carId.color': {
-                    '$first': '$carInfo.color'
-                  },
-                  'carId.modelo': {
-                    '$first': '$carInfo.modelId'
-                  },
-                  'createdAt'  :1
-
-              }
-            }, {
-              '$match': {
-                 '$or': [
-                    {
-                      'branchId.code': {
-                        '$regex': searchString, 
-                        '$options': 'i'
-                      }
-                    }, {
-                      'branchId.name': {
-                        '$regex': searchString, 
-                        '$options': 'i'
-                      }
-                    },
-                    {
-                        'carId.name': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                      
-                  ]
-                }
-            }
+            projectQuery,
+            
         )
+        if(req.query.modelId){
+            aggregateQuery.push({
+                '$match':{
+                    'carId.modelo':req.query.modelId
+                }
+            })
+        }
+        if(req.query.color){
+            aggregateQuery.push({
+                '$match':{
+                    'carId.color':req.query.color
+                }
+            })
+        }
+        let matchSearch={
+            '$match': {
+               '$or': [
+                  {
+                    'branchId.code': {
+                      '$regex': searchString, 
+                      '$options': 'i'
+                    }
+                  }, {
+                    'branchId.name': {
+                      '$regex': searchString, 
+                      '$options': 'i'
+                    }
+                  },
+                  {
+                      'carId.name': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                  },
+                  {
+                      'carId.color': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                  },
+                  {
+                      'carId.color': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                  },
+                    
+                ]
+              }
+        }
+        aggregateQuery.push(matchSearch)
+
         let sortQuery={
             '$sort':{}
         };
@@ -297,6 +390,64 @@ const statusList = async function (req,reply){
         statusPaginated.totalPages = Math.ceil(statusPaginated.totalDocs / statusPaginated.perPage);
 
     }
+    if (req.query.initialDate!=null && req.query.finalDate!=null){
+        statusPaginated.docs.forEach(doc=>{
+            doc.records.forEach(record=>{
+                doc.dateTime = doc.dateTime.getTime()
+            })
+        })
+    }
+
+    if (req.query.initialDate!=null && req.query.finalDate!=null){      
+        
+        
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        let initialTime = initialDay.getTime();
+        
+        
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
+        }
+
+        let finalDay= addDays(finalDayToDate,1)
+        let finalTime = finalDay.getTime()
+        statusPaginated.docs.forEach(doc=>{
+            let filteredRecords = doc.records.filter(record=>{
+                return record.dateTime>=initialTime && record.dateTime<=finalTime
+            })            
+            doc.records = filteredRecords
+        })
+
+        //searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
+    }
+    if (req.query.initialDate!=null && req.query.finalDate==null){        
+        let initialDay=new Date(req.query.initialDate);
+        let initialTime = initialDay.getTime();
+        statusPaginated.docs.forEach(doc=>{
+            let filteredRecords = doc.records.filter(record=>{
+                return record.dateTime>=initialTime
+            })            
+            doc.records = filteredRecords
+        })
+        //searchQuery['createdAt']={"$gte": initialDay}
+
+    }
+    if (req.query.finalDate!=null && req.query.initialDate==null){
+        let finalDay= addDays(req.query.finalDate,1)
+        let finalTime = finalDay.getTime()
+        
+        statusPaginated.docs.forEach(doc=>{
+            let filteredRecords = doc.records.filter(record=>{
+                return record.dateTime<=finalTime
+            })            
+            doc.records = filteredRecords
+        })
+        
+    } 
 
     reply.code(200).send({
         status: 'success',
