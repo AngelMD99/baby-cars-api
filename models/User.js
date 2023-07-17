@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum:['admin', 'employee']
+        enum:['admin', 'employee','supervisor']
     },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,

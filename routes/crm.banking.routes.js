@@ -35,6 +35,13 @@ const authorizeFunc = async function (req, reply) {
                 message: 'Usuario autentificado no encontrado'
             })
         }
+        if(user.role!='admin'){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'El usuario no tiene autorización'
+            })
+    
+        }
         // if(user.isEnabled == false){
         //     return reply.code(404).send({
         //         status: 'fail',
