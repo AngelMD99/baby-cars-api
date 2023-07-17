@@ -48,7 +48,73 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const batteryDef = { 
+    type: 'object',    
+    properties: {
+        _id: { type: 'string' },
+        records:{
+
+        },       
+        branchId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                code:{type:'string'},
+                name:{type:'string'},
+            }
+        },
+        carId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},
+                color:{type:'string'},
+                modelo:{type:'string'}
+
+            }
+        },        
+        createdAt:{type:'string'},
+        updatedAt:{type:'string'}        
+    }
+}
+
+const getBatteriesOpts={
+    schema: {
+         description:"Retrieves the information of all the status of the reles stored on the database.",
+         tags:['Bateries'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:batteryDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: batteryList,
+    
+}
+
 function crmBatteryRoutes(fastify, options, done) {
+    fastify.get('/crm/batteries', getBatteriesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
