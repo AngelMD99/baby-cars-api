@@ -226,16 +226,35 @@ const userShow = async function (req, reply){
 
 }
 
+const userDelete = async function (req, reply){
+    let currentUser = await User.findOne({_id: req.params.id, isDeleted:false});
+    if(currentUser == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no registrado'
+        })
+    }
+
+    let updatedUser = await User.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedUser.isDeleted=true;
+    await updatedUser.save();
+    reply.code(200).send({
+        status: 'success',
+        message: 'Usuario '+updatedUser.fullName+' eliminado correctamente'           
+        
+    })  
+    
+
+
+
+}
+
 
 const userList = async function (req, reply){
 
 }
 
-const userDelete = async function (req, reply){
 
-
-
-}
 
 const userUpdate = async function (req, reply){
 

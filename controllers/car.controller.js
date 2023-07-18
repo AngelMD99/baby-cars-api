@@ -344,8 +344,7 @@ const carDelete = async function (req, reply){
         status: 'success',
         message: 'Carrito '+updatedCar.name+'eliminado correctamente'           
         
-    })   
-    
+    })       
 }
 
 const carBranchAutoOff = async function (req, reply){

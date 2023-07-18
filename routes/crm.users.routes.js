@@ -174,17 +174,38 @@ const getSingleUserOpts={
     
 }
 
-function crmUsersRoutes(fastify, options, done) {
-    // fastify.get('/branches/:id/cars', getCarsOpts)
-    // fastify.get('/branches/:id/auto-off', autoStopCars)        
-    // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
-    // fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)
-    // fastify.put('/cars/:id/start', startSingleCarOpts)
-    // fastify.put('/cars/:id/stop', stopSingleCarOpts)            
-    //fastify.delete('/crm/branches/:id', getCarsOpts)
+const deleteSingleUserOpts={
+    schema: {
+         description:"Deletes the user with the id provided.",
+         tags:['Users'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: users.userDelete,
+    
+}
+
+function crmUsersRoutes(fastify, options, done) {    
     fastify.post('/users/in', postUserSignInOpts);
     fastify.post('/users', postUserSaveOpts);
     fastify.get('/users/:id', getSingleUserOpts);
+    fastify.delete('/users/:id', deleteSingleUserOpts);
 
 done()
 }
