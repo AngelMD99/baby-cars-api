@@ -1,4 +1,7 @@
 const users = require("../controllers/user.controller.js");
+const User = require('../models/User');
+const bcrypt = require('bcrypt');
+
 
 
 
@@ -139,8 +142,36 @@ const postUserSaveOpts = {
             400: errResponse
         }
     },
+    preHandler: authorizeFunc,
     handler: users.userCreate
 
+}
+
+const getSingleUserOpts={
+    schema: {
+         description:"Retrieves the information of a single user with the id provided.",
+         tags:['Users'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: userDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: users.userShow,
+    
 }
 
 function crmUsersRoutes(fastify, options, done) {
@@ -153,6 +184,7 @@ function crmUsersRoutes(fastify, options, done) {
     //fastify.delete('/crm/branches/:id', getCarsOpts)
     fastify.post('/users/in', postUserSignInOpts);
     fastify.post('/users', postUserSaveOpts);
+    fastify.get('/users/:id', getSingleUserOpts);
 
 done()
 }

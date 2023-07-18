@@ -149,7 +149,8 @@ const carShow = async function (req, reply){
     if(!carObj.branchId || !carObj.branchId._id){
         carObj.branchId={
             _id:null,
-            name:"",            
+            name:"", 
+            code:""           
         }
     }
     if(!carObj.modelId || !carObj.modelId._id){

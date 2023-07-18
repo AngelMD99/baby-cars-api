@@ -190,11 +190,50 @@ const userCreate = async function (req, reply){
 
 }
 
+const userShow = async function (req, reply){
+    const user = await User.findOne({_id:req.params.id, isDeleted:false}).select('-createdAt -updatedAt -__v');
+    if (!user){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no encontrado'
+        })        
+    }
+    
+    await user.populate([
+        {path:'branchId', select:'_id name code'},       
+    ]);  
+    let userObj = await user.toObject();            
+    // if (carObj.branchId){
+    //     carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
+    //     carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
+    //     delete carObj.branchId;
+    // }
+    if(!userObj.branchId || !userObj.branchId._id){
+        userObj.branchId={
+            _id:null,
+            name:"",
+            code:""            
+        }
+    }
+   
+    
+    reply.code(200).send({
+        status: 'success',
+        data: userObj
+    })    
+
+
+
+}
+
+
 const userList = async function (req, reply){
 
 }
 
 const userDelete = async function (req, reply){
+
+
 
 }
 
@@ -237,4 +276,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { userLogin, userCreate }
+module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate }
