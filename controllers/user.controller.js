@@ -251,6 +251,265 @@ const userDelete = async function (req, reply){
 
 
 const userList = async function (req, reply){
+    let searchQuery = {
+        isDeleted: false,			
+    };    
+
+    if(req.query.branchId){
+        searchQuery['branchId']=req.query.branchId
+    }
+
+    const options = {
+        select: `-isDeleted -__v`, 
+
+    }
+    if (req.query.page){
+        options.page = req.query.page;
+    }
+    if (req.query.page){
+        options.limit = req.query.perPage;
+    }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"fullName":1}
+    }
+    let usersPaginated={};
+    if(!req.query.search){         
+        //let sortOrder={name:1}       
+        let allBranches = await Branch.find({});
+        if(options.page!=null && options.limit!=null){
+            usersPaginated.docs=[];            
+            let usersQuery = await User.paginate(searchQuery, options);
+            usersQuery.docs.forEach(user => {
+                let newObj={
+                    _id:user._id,                    
+                    fullName:user.fullName, 
+                    email:user.email, 
+                    role:user.role,
+                    createdAt:user.createdAt,
+                    updatedAt:user.updatedAt                    
+
+                }
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(user.branchId)
+                })
+                newObj.branchId={
+                    _id:user.branchId ? user.branchId :null,
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                }
+ 
+                
+                delete user.branchId;
+                delete user.modelId;                 
+                usersPaginated.docs.push(newObj)                               
+            });
+            usersPaginated.page=usersQuery.page;
+            usersPaginated.perPage=usersQuery.limit;
+            usersPaginated.totalDocs=usersQuery.totalDocs;
+            usersPaginated.totalPages=usersQuery.totalPages;
+        }
+        else{
+            let sortOrder = {}
+            if(req.query.column){
+                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    name:1
+                }
+            }
+            usersPaginated.docs=[]
+            let usersQuery = await User.find(searchQuery).sort(sortOrder).lean();
+            usersQuery.forEach(user => {
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(user.branchId)
+                }) 
+                let branchId={
+                    _id:user.branchId ? user.branchId :null,
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+                }                 
+                user.branchId=branchId;         
+                // user.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                // user.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                // delete user.branchId;                
+                usersPaginated.docs.push(user)
+                
+
+                
+            });
+        }
+        
+        
+        
+        
+
+        
+    }
+    else{
+        // branchSearch = await Car.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // usersPaginated.totalDocs = branchSearch.length;
+        let diacriticSearch = diacriticSensitiveRegex(req.query.search);
+        let searchString = '.*'+diacriticSearch+'.*';
+
+  //    let searchString = '.*'+req.query.search+'.*';
+          delete options.select;
+          let aggregateQuery=[];
+          if(req.params.id && !req.query.branchId){
+            aggregateQuery.push({
+                '$match':{
+                    branchId:new ObjectId(req.params.id)
+                }
+                })
+          }
+          if(!req.params.id && req.query.branchId){
+            aggregateQuery.push({
+                '$match':{
+                    branchId:new ObjectId(req.query.branchId)
+                }
+            })
+          }
+          aggregateQuery.push(
+              {
+                '$match': {
+                  'isDeleted': false
+                }
+              }, 
+              {
+                '$lookup': {
+                  'from': 'branches', 
+                  'localField': 'branchId', 
+                  'foreignField': '_id', 
+                  'as': 'branchInfo'
+                }
+              },              
+              
+              {
+                '$project': {               
+                  'fullName': 1, 
+                  'email': 1,
+                  'color':1,
+                  "plans":1,
+                  'branchId._id': {
+                    '$first': '$branchInfo._id'
+                  },
+                  'branchId.code': {
+                    '$first': '$branchInfo.code'
+                  } ,
+                  'branchId.name': {
+                    '$first': '$branchInfo.name'
+                  },
+                  'modelId._id': {
+                    '$first': '$modelInfo._id'
+                  },
+                  'modelId.name': {
+                    '$first': '$modelInfo.name'
+                  }, 
+                  'startDate':1,
+                  'expireDate':1,
+                  'rentalTime':1,
+                  'remainingTime':1  
+
+
+                }
+              }, {
+                '$match': {
+                  '$or': [
+                    {
+                      'name': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    }, {
+                      'color': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    },
+                    {
+                        'ipAddress': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      {
+                        'branchId.code': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      {
+                        'branchId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      {
+                        'modelId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      }
+                  ]
+                }
+              }
+            )
+            let sortQuery={
+                '$sort':{}
+            };
+            if (req.query.column){
+                let sortColumn = req.query.column;
+                let order = req.query.order == "desc" ? -1: 1
+                sortQuery['$sort'][sortColumn]=order;
+            }
+            else{
+                sortQuery['$sort']['name']=1;
+            }
+            aggregateQuery.push(sortQuery)        
+        let usersSearch = await User.aggregate(aggregateQuery);
+        usersPaginated.docs = usersSearch;
+        usersPaginated.totalDocs = usersPaginated.docs.length
+
+        usersPaginated.page=req.query.page ? req.query.page : 1;
+        usersPaginated.perPage=req.query.perPage ? req.query.perPage :usersPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : usersPaginated.totalDocs;
+        let page = req.query.page ? req.query.page : 1;
+        usersPaginated.docs=paginateArray(usersSearch,limit,page);
+        
+        usersPaginated.docs.forEach(doc=>{
+            if (!doc.branchId || !doc.branchId._id){
+                doc.branchId ={
+                    _id:null,
+                    code:"",
+                    name:""
+                }
+            }
+        })
+        usersPaginated.totalPages = Math.ceil(usersPaginated.totalDocs / usersPaginated.perPage);
+
+    }
+
+    let docs = JSON.stringify(usersPaginated.docs);    
+    var users = JSON.parse(docs);
+    
+
+    reply.code(200).send({
+        status: 'success',
+        data: users,
+        page: usersPaginated.page,
+        perPage:usersPaginated.perPage,
+        totalDocs: usersPaginated.totalDocs,
+        totalPages: usersPaginated.totalPages,
+
+    })
 
 }
 

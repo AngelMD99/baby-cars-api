@@ -201,9 +201,45 @@ const deleteSingleUserOpts={
     
 }
 
+const getUsersOpts={
+    schema: {
+         description:"Retrieves the information of all the users stored on the database.",
+         tags:['Users'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:userDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: users.userList,
+    
+}
+
 function crmUsersRoutes(fastify, options, done) {    
     fastify.post('/users/in', postUserSignInOpts);
     fastify.post('/users', postUserSaveOpts);
+    fastify.get('/users', getUsersOpts);
     fastify.get('/users/:id', getSingleUserOpts);
     fastify.delete('/users/:id', deleteSingleUserOpts);
 
