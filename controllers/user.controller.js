@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Branch = require('../models/Branch');
 const mongoose = require('mongoose');
+const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
@@ -145,6 +146,16 @@ const userCreate = async function (req, reply){
             message: 'La contraseña debe tener al menos 5 caracteres'
         })
     }
+
+    let validRoles =['admin','supervisor','employee'];
+    if(!validRoles.includes(req.body.role)){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El rol proporcionado no es valido'
+        })
+
+    }
+
 
     let branchId = req.body.branchId;        
     delete req.body.branchId;    
@@ -516,6 +527,191 @@ const userList = async function (req, reply){
 
 
 const userUpdate = async function (req, reply){
+
+
+    let currentUser = await User.findOne({_id: req.params.id, isDeleted:false});
+    if(currentUser == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no registrado'
+        })
+    }
+
+    let loggedUser = await req.jwtVerify();
+    if(loggedUser.role!='admin' && String(currentUser._id) != String(loggedUser._id) ){
+        return reply.code(404).send({
+            status: 'fail',
+            message: 'El usuario no tiene permisos para editar alguna otra cuenta'
+        })        
+    }
+
+
+    let emailCheck = await User.findOne({email: req.body.email})
+    if(emailCheck!=null && String(emailCheck._id) != String(currentUser._id)){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El correo se encuentra registrado a otro usuario'
+        })
+    }
+    if(req.body.branchId!=null && req.body.branchId!=""){        
+        let branchValidation= isValidObjectId(req.body.branchId)
+        if (branchValidation==false){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'Sucursal no válida'
+            })
+        }
+        else{
+            let activeBranch= await Branch.findOne({_id:req.body.branchId,isDeleted:false})
+            if(!activeBranch){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'Sucursal no encontrada'
+                })
+
+            }
+        }
+    }  
+
+    let validRoles =['admin','supervisor','employee'];
+    if(!validRoles.includes(req.body.role)){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El rol proporcionado no es valido'
+        })
+
+    }
+
+    //let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+
+    // let branchNumberCheck = await Branch.findOne({branchNumber: req.body.branchNumber, isDeleted:false})
+
+    // if(branchNumberCheck!=null && String(branchNumberCheck._id) != String(currentBranch._id)){
+    //     reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'branch_number_already_registered'
+    //     })
+    // }
+    let inputs={};
+    // if(!req.body.branchId || req.body.branchId=="" || !req.body.branchId._id || req.body.branchId._id==""){
+    //     await Car.updateOne({_id:req.params.id}, { $unset: { branchId: 1 } })
+        
+    // }      
+    
+    if (req.body.branchId !=currentUser.branchId){
+        if(loggedUser.role!='admin'){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'El usuario logueado no puede modificar sucursales'
+            })     
+        }
+            inputs.branchId = req.body.branchId != "" ? req.body.branchId:undefined;
+    }
+
+    if (req.body.role !=currentUser.role){
+        if(loggedUser.role!='admin'){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'El usuario logueado no puede modificar roles'
+            })     
+        }            
+    }   
+    
+    inputs.fullName = req.body.fullName ? req.body.fullName : currentUser.fullName;
+    let hash="";
+    if (req.body.password!=null && req.body.password!=""){
+        let plainPassword = req.body.password
+        hash=bcrypt.hashSync(plainPassword, 12)        
+    }
+    inputs.password = req.body.password && req.body.password !="" ? hash : currentUser.password;
+    inputs.role = req.body.role ? req.body.role : currentUser.role;    
+    inputs.email = req.body.email ? req.body.email : currentUser.email;
+    inputs.branchId = req.body.branchId ? req.body.branchId : currentUser.branchId;    
+    let updatedUser = await User.findByIdAndUpdate({_id: req.params.id},inputs,{
+        new:true,
+        overwrite:true
+    }).select('-__v');
+    // updatedCar.branchId = req.body.branchId && req.body.branchId._id? req.body.branchId._id : updatedCar.branchId;
+    // updatedCar.ipAddress = req.body.ipAddress!=null ? req.body.ipAddress : updatedCar.ipAddress;
+    // updatedCar.name = req.body.name!=null ? req.body.name : updatedCar.name;
+    // updatedCar.color = req.body.color!=null ? req.body.color : updatedCar.color;
+    
+  
+    // if (req.body.image){
+
+    //     if(currentProduct.image){
+    //         let serverURL = process.env.APP_HOST;
+    //         serverURL = process.env.APP_LOCAL_PORT !=null ? serverURL + ":"+process.env.APP_LOCAL_PORT : serverURL;
+    //         if(req.body.image.full != currentProduct.image.full){
+    //             let currentFullImage = currentProduct.image.full.replace(serverURL,'');
+    //             currentFullImage = __dirname + currentFullImage;
+    //             currentFullImage = currentFullImage.replace('controllers/','');
+    //             let imageExists = await fileExists(currentFullImage)
+    //             if (imageExists==true){
+    //                 fs.remove(currentFullImage, err => {
+    //                     if (err) return console.error(err)
+    //                   })
+    //             }
+    //             updatedProduct.image.full =req.body.image.full;
+    //         }
+    //         if(req.body.image.thumbnail != currentProduct.image.thumbnail){
+    //             let currentThumbnail = currentProduct.image.thumbnail.replace(serverURL,'');
+    //             currentThumbnail = __dirname + currentThumbnail;
+    //             currentThumbnail = currentThumbnail.replace('controllers/','');
+    //             let imageExists = await fileExists(currentThumbnail);
+
+    //             if (imageExists==true){
+    //                 fs.remove(currentThumbnail, err => {
+    //                     if (err) return console.error(err)
+    //                   })
+    //             }
+    //             updatedProduct.image.thumbnail =req.body.image.thumbnail;
+    //         }
+    //     }
+    //     else{
+    //         updatedProduct.image={
+    //             full:req.body.image.full,
+    //             thumbnail:req.body.image.thumbnail
+    //         }
+    //     }
+
+
+    // }
+
+    await updatedUser.save();
+    await updatedUser.populate([
+        {path:'branchId', select:'_id name code'}
+    ]);  
+    let updatedUserObj = await updatedUser.toObject();            
+    
+    // if (updatedUserObj.branchId){
+    //     updatedUserObj.branchCode=updatedUserObj.branchId.code ? updatedUserObj.branchId.code :"";
+    //     updatedUserObj.branchName=updatedUserObj.branchId.name ? updatedUserObj.branchId.name :"";
+    //     delete updatedUserObj.branchId;
+    // }
+    if(!updatedUserObj.branchId || !updatedUserObj.branchId._id){
+        updatedUserObj.branchId={
+            _id:null,
+            name:"",            
+        }
+    }
+    if(!updatedUserObj.modelId || !updatedUserObj.modelId._id){
+        updatedUserObj.modelId={
+            _id:null,
+            name:""            
+        }
+    }
+    
+
+
+    delete updatedUserObj.__v;
+    delete updatedUserObj.password;
+   
+    reply.code(200).send({
+        status: 'success',
+        data: updatedUserObj           
+        
+    }) 
 
 }
 

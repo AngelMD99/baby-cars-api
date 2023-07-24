@@ -80,6 +80,45 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const authorizeLogin = async function (req, reply) {
+    try {
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+
+        const decoded = await req.jwtVerify()
+    
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(user == null){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario autentificado no encontrado'
+            })
+        }
+        // if(user.role!='admin' || user.role!='supervisor'){
+        //     return reply.code(401).send({
+        //         status: 'fail',
+        //         message: 'El usuario no tiene autorización'
+        //     })
+    
+        // }
+        // if(user.isEnabled == false){
+        //     return reply.code(404).send({
+        //         status: 'fail',
+        //         message: 'user_disabled'
+        //     })
+        // }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
+
 const postUserSignInOpts = {
     schema: {
         description:'Authenticates and creates a session for a user',
@@ -236,12 +275,51 @@ const getUsersOpts={
     
 }
 
+const putSingleUserOpts={
+    schema: {
+         description:"Allows to update the information of a single car with the id provided.",
+         tags:['User'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         }, 
+         body: {
+            type: 'object',
+            properties: {                                
+                fullName: { type: 'string' },                
+                email: { type: 'string' },              
+                branchId:{type:'string'},
+                password: { type: 'string' }, 
+                role: {type:'string'}
+
+            },
+        },      
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:userDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeLogin,
+    handler: users.userUpdate
+    
+}
+
 function crmUsersRoutes(fastify, options, done) {    
     fastify.post('/users/in', postUserSignInOpts);
     fastify.post('/users', postUserSaveOpts);
     fastify.get('/users', getUsersOpts);
     fastify.get('/users/:id', getSingleUserOpts);
     fastify.delete('/users/:id', deleteSingleUserOpts);
+    fastify.put('/users/:id', putSingleUserOpts);
 
 done()
 }
