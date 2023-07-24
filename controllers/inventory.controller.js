@@ -9,6 +9,72 @@ let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 
 const inventoryCreate = async function (req,reply){
+    let modelValidation= isValidObjectId(req.body.modelId)
+    if (modelValidation==false){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Modelo no válido'
+        })
+    }
+    if(!req.body.color){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El color es requerido'
+        })
+    }
+
+    let currentModel = await Modelo.findOne({_id:req.body.modelId, isDeleted:false})
+    let lowerColors=[];
+    currentModel.colors.forEach(color => {
+        lowerColors.push(color.toLowerCase())        
+    });
+    
+    if (!lowerColors.includes(req.body.color.toLowerCase()) ) {
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El color proporcionado no es valido para el modelo'
+        })
+    }
+
+    let inventoryValidation = await Inventory.findOne({
+        modelId:req.body.modelId,
+        isDeleted:false,
+        color:req.body.color.toLowerCase()
+    })
+
+    if (inventoryValidation){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Ya existe un registro de inventario para el modelo y color'
+        })
+    }
+
+    const inventory = new Inventory();
+    inventory.modelId  = req.body.modelId;
+    inventory.color  = req.body.color.toLowerCase();
+    inventory.quantity  = req.body.quantity ? req.body.quantity : 0;
+    await inventory.save()
+    await inventory.populate([        
+        {path:'modelId', select:'_id name'}
+    ]);    
+    
+    //await saveHistory(loggedUser,"CREATED","Branch",branch)
+
+    const inventoryObj = await inventory.toObject()
+    if(!inventoryObj.modelId || !inventoryObj.modelId._id){
+        inventoryObj.modelId={
+            _id:null,
+            name:"",            
+        }
+    }
+    delete inventoryObj.__v
+
+    reply.code(201).send({
+        status: 'success',
+        data: inventoryObj
+     }) 
+
+
 
 }
 
@@ -17,6 +83,10 @@ const inventoryList = async function (req,reply){
 }
 
 const inventoryDelete = async function (req,reply){
+
+}
+
+const inventoryAdd = async function (req,reply){
 
 }
 
@@ -60,4 +130,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { inventoryCreate, inventoryDelete, inventoryList, inventoryUpdate }
+module.exports = { inventoryCreate, inventoryDelete, inventoryList, inventoryUpdate, inventoryAdd }

@@ -19,9 +19,12 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 const inventorySchema = new mongoose.Schema({    
     modelId: {
         type: mongoose.Schema.Types.ObjectId,              
-        ref: "Model", 
+        ref: "Modelo", 
     },
-    color:String,
+    color:{
+        type:String,
+        lowerCase:true
+    },
     quantity:Number,    
 },{
     timestamps: true,
