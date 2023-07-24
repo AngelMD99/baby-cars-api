@@ -101,6 +101,90 @@ const userLogin = async function (req, reply) {
     })
 }
 
+const userBranchLogin = async function (req, reply) {    
+    const user = await User.findOne({email: req.body.email, isDeleted:false});
+
+    if(user == null){
+        return reply.code(404).send({
+            status: 'fail',
+            message: 'Usuario no encontrado'
+        })
+    }   
+
+    // if(user.isEnabled == false){
+    //     return reply.code(404).send({
+    //         status: 'fail',
+    //         message: 'user_disabled'
+    //     })
+    // }
+
+    if(!bcrypt.compareSync(req.body.password, user.password)){
+
+
+
+        if(!user.tempPassword || !user.tempPasswordExpiration){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Contraseña incorrecta'
+            })
+        }
+
+        let today = new Date();
+        let offset = await getOffsetSetting();              
+        today.setHours(today.getHours() - offset);
+        let expirationDate = new Date(user.tempPasswordExpiration)
+
+        if(!bcrypt.compareSync(req.body.password, user.tempPassword)){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Contraseña incorrecta'
+            })
+        }
+        else{
+            if(today>expirationDate){
+                return reply.code(401).send({
+                    status: 'fail',
+                    message: 'Contraseña temporal expirada'
+                })
+
+            }
+        }
+
+
+    }
+
+    // if(req.body.cmsLogin == true){
+    //     let today = new Date();
+    //     user.lastCMSAccess = today;
+    //     await user.save();
+    
+    // }
+
+    const timestamp = parseInt((new Date().getTime() / 1000).toFixed(0));
+    this.jwt.sign({_id: user._id, role:user.role, isDeleted:user.isDeleted, timestamp: timestamp}, async (err, token) => {
+        if (err) return reply.send(err)
+
+        if (user.branchId){
+            await user.populate([
+                {path:'branchId', select:'_id name code'},
+            ]); 
+             
+        }
+        let userObj = user.toObject()       
+
+
+        delete userObj.password;
+
+        reply.code(200).send({
+            status: 'success',
+            data: {
+                token: token,
+                user: userObj
+            }
+        }) 
+    })
+}
+
 const userCreate = async function (req, reply){
 
     if(req.body.branchId!=null && req.body.branchId!=""){        
@@ -750,4 +834,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate }
+module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin }

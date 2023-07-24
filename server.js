@@ -71,6 +71,7 @@ fastify.register(require("./routes/app.rentals.routes"));
 fastify.register(require("./routes/app.sales.routes"));
 fastify.register(require("./routes/app.status.routes"));
 fastify.register(require("./routes/app.tickets.routes"));
+fastify.register(require("./routes/app.users.routes"));
 
 fastify.register(require("./routes/crm.banking.routes"));
 fastify.register(require("./routes/crm.battery.routes"));

@@ -58,7 +58,7 @@ const postUserSignInOpts = {
             400: errResponse
         }
     },
-    handler: users.userLogin
+    handler: users.userBranchLogin
 
 }
 
@@ -70,7 +70,7 @@ function appUsersRoutes(fastify, options, done) {
     // fastify.put('/cars/:id/start', startSingleCarOpts)
     // fastify.put('/cars/:id/stop', stopSingleCarOpts)            
     //fastify.delete('/crm/branches/:id', getCarsOpts)
-    fastify.post('app/users/in', postUserSignInOpts);
+    fastify.post('/app/users/in', postUserSignInOpts);
 
 done()
 }
