@@ -82,15 +82,117 @@ const inventoryList = async function (req,reply){
 
 }
 
-const inventoryDelete = async function (req,reply){
+const inventoryShow = async function (req,reply){
+    const inventory = await Inventory.findOne({_id:req.params.id, isDeleted:false}).select('-createdAt -updatedAt -__v');
+    if (!inventory){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Inventario no registrado'
+        })        
+    } 
+    
+    await inventory.populate([        
+        {path:'modelId', select:'_id name'}
+    ]);  
+    let inventoryObj = await inventory.toObject();            
+    
+    // if (inventoryObj.branchId){
+    //     inventoryObj.branchCode=inventoryObj.branchId.code ? inventoryObj.branchId.code :"";
+    //     inventoryObj.branchName=inventoryObj.branchId.name ? inventoryObj.branchId.name :"";
+    //     delete inventoryObj.branchId;
+    // }    
+    if(!inventoryObj.modelId || !inventoryObj.modelId._id){
+        inventoryObj.modelId={
+            _id:null,
+            name:""            
+        }
+    }
+    reply.code(200).send({
+        status: 'success',
+        data: inventoryObj
+    }) 
 
 }
 
-const inventoryAdd = async function (req,reply){
+const inventoryDelete = async function (req,reply){
+    let currentInventory = await Inventory.findOne({_id: req.params.id, isDeleted:false});
+    if(currentInventory == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Inventario no registrado'
+        })
+    }
+
+    let updatedInventory = await Inventory.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedInventory.isDeleted=true;
+    await updatedInventory.save();
+    reply.code(200).send({
+        status: 'success',
+        message: 'Inventario eliminado correctamente'           
+        
+    }) 
 
 }
 
 const inventoryUpdate = async function (req,reply){
+    let currentInventory = await Inventory.findOne({_id: req.params.id, isDeleted:false});
+    if(currentInventory == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Inventario no registrado'
+        })
+    }    
+    let validActions =['adjust','add']
+
+    if (!req.body.action){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Se requiere la acción a realizar'
+        })
+    }
+
+    if (!validActions.includes(req.body.action.toLowerCase())){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'No se indico una acción valida'
+        })
+    }
+    
+    let currentQuantity = currentInventory.quantity;
+    let receivedQuantity = req.body.quantity ? req.body.quantity : 0
+
+    if (req.body.action=='adjust'){
+        currentQuantity = receivedQuantity;
+    }
+    if (req.body.action=='add'){
+        currentQuantity += receivedQuantity;
+    }
+
+
+    // let updatedInventory = await Inventory.findByIdAndUpdate({_id: req.params.id},inputs,{
+    //     new:true,
+    //     overwrite:true
+    // }).select('-__v');    
+
+    let updatedInventory = await Inventory.findOne({_id: req.params.id, isDeleted:false});
+    updatedInventory.quantity = currentQuantity;    
+
+    await updatedInventory.save();
+    await updatedInventory.populate([
+        {path:'modelId', select:'_id name'}
+    ]);  
+    let updatedInventoryObj = await updatedInventory.toObject();                
+    if(!updatedInventoryObj.modelId || !updatedInventoryObj.modelId._id){
+        updatedInventoryObj.modelId={
+            _id:null,
+            name:""            
+        }
+    }  
+    delete updatedInventoryObj.__v   
+    reply.code(200).send({
+        status: 'success',
+        data: updatedInventoryObj                   
+    }) 
 
 }
 
@@ -130,4 +232,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { inventoryCreate, inventoryDelete, inventoryList, inventoryUpdate, inventoryAdd }
+module.exports = { inventoryCreate, inventoryDelete, inventoryList, inventoryUpdate, inventoryShow  }

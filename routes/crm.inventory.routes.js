@@ -1,4 +1,4 @@
-const { inventoryCreate, inventoryList, inventoryUpdate, inventoryDelete   } = require('../controllers/inventory.controller');
+const { inventoryCreate, inventoryList, inventoryUpdate, inventoryDelete, inventoryShow   } = require('../controllers/inventory.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -106,6 +106,95 @@ const postInventoryOpts = {
     handler: inventoryCreate,
 }
 
+const deleteSingleInventoryOpts={
+    schema: {
+         description:"Deletes the inventory with the id provided.",
+         tags:['Inventory'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: inventoryDelete,
+    
+}
+
+const getSingleInventoryOpts={
+    schema: {
+         description:"Retrieves the information of a single inventory with the id provided.",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: inventoryDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: inventoryShow,
+    
+}
+
+const putSingleInventoryOpts={
+    schema: {
+         description:"Allows to add or adjust the quantity of the inventory with id provided",
+         tags:['Cars'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         }, 
+         body: {
+            type: 'object',
+            properties: {                                
+                quantity: { type: 'number' },                
+                action: { type: 'string' },                              
+
+            },
+        },      
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:inventoryDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: inventoryUpdate,
+    
+}
+
 function crmInventoryRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
@@ -114,6 +203,12 @@ function crmInventoryRoutes(fastify, options, done) {
     // fastify.put('/cars/:id/start', startSingleCarOpts)
     // fastify.put('/cars/:id/stop', stopSingleCarOpts)            
     fastify.post('/crm/inventory', postInventoryOpts)
+    fastify.delete('/crm/inventory/:id', deleteSingleInventoryOpts)
+    fastify.get('/crm/inventory/:id', getSingleInventoryOpts)
+    fastify.put('/crm/inventory/:id', putSingleInventoryOpts)
+
+
+
 
 done()
 }

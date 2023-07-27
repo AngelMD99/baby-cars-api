@@ -17,6 +17,10 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 // );
 
 const inventorySchema = new mongoose.Schema({    
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
     modelId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Modelo", 
