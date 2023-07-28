@@ -50,7 +50,60 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const inventoryDef ={
+    type:'object',
+    properties:{
+        _id:{type:'string'},
+        modelId :{
+            type:'object',
+            properties:{
+                _id:{type:'string'},             
+                name:{type:'string'},
+            }
+        },
+        color:{type:'string'},
+        quantity:{type:'number'}
+
+    }
+}
+
+const getInventoriesOpts={
+    schema: {
+         description:"Retrieves the information of all the inventories stored on the database.",
+         tags:['Inventories'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:inventoryDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: inventoryList,
+    
+}
+
 function appInventoryRoutes(fastify, options, done) {
+    fastify.get('/inventory', getInventoriesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)

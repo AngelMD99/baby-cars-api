@@ -79,6 +79,271 @@ const inventoryCreate = async function (req,reply){
 }
 
 const inventoryList = async function (req,reply){
+    let searchQuery = {
+        isDeleted: false,			
+    };
+    if(req.query.modelIdId){
+        searchQuery['modelId']=req.query.modelId;        
+    }
+
+    if(req.query.color){
+        searchQuery['color']=req.query.color.toLowerCase();        
+    }
+    
+    const options = {
+        select: `-isDeleted -__v -updatedAt -createdAt`, 
+
+    }
+    if (req.query.page){
+        options.page = req.query.page;
+    }
+    if (req.query.perPage){
+        options.limit = req.query.perPage;
+    }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"modelId.name":1}
+    }
+    let inventoriesPaginated={};
+    if(!req.query.search){         
+        //let sortOrder={name:1}               
+        let allModels = await Modelo.find({});
+        if(options.page!=null && options.limit!=null){
+            inventoriesPaginated.docs=[];
+            let inventoriesQuery = await Inventory.paginate(searchQuery, options);
+            inventoriesQuery.docs.forEach(inventory => {
+                let newObj={
+                    _id:inventory._id,                    
+                    color:inventory.color,                    
+                    quantity:inventory.quantity,
+                    createdAt:inventory.createdAt,
+                    updatedAt:inventory.updatedAt
+
+                }
+                
+                let modelInfo = allModels.find(modelo=>{
+                    return String(modelo._id) == String(inventory.modelId)
+                })
+                newObj.modelId={
+                    _id:inventory.modelId ? inventory.modelId :null,
+                    name : modelInfo && modelInfo.name ? modelInfo.name : "",
+                    code : modelInfo && modelInfo.code ? modelInfo.code : "",
+
+                }                
+                delete inventory.modelId;                
+                inventoriesPaginated.docs.push(newObj)                               
+            });
+            inventoriesPaginated.page=inventoriesQuery.page;
+            inventoriesPaginated.perPage=inventoriesQuery.limit;
+            inventoriesPaginated.totalDocs=inventoriesQuery.totalDocs;
+            inventoriesPaginated.totalPages=inventoriesQuery.totalPages;
+        }
+        else{
+            let sortOrder = {}
+            if(req.query.column){                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    "modelId.name":1
+                }
+            }
+            inventoriesPaginated.docs=[]
+            let inventoriesQuery = await Inventory.find(searchQuery).sort(sortOrder).lean();
+            inventoriesQuery.forEach(inventory => {                            
+                let modelInfo = allModels.find(modelo=>{
+                    return String(modelo._id) == String(inventory.modelId)
+                }) 
+                let modelId={
+                    _id:inventory.modelId ? inventory.modelId :null,
+                    name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
+                }  
+                inventory.modelId=modelId;         
+                // inventory.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                // inventory.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                // delete inventory.branchId;                
+                inventoriesPaginated.docs.push(inventory);                              
+            });
+        }                              
+    }
+    else{
+        // branchSearch = await inventory.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // inventoriesPaginated.totalDocs = branchSearch.length;
+        let diacriticSearch = diacriticSensitiveRegex(req.query.search);
+        let searchString = '.*'+diacriticSearch+'.*';
+
+  //    let searchString = '.*'+req.query.search+'.*';
+        delete options.select;
+        let aggregateQuery=[];
+        if(req.query.modelId){
+            aggregateQuery.push({
+               '$match':{
+                    modelId:new ObjectId(req.query.modelId)
+                }
+            })
+        }
+        if(req.query.color){
+            aggregateQuery.push({
+               '$match':{
+                    color:req.query.color.toLowerCase()
+                }
+            })
+        }
+        //   if(req.params.id && !req.query.branchId){
+        //     aggregateQuery.push({
+        //         '$match':{
+        //             branchId:new ObjectId(req.params.id)
+        //         }
+        //         })
+        //   }
+        //   if(!req.params.id && req.query.branchId){
+        //     aggregateQuery.push({
+        //         '$match':{
+        //             branchId:new ObjectId(req.query.branchId),
+        //             isStarted:true
+        //         }
+        //         })
+        //   }
+          aggregateQuery.push(
+              {
+                '$match': {
+                  'isDeleted': false
+                }
+              }, 
+            //   {
+            //     '$lookup': {
+            //       'from': 'branches', 
+            //       'localField': 'branchId', 
+            //       'foreignField': '_id', 
+            //       'as': 'branchInfo'
+            //     }
+            //   },
+              {
+                '$lookup': {
+                    'from': 'modelos', 
+                    'localField': 'modelId', 
+                    'foreignField': '_id', 
+                    'as': 'modelInfo'
+                  }
+             },
+              
+              {
+                '$project': {
+                  'color':1,
+                  //'branchId': 1,                   
+                  'quantity': 1, 
+                //   'name': 1,
+                //   'color':1,
+                //   "plans":1,
+                //   'branchId._id': {
+                //     '$first': '$branchInfo._id'
+                //   },
+                //   'branchId.code': {
+                //     '$first': '$branchInfo.code'
+                //   } ,
+                //   'branchId.name': {
+                //     '$first': '$branchInfo.name'
+                //   },
+                  'modelId._id': {
+                    '$first': '$modelInfo._id'
+                  },
+                  'modelId.name': {
+                    '$first': '$modelInfo.name'
+                  }, 
+                  'createdAt':1,
+                  'updatedAt':1,                
+                }
+              }, {
+                '$match': {
+                  '$or': [
+                    {
+                      'color': {
+                        '$regex': searchString, 
+                        '$options': 'i'
+                      }
+                    },
+                    // {
+                    //     'branchId.code': {
+                    //       '$regex': searchString, 
+                    //       '$options': 'i'
+                    //     }
+                    // },
+                    //   {
+                    //     'branchId.name': {
+                    //       '$regex': searchString, 
+                    //       '$options': 'i'
+                    //     }
+                    //   },
+                    {
+                        'modelId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    }
+                  ]
+                }
+              }
+            )
+            let sortQuery={
+                '$sort':{}
+            };
+            if (req.query.column){
+                let sortColumn = req.query.column;
+                let order = req.query.order == "desc" ? -1: 1
+                sortQuery['$sort'][sortColumn]=order;
+            }
+            else{
+                sortQuery['$sort']['modelId.name']=1;
+            }
+            aggregateQuery.push(sortQuery)        
+        let inventoriesSearch = await Inventory.aggregate(aggregateQuery);
+        inventoriesPaginated.docs = inventoriesSearch;
+        inventoriesPaginated.totalDocs = inventoriesPaginated.docs.length
+
+        inventoriesPaginated.page=req.query.page ? req.query.page : 1;
+        inventoriesPaginated.perPage=req.query.perPage ? req.query.perPage :inventoriesPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : inventoriesPaginated.totalDocs;
+        let page = req.query.page ? req.query.page : 1;
+        inventoriesPaginated.docs=paginateArray(inventoriesSearch,limit,page);
+        
+        inventoriesPaginated.docs.forEach(doc=>{            
+            if (!doc.modelId || !doc.modelId._id){
+                doc.modelId ={
+                    _id:null,
+                    code:"",
+                    name:""
+                }
+            }
+        })
+        inventoriesPaginated.totalPages = Math.ceil(inventoriesPaginated.totalDocs / inventoriesPaginated.perPage);
+
+    }
+    inventoriesPaginated.docs.forEach(doc=>{
+        if(doc.isStarted== true && doc.expireDate){
+            let currentDate = new Date ()
+            let remainingTime = minutesDiff (currentDate,doc.expireDate);
+            doc.remainingTime=remainingTime
+
+        }
+        
+
+    })
+    let docs = JSON.stringify(inventoriesPaginated.docs);    
+    var inventories = JSON.parse(docs);   
+    reply.code(200).send({
+        status: 'success',
+        data: inventories,
+        page: inventoriesPaginated.page,
+        perPage:inventoriesPaginated.perPage,
+        totalDocs: inventoriesPaginated.totalDocs,
+        totalPages: inventoriesPaginated.totalPages,
+
+    })
 
 }
 

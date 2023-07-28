@@ -623,7 +623,7 @@ const carList = async function (req, reply){
     if (req.query.page){
         options.page = req.query.page;
     }
-    if (req.query.page){
+    if (req.query.perPage){
         options.limit = req.query.perPage;
     }
     if (req.query.column){

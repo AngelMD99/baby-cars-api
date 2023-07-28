@@ -39,6 +39,10 @@ const saleSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Car", 
     },
+    employeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+    },
     reserveId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Reserve", 

@@ -13,6 +13,16 @@ exports.options = {
         { name: 'Cars', description: 'Cars related end-points' } ,               
         { name: 'Rentals', description: 'Rentals related end-points' },            
         { name: 'Banking accounts', description: 'Banking accounts related end-points' },            
+        { name: 'Inventories', description: 'Inventories related end-points' },            
+        { name: 'Batteries', description: 'Batteries related end-points' },            
+        { name: 'Status', description: 'Status related end-points' },            
+        { name: 'Clients', description: 'Clients related end-points' },            
+        { name: 'Models', description: 'Models related end-points' },            
+        { name: 'Reserves', description: 'Reserves related end-points' },            
+        { name: 'Sales', description: 'Sales related end-points' },            
+        
+
+
                 
       ],
       definitions: {      
@@ -154,7 +164,9 @@ exports.options = {
 
                 }
               }
-            }                     
+            },
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}
           }
         },
 
@@ -175,8 +187,11 @@ exports.options = {
 
                 }
               }
-            }                     
+            },
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}                     
           }
+          
         },
         inventory:{
           type: 'object',
@@ -186,7 +201,9 @@ exports.options = {
             isDeleted:{type:'boolean'},
             modelId:{type:'string'}, 
             color:{type:'string'},
-            quantity:{type:'number'}            
+            quantity:{type:'number'},
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}           
           }
         },
 
@@ -197,6 +214,7 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},                        
             folio:{type:'boolean'},
+            employeeId:{type:'string'},
             clientId:{type:'string'},
             branchId:{type:'string'},
             modelId:{type:'string'},
@@ -227,7 +245,9 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},
             fullName:{type:'string'}, 
-            phone:{type:'string'},            
+            phone:{type:'string'}, 
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}           
           }
         },
 
@@ -238,13 +258,14 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},
             modelId:{type:'string'}, 
-            clientId:{type:'string'}, 
-            color:{type:'string'},            
+            clientId:{type:'string'},
+            branchId:{type:'string'},
+            employeeIdId:{type:'string'},
+            color:{type:'string'}, 
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}           
           }
-        },
-
-
-        
+        },        
       }
     }
   }

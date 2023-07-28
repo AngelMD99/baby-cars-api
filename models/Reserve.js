@@ -14,7 +14,15 @@ const reserveSchema = new mongoose.Schema({
     clientId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Client", 
-    },        
+    }, 
+    branchId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Branch", 
+    },       
+    employeeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", 
+    },
 },{
     timestamps: true,
   }

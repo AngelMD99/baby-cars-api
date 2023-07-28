@@ -195,6 +195,41 @@ const putSingleInventoryOpts={
     
 }
 
+const getInventoriesOpts={
+    schema: {
+         description:"Retrieves the information of all the inventories stored on the database.",
+         tags:['Inventories'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:inventoryDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: inventoryList,
+    
+}
+
 function crmInventoryRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
@@ -206,6 +241,7 @@ function crmInventoryRoutes(fastify, options, done) {
     fastify.delete('/crm/inventory/:id', deleteSingleInventoryOpts)
     fastify.get('/crm/inventory/:id', getSingleInventoryOpts)
     fastify.put('/crm/inventory/:id', putSingleInventoryOpts)
+    fastify.get('/crm/inventory', getInventoriesOpts)
 
 
 
