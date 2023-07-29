@@ -19,7 +19,8 @@ exports.options = {
         { name: 'Clients', description: 'Clients related end-points' },            
         { name: 'Models', description: 'Models related end-points' },            
         { name: 'Reserves', description: 'Reserves related end-points' },            
-        { name: 'Sales', description: 'Sales related end-points' },            
+        { name: 'Sales', description: 'Sales related end-points' },
+        { name: 'Payments', description: 'Payments related end-points' },                        
         
 
 
@@ -254,6 +255,21 @@ exports.options = {
         reserves:{
           type: 'object',
           required: ['modelId','clientId'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            modelId:{type:'string'}, 
+            clientId:{type:'string'},
+            branchId:{type:'string'},
+            employeeIdId:{type:'string'},
+            color:{type:'string'}, 
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}           
+          }
+        },        
+        payments:{
+          type: 'object',
+          required: ['amount','paidOn','operationType'],
           properties: {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},

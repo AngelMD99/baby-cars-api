@@ -46,15 +46,14 @@ const saleSchema = new mongoose.Schema({
     reserveId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Reserve", 
-    },
-    
+    },    
     color:String,
-    saleType:{
-        type:String,
-        enum:['single', 'reserve']
+    // saleType:{
+    //     type:String,
+    //     enum:['single', 'reserve']
 
-    },
-    payments:[paymentSchema],    
+    // },
+    //payments:[paymentSchema],    
     price:Number,
     isPaid:{
         type:Boolean,
