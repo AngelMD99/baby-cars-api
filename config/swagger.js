@@ -257,6 +257,7 @@ exports.options = {
           required: ['modelId','clientId'],
           properties: {
             _id:{type:'string'},
+            folio:{type:'string'},
             isDeleted:{type:'boolean'},
             modelId:{type:'string'}, 
             clientId:{type:'string'},

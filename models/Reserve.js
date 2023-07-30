@@ -6,6 +6,9 @@ const reserveSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    folio:{
+        type:String
+    },
     modelId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Car", 

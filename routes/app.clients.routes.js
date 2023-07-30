@@ -1,5 +1,5 @@
 const Branch = require('../models/Branch');
-const { clientCreate, clientSearch, clientDelete, clientUpdate   } = require('../controllers/client.controller');
+const { clientCreate, clientSearch, clientDelete, clientUpdate, clientShow, clientList   } = require('../controllers/client.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');
 const errResponse = {
@@ -50,8 +50,182 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const clientDef = { 
+    type: 'object',    
+    properties: {
+        _id: { type: 'string' },
+        fullName:{type:'string'},       
+        phone: { type: 'string'},        
+        email:{type:'string'},       
+        createdAt:{type:'string'},
+        updatedAt:{type:'string'}        
+    }
+}
+
+const postClientUpOpts = {
+    schema: {
+        description:'Allows to register a new client on database.',
+        tags:['Clients'],
+        // headers:{
+        //     authorization:{type:'string'}
+        // },
+        body: {
+            type: 'object',            
+            properties: {                
+                fullName:{type:'string'},
+                phone:{type:'string'},                
+                email:{type:'string'}               
+            },
+        },
+        response: {
+            201: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string' },
+                    data:clientDef
+ 
+                }
+            },
+            400: errResponse
+        }
+    },
+    preHandler: authorizeFunc,
+    handler: clientCreate,
+}
+
+const getSingleClientOpts={
+    schema: {
+         description:"Retrieves the information of a single client with the id provided.",
+         tags:['Clients'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: clientDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: clientShow,
+    
+}
+
+const deleteSingleClientOpts={
+    schema: {
+         description:"Deletes the client with the id provided.",
+         tags:['Clients'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: clientDelete,
+    
+}
+
+const putSingleClientOpts={
+    schema: {
+         description:"Allows to update the information of a single client with the id provided.",
+         tags:['Clients'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         }, 
+         body: {
+            type: 'object',
+            properties: {                                
+                fullName: { type: 'string' },                
+                email: { type: 'string' },              
+                phone: { type: 'string' },                 
+
+            },
+        },      
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:clientDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: clientUpdate,
+    
+}
+
+const getClientsOpts={
+    schema: {
+         description:"Retrieves the information of all the clients stored on the database.",
+         tags:['Clients'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:clientDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: clientList,
+    
+}
+
+
 function appClientsRoutes(fastify, options, done) {
-    // fastify.get('/branches/:id/cars', getCarsOpts)
+    fastify.post('/app/clients', postClientUpOpts)
+    fastify.get('/app/clients', getClientsOpts)
+    fastify.get('/app/clients/:id', getSingleClientOpts)
+    fastify.delete('/app/clients/:id', deleteSingleClientOpts)
+    fastify.put('/app/clients/:id', putSingleClientOpts)
+   
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
     // fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)

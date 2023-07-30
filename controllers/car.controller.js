@@ -119,7 +119,7 @@ const carCreate = async function (req, reply){
     }
     delete carObj.__v
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data: carObj
      })      
@@ -159,7 +159,7 @@ const carShow = async function (req, reply){
             name:""            
         }
     }
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: carObj
     })    
@@ -319,7 +319,7 @@ const carUpdate = async function (req, reply){
 
     delete updatedCarObj.__v
    
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: updatedCarObj           
         
