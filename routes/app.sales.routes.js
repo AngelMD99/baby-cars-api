@@ -50,8 +50,98 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const saleDef = { 
+    type: 'object',    
+    properties: {
+        _id: { type: 'string' },
+        folio:{type:'string'},
+        branchId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                code:{type:'string'},
+                name:{type:'string'}
+            }
+        },
+        modelId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},                
+            }
+        },
+        clientId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},                
+                email:{type:'string'},                
+                phone:{type:'string'},                
+            }
+        },
+        employeeId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},                
+                email:{type:'string'},                                
+            }
+        },
+        quantity:{type:'number'},
+        price:{type:'number'},
+        totalSale:{type:'number'},
+        payments:{
+            type:'array',
+            items:{
+                amount:{type:'number'},
+                paid:{type:'string'},
+                paymentType:{type:'string'}
+            }
+        },              
+        createdAt:{type:'string'},
+        updatedAt:{type:'string'}        
+    }
+}
+
+const postSaleUpOpts = {
+    schema: {
+        description:'Allows to register a new single payment sale  on database.',
+        tags:['Sales'],
+        // headers:{
+        //     authorization:{type:'string'}
+        // },
+        body: {
+            type: 'object',            
+            properties: {                
+                branchId:{type:'string'},
+                modelId:{type:'string'},
+                userId:{type:'string'},
+                clientId:{type:'string'},
+                employeeId:{type:'string'},                
+                color:{type:'string'},
+                paymentType:{type:'string'},
+                price:{type:'number'},               
+                quantity:{type:'number'},                
+            },
+        },
+        response: {
+            201: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string' },
+                    data:saleDef
+ 
+                }
+            },
+            400: errResponse
+        }
+    },
+    preHandler: authorizeFunc,
+    handler: saleCreate,
+}
+
 function appSalesRoutes(fastify, options, done) {
-    //fastify.post('/rentals', postRentalUpOpts)
+    fastify.post('/app/sales', postSaleUpOpts)
     // fastify.get('/crm/branches', getBranchesOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     

@@ -33,20 +33,20 @@ const saleSchema = new mongoose.Schema({
     },
     clientId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Clients", 
+        ref: "Client", 
     },
     modelId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Car", 
+        ref: "Modelo", 
     },
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", 
     },
-    reserveId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Reserve", 
-    },    
+    // reserveId: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "Reserve", 
+    // },    
     color:String,
     // saleType:{
     //     type:String,
@@ -55,10 +55,12 @@ const saleSchema = new mongoose.Schema({
     // },
     //payments:[paymentSchema],    
     price:Number,
-    isPaid:{
-        type:Boolean,
-        default:false
-    }
+    quantity:Number,
+    totalSale:Number,
+    // isPaid:{
+    //     type:Boolean,
+    //     default:false
+    // }
 
       
     
