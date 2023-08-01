@@ -140,8 +140,37 @@ const postSaleUpOpts = {
     handler: saleCreate,
 }
 
+const getSingleSaleOpts={
+    schema: {
+         description:"Retrieves the information of a single sale with the id provided.",
+         tags:['Sale'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: saleDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: saleShow,
+    
+}
+
 function appSalesRoutes(fastify, options, done) {
     fastify.post('/app/sales', postSaleUpOpts)
+    fastify.get('/app/sales/:id', getSingleSaleOpts)
+
     // fastify.get('/crm/branches', getBranchesOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     
