@@ -142,13 +142,14 @@ const postSaleUpOpts = {
 
 const getSingleSaleOpts={
     schema: {
-         description:"Retrieves the information of a single sale with the id provided.",
+         description:"Retrieves the information of a single sale with the saleId provided for the id of the branch ",
          tags:['Sale'],
         //  headers:{
         //     authorization:{type:'string'}
         // },
          params:{
-            id:{type:'string'}
+            id:{type:'string'},
+            saleId:{type:'string'}
          },         
          response: {
             200: {
@@ -167,9 +168,45 @@ const getSingleSaleOpts={
     
 }
 
+const getBranchSalesOpts={
+    schema: {
+         description:"Retrieves the information of all the rentals for the branch with id provided in URL, stored on the database.",
+         tags:['Sales'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:saleDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: saleList,
+    
+}
+
 function appSalesRoutes(fastify, options, done) {
-    fastify.post('/app/sales', postSaleUpOpts)
-    fastify.get('/app/sales/:id', getSingleSaleOpts)
+    fastify.post('/app/:id/sales', postSaleUpOpts)
+    fastify.get('/app/:id/sales/:saleId', getSingleSaleOpts)
+    fastify.get('/app/:id/sales', getBranchSalesOpts)
 
     // fastify.get('/crm/branches', getBranchesOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)

@@ -293,11 +293,11 @@ const saleCreate = async function (req, reply){
 }
 
 const saleShow = async function (req, reply){
-    const sale = await Sale.findOne({_id:req.params.id}).select('-createdAt -updatedAt -__v');
+    const sale = await Sale.findOne({_id:req.params.saleId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
     if (!sale){
         return reply.code(400).send({
             status: 'fail',
-            message: 'Venta no registrado'
+            message: 'Venta no registrada'
         })        
     } 
     
@@ -447,7 +447,7 @@ const saleList = async function (req, reply){
                 let newObj={
                     _id:sale._id,
                     folio:sale.folio,
-                    ipAddress:sale.ipAddress,
+                    color:sale.color,
                     quantity:sale.quantity,
                     price:sale.price,
                     totalSale:sale.totalSale,
@@ -473,9 +473,37 @@ const saleList = async function (req, reply){
                     code : modelInfo && modelInfo.code ? modelInfo.code : "",
 
                 }
+
+                let clientInfo = allClients.find(client=>{
+                    return String(client._id) == String(sale.clientId)
+                })
+                newObj.clientId={
+                    _id:sale.clientId ? sale.clientId :null,
+                    fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
+                    phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
+                    email : clientInfo && clientInfo.email ? clientInfo.email : "",
+
+                }
+
+                let userInfo = allUsers.find(user=>{
+                    return String(user._id) == String(sale.employeeId)
+                })
+                newObj.employeeId={
+                    _id:sale.employeeId ? sale.employeeId :null,
+                    fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
+                    phone : userInfo && userInfo.phone ? userInfo.phone : "",
+                    email : userInfo && userInfo.email ? userInfo.email : "",
+
+                }
+
+                newObj.payments = allPayments.filter(payment=>{
+                    return String(payment.saleId) == String(sale._id)
+                })
                 
                 delete sale.branchId;
                 delete sale.modelId;                
+                delete sale.clientId;                
+                delete sale.employeeId;                
                 salesPaginated.docs.push(newObj)                               
             });
             salesPaginated.page=salesQuery.page;
@@ -491,7 +519,7 @@ const saleList = async function (req, reply){
             }
             else{
                 sortOrder ={
-                    name:1
+                    createdAt:1
                 }
             }
             salesPaginated.docs=[]
@@ -511,9 +539,40 @@ const saleList = async function (req, reply){
                 let modelId={
                     _id:sale.modelId ? sale.modelId :null,
                     name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
-                }  
+                }
+                
+                let clientInfo = allClients.find(client=>{
+                    return String(client._id) == String(sale.clientId)
+                })
+
+                let clientId={
+                    _id:sale.clientId ? sale.clientId :null,
+                    fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
+                    phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
+                    email : clientInfo && clientInfo.email ? clientInfo.email : "",
+
+                }
+
+                let userInfo = allUsers.find(user=>{
+                    return String(user._id) == String(sale.employeeId)
+                })
+                let userId={
+                    _id:sale.employeeId ? sale.employeeId :null,
+                    fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
+                    phone : userInfo && userInfo.phone ? userInfo.phone : "",
+                    email : userInfo && userInfo.email ? userInfo.email : "",
+
+                }
+
+                let payments = allPayments.filter(payment=>{
+                    return String(payment.saleId) == String(sale._id)
+                })
                 sale.branchId=branchId;         
                 sale.modelId=modelId;         
+                sale.clientId=clientId;         
+                sale.employeeId=userId;         
+                sale.payments=payments;         
+
                 // sale.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
                 // sale.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
                 // delete sale.branchId;                
@@ -554,6 +613,73 @@ const saleList = async function (req, reply){
                 }
                 })
           }
+          if(req.query.modelId){
+            aggregateQuery.push({
+                '$match':{
+                    modelId:new ObjectId(req.query.modelId)
+                }
+                })
+          }
+
+          if(req.query.clientId){
+            aggregateQuery.push({
+                '$match':{
+                    clientId:new ObjectId(req.query.clientId)
+                }
+                })
+          }
+          if(req.query.userId){
+            aggregateQuery.push({
+                '$match':{
+                    userId:new ObjectId(req.query.userId)
+                }
+                })
+          }
+          if(req.query.color){
+            aggregateQuery.push({
+                '$match':{
+                    userId:new ObjectId(req.query.color)
+                }
+                })
+          }
+
+          if (req.query.initialDate!=null && req.query.finalDate!=null){                    
+            let initialDay=new Date(req.query.initialDate);
+            let finalDayToDate =new Date(req.query.finalDate)            
+            if(initialDay.getTime() > finalDayToDate.getTime()){
+                return reply.code(400).send({
+                    status:'fail',
+                    message:'La fecha inicial no puede ser mayor que la fecha final'
+                })
+            }
+    
+            let finalDay= addDays(finalDayToDate,1)
+            console.log("INITIAL DATE RECEIVED CRM RENTALS: ", req.query.initialDate);
+            console.log("INITIAL DATE ADJUSTED CRM RENTALS: ", initialDay);
+            console.log("FINAL DATE RECEIVED CRM RENTALS: ", req.query.finalDate);                       
+            console.log("FINAL DATE RECEIVED CRM RENTALS: ", finalDay);
+            aggregateQuery.push({
+                '$match':{
+                    createdAt:{"$gte": initialDay,"$lte":finalDay}
+                }
+            })                                   
+        }
+        if (req.query.initialDate!=null && req.query.finalDate==null){        
+            let initialDay=new Date(req.query.initialDate);
+            aggregateQuery.push({
+                '$match':{
+                    createdAt:{"$gte": initialDay}
+                }
+            })                                              
+        }
+        if (req.query.finalDate!=null && req.query.initialDate==null){
+            let finalDay= addDays(req.query.finalDate,1)
+            aggregateQuery.push({
+                '$match':{
+                    createdAt:{"$lte": finalDay}
+                }
+            })                                                          
+        }
           aggregateQuery.push(
               {
                 '$match': {
@@ -576,15 +702,37 @@ const saleList = async function (req, reply){
                     'as': 'modelInfo'
                   }
              },
+            {
+                '$lookup': {
+                    'from': 'clients', 
+                    'localField': 'clientId', 
+                    'foreignField': '_id', 
+                    'as': 'clientInfo'
+                  }
+             },
+             {
+                '$lookup': {
+                    'from': 'users', 
+                    'localField': 'employeeId', 
+                    'foreignField': '_id', 
+                    'as': 'employeeInfo'
+                  }
+             },
+             {
+                '$lookup': {
+                    'from': 'payments', 
+                    'localField': '_id', 
+                    'foreignField': 'saleId', 
+                    'as': 'paymentsInfo'
+                  }
+             },
+
               
               {
                 '$project': {
-                  'isStarted':1,
+                  'isDeleted':1,
                   //'branchId': 1,                   
-                  'ipAddress': 1, 
-                  'name': 1,
-                  'color':1,
-                  "plans":1,
+                  'folio': 1,                   
                   'branchId._id': {
                     '$first': '$branchInfo._id'
                   },
@@ -600,51 +748,94 @@ const saleList = async function (req, reply){
                   'modelId.name': {
                     '$first': '$modelInfo.name'
                   }, 
-                  'startDate':1,
-                  'expireDate':1,
-                  'rentalTime':1,
-                  'remainingTime':1  
+                  'color':1,
+                  'clientId._id': {
+                    '$first': '$clientInfo._id'
+                  },
+                  'client.fullName': {
+                    '$first': '$clientInfo.fullName'
+                  }, 
+                  'client.phone': {
+                    '$first': '$clientInfo.phone'
+                  }, 
+                  'client.email': {
+                    '$first': '$clientInfo.email'
+                  }, 
+                  'userId._id': {
+                    '$first': '$userInfo._id'
+                  },
+                  'userId.fullName': {
+                    '$first': '$userInfo.fullName'
+                  }, 
+                  'userId.phone': {
+                    '$first': '$userInfo.phone'
+                  }, 
+                  'userId.email': {
+                    '$first': '$userInfo.email'
+                  }, 
+                  'payments':'$payments.Info',
 
-
+                  'createdAt':1,
+                  'updatedAt':1,                 
                 }
               }, {
                 '$match': {
-                  '$or': [
+                  '$or': [                    
                     {
-                      'name': {
-                        '$regex': searchString, 
-                        '$options': 'i'
-                      }
-                    }, {
                       'color': {
                         '$regex': searchString, 
                         '$options': 'i'
                       }
                     },
                     {
-                        'ipAddress': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                      {
                         'branchId.code': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                      },
-                      {
+                    },
+                    {
                         'branchId.name': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                      },
-                      {
+                    },
+                    {
                         'modelId.name': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                      }
+                    },
+                    {
+                        'clientId.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'clientId.phone': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'clientId.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'userId.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },                    
+                    {
+                        'userId.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    }
+
                   ]
                 }
               }
