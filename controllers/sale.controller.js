@@ -137,7 +137,6 @@ const saleCreate = async function (req, reply){
     let clientId = req.body.clientId;    
     let employeeId= req.body.employeeId;    
     let color = req.body.color  
-
     delete req.body.branchId;  
     
     let inventoryValidation = await Inventory.findOne({

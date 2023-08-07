@@ -69,11 +69,12 @@ fastify.register(require("./routes/app.modelos.routes"));
 fastify.register(require("./routes/app.payment.routes"));
 fastify.register(require("./routes/app.rental.ticket.route"));
 fastify.register(require("./routes/app.rentals.routes"));
+fastify.register(require("./routes/app.reserve.routes"));
 fastify.register(require("./routes/app.sales.routes"));
 fastify.register(require("./routes/app.status.routes"));
 fastify.register(require("./routes/app.tickets.routes"));
 fastify.register(require("./routes/app.users.routes"));
-
+fastify.register(require("./routes/crm.balance.routes"));
 fastify.register(require("./routes/crm.banking.routes"));
 fastify.register(require("./routes/crm.battery.routes"));
 fastify.register(require("./routes/crm.branches.routes"));

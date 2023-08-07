@@ -26,6 +26,10 @@ const reserveSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 
     },
+    quantity:Number,
+    price:Number,
+    totalSale:Number,
+    pendingBalance:Number,
 },{
     timestamps: true,
   }

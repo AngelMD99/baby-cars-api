@@ -262,8 +262,12 @@ exports.options = {
             modelId:{type:'string'}, 
             clientId:{type:'string'},
             branchId:{type:'string'},
-            employeeIdId:{type:'string'},
-            color:{type:'string'}, 
+            employeeId:{type:'string'},
+            color:{type:'string'},
+            quantity:{type:'number'},
+            price:{type:'number'},
+            totalSale:{type:'number'},
+            pendingBalance:{type:'number'},
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}           
           }
@@ -277,12 +281,26 @@ exports.options = {
             modelId:{type:'string'}, 
             clientId:{type:'string'},
             branchId:{type:'string'},
-            employeeIdId:{type:'string'},
+            employeeId:{type:'string'},
             color:{type:'string'}, 
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}           
           }
-        },        
+        },  
+        balances:{
+          type: 'object',
+          required: ['amount','branchId','userId','loginDate','logoutDate'],
+          properties: {
+            _id:{type:'string'},
+            isDeleted:{type:'boolean'},
+            userId:{type:'string'},             
+            branchId:{type:'string'},
+            loginDate:{type:'timestamp'},
+            logoutDate:{type:'timestamp'},
+            createdAt:{type:'timestamp'},
+            updatedAt:{type:'timestamp'}           
+          }
+        },      
       }
     }
   }

@@ -3,6 +3,8 @@ const { branchLogin } = require('../controllers/branch.controller');
 const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
 const { statusCreate, statusDelete, statusList, statusUpdate } = require('../controllers/status.controller');
 const { batteryCreate } = require('../controllers/battery.controller');
+const { balanceShow, balanceCreate, balanceList } = require('../controllers/balance.controller');
+
 
 
 
