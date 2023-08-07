@@ -13,6 +13,10 @@ const balanceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,              
         ref: "User", 
     },
+    quantity: {
+        type: Number,
+        required: true
+    },
     amount: {
         type: Number,
         required: true

@@ -92,6 +92,14 @@ const reserveDef = {
         quantity:{type:'number'},
         price:{type:'number'},
         totalSale:{type:'number'},
+        payments:{
+            type:'array',
+            items:{
+                amount:{type:'number'},
+                paid:{type:'string'},
+                paymentType:{type:'string'}
+            }
+        }, 
         pendingBalance:{type:'number'},                  
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        

@@ -11,7 +11,7 @@ const reserveSchema = new mongoose.Schema({
     },
     modelId: {
         type: mongoose.Schema.Types.ObjectId,              
-        ref: "Car", 
+        ref: "Modelo", 
     },
     color:String,
     clientId: {

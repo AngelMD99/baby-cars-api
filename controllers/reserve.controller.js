@@ -2,6 +2,7 @@ const Reserve = require('../models/Reserve');
 const Status = require('../models/Status');
 const Branch = require('../models/Branch');
 const User = require('../models/User');
+const Client = require('../models/Client');
 const Payment = require('../models/Payment');
 const Inventory = require('../models/Inventory');
 const mongoose = require('mongoose');
@@ -12,6 +13,8 @@ const Modelo = require('../models/Modelo');
 const Car = require('../models/Car');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+const { getOffsetSetting } = require('../controllers/base.controller');
+
 
 const reserveCreate = async function (req,reply){
     if(!req.body.branchId){
@@ -128,6 +131,8 @@ const reserveCreate = async function (req,reply){
     let employeeId= req.body.employeeId;    
     let color = req.body.color  
 
+    console.log("MODEL ID: ", modelId)
+
     let inventoryValidation = await Inventory.findOne({
         modelId:req.body.modelId,
         isDeleted:false,
@@ -159,7 +164,7 @@ const reserveCreate = async function (req,reply){
         if(!req.body.amount){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'El metodo de pago es requerido al registrar el primer pago.'
+                message: 'El monto del pago es requerido si va  a registrar el primer pago.'
             })
 
         }
@@ -187,7 +192,10 @@ const reserveCreate = async function (req,reply){
     reserve.isPaid = true;
     let total = req.body.price * req.body.quantity;
     reserve.totalSale = total;
+    reserve.pendingBalance = total;
+
     reserve._id = mongoose.Types.ObjectId();
+
 
     let offset = await getOffsetSetting();              
     let date = new Date ();    
@@ -217,7 +225,7 @@ const reserveCreate = async function (req,reply){
     nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
     nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
     let branchCode = activeBranch.code;
-    sale.folio = "RS-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+    reserve.folio = "RS-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
     
 
     let receivedPayments=[];
@@ -235,15 +243,13 @@ const reserveCreate = async function (req,reply){
         const payment = new Payment(paymentInput);
         payment._id = mongoose.Types.ObjectId();     
         await payment.save(); 
-        reserve.totalSale -=  req.body.amount;
+        reserve.pendingBalance -=  req.body.amount;
         const paymentObj = await payment.toObject()
         delete paymentObj.__v;
         delete paymentObj.createdAt;
         delete paymentObj.updateAt;
         receivedPayments.push(paymentObj)  
     }
-
-
     await reserve.save()
     await reserve.populate([
         {path:'branchId', select:'_id name code'},
@@ -259,7 +265,7 @@ const reserveCreate = async function (req,reply){
         {path:'clientId', select:'_id fullName email phone'}
     ]); 
 
-    const reserveObj = await reserve.toObject()    
+    const reserveObj = await reserve.toObject()       
     reserveObj.payments=receivedPayments;    
     if(!reserveObj.branchId || !reserveObj.branchId._id){
         reserveObj.branchId={
@@ -292,7 +298,6 @@ const reserveCreate = async function (req,reply){
         }
     }
     delete reserveObj.__v
-    reserveObj.payments.push(paymentObj)
     inventoryValidation.quantity-=req.body.quantity;
     await inventoryValidation.save();
     return reply.code(201).send({

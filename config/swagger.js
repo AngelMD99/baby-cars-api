@@ -295,6 +295,8 @@ exports.options = {
             isDeleted:{type:'boolean'},
             userId:{type:'string'},             
             branchId:{type:'string'},
+            quantity:{type:'number'},
+            amount:{type:'number'},
             loginDate:{type:'timestamp'},
             logoutDate:{type:'timestamp'},
             createdAt:{type:'timestamp'},
