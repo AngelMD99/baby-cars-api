@@ -226,7 +226,7 @@ const reserveCreate = async function (req,reply){
     nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
     let branchCode = activeBranch.code;
     reserve.folio = "RS-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
-    
+    let totalPaid = 0;
 
     let receivedPayments=[];
     if(req.body.amount && req.body.paymentType){
@@ -248,6 +248,7 @@ const reserveCreate = async function (req,reply){
         delete paymentObj.__v;
         delete paymentObj.createdAt;
         delete paymentObj.updateAt;
+        totalPaid +=req.body.amount;
         receivedPayments.push(paymentObj)  
     }
     await reserve.save()
@@ -298,6 +299,7 @@ const reserveCreate = async function (req,reply){
         }
     }
     delete reserveObj.__v
+    reserveObj.totalPaid = totalPaid;
     inventoryValidation.quantity-=req.body.quantity;
     await inventoryValidation.save();
     return reply.code(201).send({
@@ -312,6 +314,73 @@ const reserveCreate = async function (req,reply){
 }
 
 const reserveShow = async function (req,reply){
+    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
+    if (!reserve){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado no registrado'
+        })        
+    } 
+    
+    await reserve.populate([
+        {path:'branchId', select:'_id name code'},
+        {path:'modelId', select:'_id name'},
+        {path:'employeeId', select:'_id fullName email'},
+        {path:'clientId', select:'_id fullName email phone'}
+    ]);  
+    let reserveObj = await reserve.toObject();
+    let payments = await Payment.find({reserveId:reserve._id,isDeleted:false})                
+    let totalPaid = 0;
+    payments.forEach(payment=>{
+        totalPaid+=payment.amount;
+    })
+    reserveObj.payments=payments;
+    reserveObj.totalPaid=totalPaid;
+    
+
+
+
+    
+    // if (reserveObj.branchId){
+    //     reserveObj.branchCode=reserveObj.branchId.code ? reserveObj.branchId.code :"";
+    //     reserveObj.branchName=reserveObj.branchId.name ? reserveObj.branchId.name :"";
+    //     delete reserveObj.branchId;
+    // }
+    if(!reserveObj.branchId || !reserveObj.branchId._id){
+        reserveObj.branchId={
+            _id:null,
+            name:"",
+            code:"",
+        }
+    }
+    if(!reserveObj.modelId || !reserveObj.modelId._id){
+        reserveObj.modelId={
+            _id:null,
+            name:"",            
+        }
+    }
+
+    if(!reserveObj.clientId || !reserveObj.clientId._id){
+        reserveObj.clientId={
+            _id:null,
+            fullName:"",            
+            phone:"",
+            email:""
+        }
+    }
+    
+    if(!reserveObj.employeeId || !reserveObj.employeeId._id){
+        reserveObj.modelId={
+            _id:null,
+            fullName:"",                        
+            email:""
+        }
+    }
+    delete reserveObj.__v
+    return reply.code(200).send({
+        status: 'success',
+        data: reserveObj
+    })    
     
 }
 

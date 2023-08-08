@@ -100,6 +100,7 @@ const reserveDef = {
                 paymentType:{type:'string'}
             }
         }, 
+        totalPaid:{type:'number'},                  
         pendingBalance:{type:'number'},                  
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
@@ -146,11 +147,40 @@ const postReserveUpOpts = {
     handler: reserveCreate,
 }
 
+const getSingleReserveOpts={
+    schema: {
+         description:"Retrieves the information of a single reserve with the reserveId provided for the id of the branch ",
+         tags:['Sale'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'},
+            saleId:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: reserveDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveShow,
+    
+}
+
+
 
 function appReserveRoutes(fastify, options, done) {
 
     fastify.post('/app/:id/reserves', postReserveUpOpts)
-    // fastify.get('/app/:id/sales/:saleId', getSingleSaleOpts)
+    fastify.get('/app/:id/reserves/:reserveId', getSingleReserveOpts)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
