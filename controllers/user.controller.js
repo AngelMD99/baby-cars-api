@@ -86,10 +86,13 @@ const userLogin = async function (req, reply) {
             ]); 
              
         }
+        user.lastLogin = new Date()
+        await user.save();
         let userObj = user.toObject()       
 
 
         delete userObj.password;
+        delete userObj.lastLogin;
 
         reply.code(200).send({
             status: 'success',
@@ -170,10 +173,14 @@ const userBranchLogin = async function (req, reply) {
             ]); 
              
         }
+
+        user.lastLogin = new Date();
+        await user.save();
         let userObj = user.toObject()       
 
 
         delete userObj.password;
+        delete userObj.lastLogin;
 
         reply.code(200).send({
             status: 'success',
@@ -386,6 +393,7 @@ const userList = async function (req, reply){
                     fullName:user.fullName, 
                     email:user.email, 
                     role:user.role,
+                    lastLogin:user.lastLogin,
                     createdAt:user.createdAt,
                     updatedAt:user.updatedAt                    
 
@@ -491,8 +499,6 @@ const userList = async function (req, reply){
                 '$project': {               
                   'fullName': 1, 
                   'email': 1,
-                  'color':1,
-                  "plans":1,
                   'branchId._id': {
                     '$first': '$branchInfo._id'
                   },
@@ -502,14 +508,9 @@ const userList = async function (req, reply){
                   'branchId.name': {
                     '$first': '$branchInfo.name'
                   },
-                  'modelId._id': {
-                    '$first': '$modelInfo._id'
-                  },
-                  'modelId.name': {
-                    '$first': '$modelInfo.name'
-                  }, 
-                  'startDate':1,
-                  'expireDate':1,
+                  'lastLogin':1,
+                  'createdAt':1,
+                  'updatedAt':1,
                   'rentalTime':1,
                   'remainingTime':1  
 
@@ -519,40 +520,29 @@ const userList = async function (req, reply){
                 '$match': {
                   '$or': [
                     {
-                      'name': {
+                      'fullName': {
                         '$regex': searchString, 
                         '$options': 'i'
                       }
                     }, {
-                      'color': {
+                      'email': {
                         '$regex': searchString, 
                         '$options': 'i'
                       }
-                    },
+                    },                    
                     {
-                        'ipAddress': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                      {
                         'branchId.code': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                      },
+                    },
                       {
                         'branchId.name': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                      },
-                      {
-                        'modelId.name': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      }
+                    },
+                    
                   ]
                 }
               }
