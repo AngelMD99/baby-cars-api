@@ -6,6 +6,11 @@ const paymentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isDiscarded: {
+        type: Boolean,
+        default: false
+    },
+    discardReason:String,
     branchId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Branch", 

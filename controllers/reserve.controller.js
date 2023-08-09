@@ -188,8 +188,7 @@ const reserveCreate = async function (req,reply){
         reserve.color=color.toLowerCase()
     }
     reserve.price = req.body.price;
-    reserve.quantity = req.body.quantity;
-    reserve.isPaid = true;
+    reserve.quantity = req.body.quantity;    
     let total = req.body.price * req.body.quantity;
     reserve.totalSale = total;
     reserve.pendingBalance = total;
@@ -251,6 +250,7 @@ const reserveCreate = async function (req,reply){
         totalPaid +=req.body.amount;
         receivedPayments.push(paymentObj)  
     }
+    reserve.isPaid = reserve.pendingBalance <= 0 ? true: false;
     await reserve.save()
     await reserve.populate([
         {path:'branchId', select:'_id name code'},

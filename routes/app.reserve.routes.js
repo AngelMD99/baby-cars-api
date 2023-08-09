@@ -54,6 +54,10 @@ const reserveDef = {
     properties: {
         _id: { type: 'string' },
         folio:{type:'string'},
+        isPaid:{type:'boolean'},
+        isCancelled:{type:'boolean'},
+        isDelivered:{type:'boolean'},
+        cancellationReason:{type:'boolean'},
         modelId:{
             type:'object',
             properties:{
@@ -81,6 +85,24 @@ const reserveDef = {
             }
         },
         employeeId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'}
+            }
+        }, 
+        cancelledBy:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'}
+            }
+        }, 
+        DeliveredBy:{
             type:'object',
             properties:{
                 _id:{type:'string'},

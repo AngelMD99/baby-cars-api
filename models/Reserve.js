@@ -6,6 +6,19 @@ const reserveSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isPaid: {
+        type: Boolean,
+        default: false
+    },
+    isDelivered: {
+        type: Boolean,
+        default: false
+    },
+    isCancelled: {
+        type: Boolean,
+        default: false
+    },
+    cancellationReason:String,
     folio:{
         type:String
     },
@@ -23,6 +36,10 @@ const reserveSchema = new mongoose.Schema({
         ref: "Branch", 
     },       
     employeeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", 
+    },
+    cancelledBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 
     },
