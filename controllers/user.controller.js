@@ -394,7 +394,8 @@ const userList = async function (req, reply){
                     email:user.email, 
                     role:user.role,
                     lastLogin:user.lastLogin,
-                    createdAt:user.createdAt,
+                    lastLogOut:user.lastLogin,
+                    createdAt:user.createdAt,                  
                     updatedAt:user.updatedAt                    
 
                 }
@@ -509,6 +510,7 @@ const userList = async function (req, reply){
                     '$first': '$branchInfo.name'
                   },
                   'lastLogin':1,
+                  'lastLogOut':1,
                   'createdAt':1,
                   'updatedAt':1,
                   'rentalTime':1,

@@ -29,7 +29,8 @@ const userDef={
                 code:{type:'string'}
             }
         }, 
-        lastLogin:{type:'string'},               
+        lastLogin:{type:'string'},
+        lastLogOut:{type:'string'},               
         createdAt:{type:'string'},
         updatedAt:{type:'string'}
       }

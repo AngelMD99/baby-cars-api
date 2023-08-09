@@ -40,6 +40,8 @@ exports.options = {
             fullName:{type:'string'},
             email:{type:'string'},
             password:{type:'string'},
+            lastLogin:{type:'timestamp'},
+            lastLogOut:{type:'timestamp'},
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}
           }

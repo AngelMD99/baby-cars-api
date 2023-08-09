@@ -30,7 +30,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    lastLogin: Date
+    lastLogin: Date,
+    lastLogOut: Date
     
 },{
     timestamps: true,
