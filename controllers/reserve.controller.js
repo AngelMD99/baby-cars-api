@@ -131,8 +131,6 @@ const reserveCreate = async function (req,reply){
     let employeeId= req.body.employeeId;    
     let color = req.body.color  
 
-    console.log("MODEL ID: ", modelId)
-
     let inventoryValidation = await Inventory.findOne({
         modelId:req.body.modelId,
         isDeleted:false,
@@ -326,10 +324,173 @@ const reserveShow = async function (req,reply){
         {path:'branchId', select:'_id name code'},
         {path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
-        {path:'clientId', select:'_id fullName email phone'}
+        {path:'clientId', select:'_id fullName email phone'},
+        {path:'cancelledBy', select:'_id fullName email phone'}
     ]);  
     let reserveObj = await reserve.toObject();
-    let payments = await Payment.find({reserveId:reserve._id,isDeleted:false})                
+    let payments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:false})                
+    
+    // letpayments = await Payment.aggregate([
+    //     {
+    //     '$match': {
+    //       'reserveId':reserve._id
+    //       'isDeleted': false
+    //     }
+    //   }, 
+    //   {
+    //     '$lookup': {
+    //       'from': 'branches', 
+    //       'localField': 'branchId', 
+    //       'foreignField': '_id', 
+    //       'as': 'branchInfo'
+    //     }
+    //   },
+    //   {
+    //     '$lookup': {
+    //         'from': 'modelos', 
+    //         'localField': 'modelId', 
+    //         'foreignField': '_id', 
+    //         'as': 'modelInfo'
+    //       }
+    //  },
+    // {
+    //     '$lookup': {
+    //         'from': 'clients', 
+    //         'localField': 'clientId', 
+    //         'foreignField': '_id', 
+    //         'as': 'clientInfo'
+    //       }
+    //  },
+    //  {
+    //     '$lookup': {
+    //         'from': 'users', 
+    //         'localField': 'employeeId', 
+    //         'foreignField': '_id', 
+    //         'as': 'employeeInfo'
+    //       }
+    //  },
+    //  {
+    //     '$lookup': {
+    //         'from': 'payments', 
+    //         'localField': '_id', 
+    //         'foreignField': 'saleId', 
+    //         'as': 'paymentsInfo'
+    //       }
+    //  },
+
+      
+    //   {
+    //     '$project': {
+    //       'isDeleted':1,
+    //       //'branchId': 1,                   
+    //       'folio': 1,                   
+    //       'branchId._id': {
+    //         '$first': '$branchInfo._id'
+    //       },
+    //       'branchId.code': {
+    //         '$first': '$branchInfo.code'
+    //       } ,
+    //       'branchId.name': {
+    //         '$first': '$branchInfo.name'
+    //       },
+    //       'modelId._id': {
+    //         '$first': '$modelInfo._id'
+    //       },
+    //       'modelId.name': {
+    //         '$first': '$modelInfo.name'
+    //       }, 
+    //       'color':1,
+    //       'clientId._id': {
+    //         '$first': '$clientInfo._id'
+    //       },
+    //       'client.fullName': {
+    //         '$first': '$clientInfo.fullName'
+    //       }, 
+    //       'client.phone': {
+    //         '$first': '$clientInfo.phone'
+    //       }, 
+    //       'client.email': {
+    //         '$first': '$clientInfo.email'
+    //       }, 
+    //       'userId._id': {
+    //         '$first': '$userInfo._id'
+    //       },
+    //       'userId.fullName': {
+    //         '$first': '$userInfo.fullName'
+    //       }, 
+    //       'userId.phone': {
+    //         '$first': '$userInfo.phone'
+    //       }, 
+    //       'userId.email': {
+    //         '$first': '$userInfo.email'
+    //       }, 
+    //       'payments':'$payments.Info',
+
+    //       'createdAt':1,
+    //       'updatedAt':1,                 
+    //     }
+    //   }, {
+    //     '$match': {
+    //       '$or': [                    
+    //         {
+    //           'color': {
+    //             '$regex': searchString, 
+    //             '$options': 'i'
+    //           }
+    //         },
+    //         {
+    //             'branchId.code': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },
+    //         {
+    //             'branchId.name': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },
+    //         {
+    //             'modelId.name': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },
+    //         {
+    //             'clientId.fullName': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },
+    //         {
+    //             'clientId.phone': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },
+    //         {
+    //             'clientId.email': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },
+    //         {
+    //             'userId.fullName': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         },                    
+    //         {
+    //             'userId.email': {
+    //               '$regex': searchString, 
+    //               '$options': 'i'
+    //             }
+    //         }
+
+    //       ]
+    //     }
+    //   }
+    // ])
     let totalPaid = 0;
     payments.forEach(payment=>{
         totalPaid+=payment.amount;
@@ -376,6 +537,13 @@ const reserveShow = async function (req,reply){
             email:""
         }
     }
+    if(!reserveObj.cancelledBy || !reserveObj.cancelledBy){
+        reserveObj.cancelledBy={
+            _id:null,
+            fullName:"",                        
+            email:""
+        }
+    }
     delete reserveObj.__v
     return reply.code(200).send({
         status: 'success',
@@ -384,13 +552,27 @@ const reserveShow = async function (req,reply){
     
 }
 
-const reserveList = async function (req,reply){
+const reserveCancel = async function (req,reply){
+    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
+    if (!reserve){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado no registrado'
+        })        
+    } 
+    
     
 }
 
 const reserveDelete = async function (req,reply){
     
 }
+
+
+const reserveList = async function (req,reply){
+    
+}
+
 
 const reserveUpdate = async function (req,reply){
     
@@ -449,4 +631,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { reserveCreate, reserveDelete, reserveList, reserveShow, reserveUpdate, reserveAddPayment}
+module.exports = { reserveCreate, reserveDelete, reserveList, reserveShow, reserveUpdate, reserveAddPayment, reserveCancel}

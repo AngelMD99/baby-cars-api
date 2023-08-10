@@ -102,7 +102,7 @@ const reserveDef = {
                 phone:{type:'string'}
             }
         }, 
-        DeliveredBy:{
+        deliveredBy:{
             type:'object',
             properties:{
                 _id:{type:'string'},
@@ -117,10 +117,24 @@ const reserveDef = {
         payments:{
             type:'array',
             items:{
+                isDiscarded:{type:'boolean'},
                 amount:{type:'number'},
                 paid:{type:'string'},
-                paymentType:{type:'string'}
+                paymentType:{type:'string'},
+                cancellationReason:{type:'string'},
+                cancelledBy:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},
+                        fullName:{type:'string'},
+                        email:{type:'string'},
+                        phone:{type:'string'}
+                    }
+                }, 
+
             }
+
+
         }, 
         totalPaid:{type:'number'},                  
         pendingBalance:{type:'number'},                  
