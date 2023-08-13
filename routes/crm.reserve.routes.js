@@ -14,33 +14,23 @@ const reserveDef = {
         _id: { type: 'string' },
         folio:{type:'string'},
         isPaid:{type:'boolean'},
-        isCancelled:{type:'boolean'},
-        isDelivered:{type:'boolean'},
+        isCancelled:{type:'boolean'},        
         cancellationReason:{type:'boolean'},
-        modelId:{
-            type:'object',
-            properties:{
-                _id:{type:'string'},
-                code:{type:'string'},
-                name:{type:'string'}
-            }
-        },        
-        color:{type:'string'},
-        clientId:{
-            type:'object',
-            properties:{
-                _id:{type:'string'},
-                fullName:{type:'string'},
-                email:{type:'string'},
-                phone:{type:'string'}
-            }
-        },
+        isDelivered:{type:'boolean'},
         branchId:{
             type:'object',
             properties:{
                 _id:{type:'string'},
                 code:{type:'string'},
                 name:{type:'string'}
+            }
+        },
+        client:{
+            type:'object',
+            properties:{
+              fullName:{type:'string'},
+              email:{type:'string'},
+              phone:{type:'string'}
             }
         },
         employeeId:{
@@ -61,7 +51,7 @@ const reserveDef = {
                 phone:{type:'string'}
             }
         }, 
-        DeliveredBy:{
+        deliveredBy:{
             type:'object',
             properties:{
                 _id:{type:'string'},
@@ -69,17 +59,42 @@ const reserveDef = {
                 email:{type:'string'},
                 phone:{type:'string'}
             }
-        }, 
-        quantity:{type:'number'},
-        price:{type:'number'},
+        },
+        products:{
+            type:'array',
+            items:{
+              type:'object',
+              properties:{
+                modelId:{type:'string'},
+                modelName:{type:'string'},
+                color:{type:'string'},
+                quantity:{type:'number'},
+                price:{type:'number'},
+              }
+            }
+        },         
         totalSale:{type:'number'},
         payments:{
             type:'array',
             items:{
+                isDiscarded:{type:'boolean'},
                 amount:{type:'number'},
                 paid:{type:'string'},
-                paymentType:{type:'string'}
+                paymentType:{type:'string'},
+                cancellationReason:{type:'string'},
+                cancelledBy:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},
+                        fullName:{type:'string'},
+                        email:{type:'string'},
+                        phone:{type:'string'}
+                    }
+                }, 
+
             }
+
+
         }, 
         totalPaid:{type:'number'},                  
         pendingBalance:{type:'number'},                  
