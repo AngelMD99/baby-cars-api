@@ -63,20 +63,21 @@ const saleDef = {
                 name:{type:'string'}
             }
         },
-        modelId:{
+        // clientId:{
+        //     type:'object',
+        //     properties:{
+        //         _id:{type:'string'},
+        //         fullName:{type:'string'},                
+        //         email:{type:'string'},                
+        //         phone:{type:'string'},                
+        //     }
+        // },
+        client:{
             type:'object',
             properties:{
-                _id:{type:'string'},
-                name:{type:'string'},                
-            }
-        },
-        clientId:{
-            type:'object',
-            properties:{
-                _id:{type:'string'},
-                fullName:{type:'string'},                
-                email:{type:'string'},                
-                phone:{type:'string'},                
+              fullName:{type:'string'},
+              email:{type:'string'},
+              phone:{type:'string'}
             }
         },
         employeeId:{
@@ -87,8 +88,28 @@ const saleDef = {
                 email:{type:'string'},                                
             }
         },
-        quantity:{type:'number'},
-        price:{type:'number'},
+        products:{
+            type:'array',
+            items:{
+              type:'object',
+              properties:{
+                modelId:{type:'string'},
+                modelName:{type:'string'},
+                color:{type:'string'},
+                quantity:{type:'number'},
+                price:{type:'number'},
+              }
+            }
+          },
+        // modelId:{
+        //     type:'object',
+        //     properties:{
+        //         _id:{type:'string'},
+        //         name:{type:'string'},                
+        //     }
+        // },
+        // quantity:{type:'number'},
+        // price:{type:'number'},
         totalSale:{type:'number'},
         payments:{
             type:'array',
@@ -114,14 +135,28 @@ const postSaleUpOpts = {
             type: 'object',            
             properties: {                
                 branchId:{type:'string'},
-                modelId:{type:'string'},
+                
                 userId:{type:'string'},
                 clientId:{type:'string'},
-                employeeId:{type:'string'},                
-                color:{type:'string'},
+                employeeId:{type:'string'},                           
+                // modelId:{type:'string'},
+                //color:{type:'string'},
+                // price:{type:'number'},               
+                // quantity:{type:'number'},
+                products:{
+                    type:'array',
+                    items:{
+                      type:'object',
+                      properties:{
+                        modelId:{type:'string'},
+                        modelName:{type:'string'},
+                        color:{type:'string'},
+                        quantity:{type:'number'},
+                        price:{type:'number'},
+                      }
+                    }
+                },                
                 paymentType:{type:'string'},
-                price:{type:'number'},               
-                quantity:{type:'number'},                
             },
         },
         response: {

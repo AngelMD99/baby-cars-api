@@ -55,33 +55,23 @@ const reserveDef = {
         _id: { type: 'string' },
         folio:{type:'string'},
         isPaid:{type:'boolean'},
-        isCancelled:{type:'boolean'},
-        isDelivered:{type:'boolean'},
+        isCancelled:{type:'boolean'},        
         cancellationReason:{type:'boolean'},
-        modelId:{
-            type:'object',
-            properties:{
-                _id:{type:'string'},
-                code:{type:'string'},
-                name:{type:'string'}
-            }
-        },        
-        color:{type:'string'},
-        clientId:{
-            type:'object',
-            properties:{
-                _id:{type:'string'},
-                fullName:{type:'string'},
-                email:{type:'string'},
-                phone:{type:'string'}
-            }
-        },
+        isDelivered:{type:'boolean'},
         branchId:{
             type:'object',
             properties:{
                 _id:{type:'string'},
                 code:{type:'string'},
                 name:{type:'string'}
+            }
+        },
+        client:{
+            type:'object',
+            properties:{
+              fullName:{type:'string'},
+              email:{type:'string'},
+              phone:{type:'string'}
             }
         },
         employeeId:{
@@ -110,9 +100,20 @@ const reserveDef = {
                 email:{type:'string'},
                 phone:{type:'string'}
             }
-        }, 
-        quantity:{type:'number'},
-        price:{type:'number'},
+        },
+        products:{
+            type:'array',
+            items:{
+              type:'object',
+              properties:{
+                modelId:{type:'string'},
+                modelName:{type:'string'},
+                color:{type:'string'},
+                quantity:{type:'number'},
+                price:{type:'number'},
+              }
+            }
+        },         
         totalSale:{type:'number'},
         payments:{
             type:'array',
@@ -155,15 +156,31 @@ const postReserveUpOpts = {
         body: {
             type: 'object',            
             properties: {                
-                branchId:{type:'string'},
-                modelId:{type:'string'},
+                branchId:{type:'string'},                
                 userId:{type:'string'},
-                clientId:{type:'string'},
+                client:{
+                    type:'object',
+                    properties:{
+                      fullName:{type:'string'},
+                      email:{type:'string'},
+                      phone:{type:'string'}
+                    }
+                },
                 employeeId:{type:'string'},                
-                color:{type:'string'},
+                products:{
+                    type:'array',
+                    items:{
+                      type:'object',
+                      properties:{
+                        modelId:{type:'string'},
+                        modelName:{type:'string'},
+                        color:{type:'string'},
+                        quantity:{type:'number'},
+                        price:{type:'number'},
+                      }
+                    }
+                },                
                 paymentType:{type:'string'},
-                price:{type:'number'},               
-                quantity:{type:'number'},
                 amount:{type:'number'}                
             },
         },

@@ -308,9 +308,7 @@ exports.options = {
 
             employeeId:{type:'string'},
             cancelledBy:{type:'string'},
-            deliveredBy:{type:'string'},
-
-            
+            deliveredBy:{type:'string'},            
             totalSale:{type:'number'},
             pendingBalance:{type:'number'},
             createdAt:{type:'timestamp'},
