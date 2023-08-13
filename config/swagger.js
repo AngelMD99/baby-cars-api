@@ -217,25 +217,45 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},                        
             folio:{type:'boolean'},
-            employeeId:{type:'string'},
-            clientId:{type:'string'},
+            employeeId:{type:'string'},            //clientId:{type:'string'},
             branchId:{type:'string'},
-            modelId:{type:'string'},
-            color:{type:'string'},
-            reserveId:{type:'string'},
-            price:{type:'number'},                               
-            payments:{
+            client:{
+              type:'object',
+              properties:{
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'}
+              }
+            },
+            products:{
               type:'array',
               items:{
                 type:'object',
                 properties:{
-                  amount:{type:'number'},
-                  paidOn:{type:'number'},
-                  paymentType:{type:'string'}
-
+                  modelId:{type:'string'},
+                  modelName:{type:'string'},
+                  color:{type:'string'},
+                  quantity:{type:'number'},
+                  price:{type:'number'},
                 }
               }
             },
+            //modelId:{type:'string'},
+            //color:{type:'string'},
+            //reserveId:{type:'string'},
+            //price:{type:'number'},                               
+            // payments:{
+            //   type:'array',
+            //   items:{
+            //     type:'object',
+            //     properties:{
+            //       amount:{type:'number'},
+            //       paidOn:{type:'number'},
+            //       paymentType:{type:'string'}
+
+            //     }
+            //   }
+            // },
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}
           }
@@ -262,16 +282,35 @@ exports.options = {
             folio:{type:'string'},
             isDeleted:{type:'boolean'},
             isPaid:{type:'boolean'},
-            isCancelled:{type:'boolean'},
-            modelId:{type:'string'}, 
-            clientId:{type:'string'},
+            isCancelled:{type:'boolean'},          
             branchId:{type:'string'},
+            client:{
+              type:'object',
+              properties:{
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'}
+              }
+            },
+            products:{
+              type:'array',
+              items:{
+                type:'object',
+                properties:{
+                  modelId:{type:'string'},
+                  modelName:{type:'string'},
+                  color:{type:'string'},
+                  quantity:{type:'number'},
+                  price:{type:'number'},
+                }
+              }
+            },
+
             employeeId:{type:'string'},
             cancelledBy:{type:'string'},
             deliveredBy:{type:'string'},
-            color:{type:'string'},
-            quantity:{type:'number'},
-            price:{type:'number'},
+
+            
             totalSale:{type:'number'},
             pendingBalance:{type:'number'},
             createdAt:{type:'timestamp'},

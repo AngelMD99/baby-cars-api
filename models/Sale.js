@@ -17,7 +17,38 @@ let paymentSchema = new mongoose.Schema(
       _id: false,
       timestamps:false
     }
-  );
+);
+
+let productSchema = new mongoose.Schema(
+  {
+    modelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Modelo", 
+    },
+    modelName: String,
+    color:String,
+    price: Number,
+    quantity: Number,
+  },
+  {
+    _id: false,
+    timestamps:false
+  }
+);
+
+let clientSchema = new mongoose.Schema(
+  {
+    
+    fullName: String,
+    email:String,
+    phone: String    
+  },
+  {
+    _id: false,
+    timestamps:false
+  }
+);
+
 
 const saleSchema = new mongoose.Schema({
     isDeleted: {
@@ -31,14 +62,12 @@ const saleSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Branch", 
     },
-    clientId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Client", 
-    },
-    modelId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Modelo", 
-    },
+    // clientId: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: "Client", 
+    // },
+    client:clientSchema,
+
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", 
@@ -46,21 +75,27 @@ const saleSchema = new mongoose.Schema({
     // reserveId: {
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: "Reserve", 
-    // },    
-    color:String,
+    // }, 
     // saleType:{
     //     type:String,
     //     enum:['single', 'reserve']
 
     // },
     //payments:[paymentSchema],    
-    price:Number,
-    quantity:Number,
-    totalSale:Number,
+    // modelId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Modelo", 
+    // },   
+    // color:String,    
+    // price:Number,
+    // quantity:Number,
+    // totalSale:Number,
     // isPaid:{
     //     type:Boolean,
     //     default:false
     // }
+    products:[productSchema],
+    totalSale:Number,
 
       
     

@@ -130,8 +130,26 @@ const saleCreate = async function (req, reply){
 
             }
         }
-    }  
-    
+    }      
+
+    // let db = await mongoose.startSession()
+    // .then(async session => {
+    //     await session.withTransaction(async () => {
+    //         let newSale = await Sale.create(sale);
+    //         this.newSale = newSale
+    //     });
+    // }).catch((err) => {
+    //     this.newSale = err;
+    // });
+
+    // if(this.newSale == null || this.newSale.message){
+    //     console.error(this.newSale);
+    //     return response.badRequest({
+    //         status:"fail",
+    //         message:this.newSale.message
+    //     });
+    // }
+
     let branchId = req.body.branchId;    
     let modelId = req.body.modelId;  
     let clientId = req.body.clientId;    
