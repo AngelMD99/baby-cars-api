@@ -11,36 +11,17 @@ const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+var _ = require('lodash');
 const { getOffsetSetting } = require('../controllers/base.controller');
 const { findOneAndDelete } = require('../models/Branch');
 const { inventoryCreate } = require('./inventory.controller');
+const input = require('sharp/lib/input');
 
 const saleCreate = async function (req, reply){  
     if(!req.body.branchId){
         return reply.code(400).send({
             status: 'fail',
             message: 'La sucursal es requerida'
-        })
-    }
-
-    if(!req.body.clientId){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'El cliente es requerido'
-        })
-    }
-
-    if(!req.body.price){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'El costo es requerido'
-        })
-    }
-
-    if(!req.body.quantity){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'La cantidad es requerida'
         })
     }
 
@@ -70,47 +51,37 @@ const saleCreate = async function (req, reply){
 
             }
         }
-    }  
+    } 
 
-    if(req.body.clientId!=null && req.body.clientId!=""){        
-        let clientValidation= isValidObjectId(req.body.clientId)
-        if (clientValidation==false){
-            return reply.code(400).send({
-                status: 'fail',
-                message: 'Cliente no válido'
-            })
-        }
-        else{
-            let activeClient= await Client.findOne({_id:req.body.clientId,isDeleted:false})
-            if(!activeClient){
-                return reply.code(400).send({
-                    status: 'fail',
-                    message: 'Cliente no encontrado'
-                })
-
-            }
-        }
-    }  
-
-    if(req.body.modelId!=null && req.body.modelId!=""){        
-        let modelValidation= isValidObjectId(req.body.modelId)
-        if (modelValidation==false){
-            return reply.code(400).send({
-                status: 'fail',
-                message: 'Modelo no valido'
-            })
-        }
-        else{
-            let activeModel= await Modelo.findOne({_id:req.body.modelId,isDeleted:false})
-            if(!activeModel){
-                return reply.code(400).send({
-                    status: 'fail',
-                    message: 'Modelo no encontrado'
-                })
-
-            }
-        }
+    if(!req.body.products){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Es necesario indicar los productos de la venta.'
+        })        
     }
+    
+    if(!req.body.client){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'La información del cliente es necesaria'
+        })
+
+    }
+
+    if(!req.body.client  && (!req.body.client.fullName || !req.body.client.fullName=="")){                
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El nombre del cliente es necesario'
+            })
+    }
+     
+    if(!req.body.client  && (!req.body.client.phone || !req.body.client.phone=="")){                
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El telefono del cliente es necesario'
+        })
+    }
+
 
     if(req.body.employeeId!=null && req.body.employeeId!=""){        
         let userValidation= isValidObjectId(req.body.employeeId)
@@ -130,134 +101,269 @@ const saleCreate = async function (req, reply){
 
             }
         }
-    }      
+    }  
+    
+    this.newSale = {};
+    this.newPayment = {};
 
-    // let db = await mongoose.startSession()
-    // .then(async session => {
-    //     await session.withTransaction(async () => {
-    //         let newSale = await Sale.create(sale);
-    //         this.newSale = newSale
-    //     });
-    // }).catch((err) => {
-    //     this.newSale = err;
-    // });
 
-    // if(this.newSale == null || this.newSale.message){
-    //     console.error(this.newSale);
-    //     return response.badRequest({
-    //         status:"fail",
-    //         message:this.newSale.message
-    //     });
+    let db = await mongoose.startSession()
+    .then(async session => {
+        await session.withTransaction(async () => {
+        let products = req.body.products;
+        //let products = req.body('products');
+        let inputs={};        
+        inputs.branchId = req.body.branchId;    
+        inputs.client = req.body.client;    
+        inputs.employeeId= req.body.employeeId;                 
+        //let inputs = request.only(['clientId', 'branchId', 'hasIva', 'ivaType', 'type', 'deliveryDate', 'deliveryLocation', 'validity', 'comments', 'discount', 'percentageDiscount']);
+        inputs.totalSale = 0;        
+        inputs.totalSale = _.sumBy(products, (product) => {
+            return Number(((product.price *100)*(product.quantity*100) /10000).toFixed(2))
+        });
+        for (const product of products) {
+
+            if(product.modelId!=null && product.modelId!=""){        
+                let modelValidation= isValidObjectId(product.modelId)
+                if (modelValidation==false){
+                    // return reply.code(400).send({
+                    //     status: 'fail',
+                    //     message: 'Modelo no valido'
+                    // })
+                    throw {message: "Modelo no valido"}
+
+                }
+                else{
+                    let activeModel= await Modelo.findOne({_id:product.modelId,isDeleted:false})
+                    if(!activeModel){
+                        // return reply.code(400).send({
+                        //     status: 'fail',
+                        //     message: 'Modelo no encontrado'
+                        // })        
+                        throw {message: "Modelo no encontrado"}
+                    }
+                    
+                }
+            }
+
+            if(!product.color || product.color==""){
+                // return reply.code(400).send({
+                //     status: 'fail',
+                //     message: 'La cantidad es requerida'
+                // })
+                throw {message: "El color es requerido"}
+            }
+
+            if(!product.quantity || product.quantity=="" || Number(product.quantity)==NaN || Number(product.quantity)<=0){
+                // return reply.code(400).send({
+                //     status: 'fail',
+                //     message: 'Cantidad requerida, debe ser mayor a 0'
+                // })
+                throw {message: "Cantidad requerida, debe ser mayor a 0"}
+            }
+
+            if(!product.price || product.price=="" || Number(product.price)==NaN || Number(product.price)<=0){
+                // return reply.code(400).send({
+                //     status: 'fail',
+                //     message: 'Cantidad requerida, debe ser mayor a 0'
+                // })
+                throw {message: "Precio requerido, debe ser mayor a 0"}
+
+            }
+            
+            if(product.modelId || product.color){
+                let dbInventory = await Inventory.findOne({ modelId: product.modelId, color:product.color.toLowerCase(), isDeleted:false});                                
+
+                    if(!dbInventory){
+                        throw {message: "No hay inventario para modelo "+product.modelName+ " en color "+product.color}
+                    }
+
+                    if(dbInventory.quantity<product.quantity){
+                        throw {message: "No hay existencia suficiente para  modelo "+product.modelName+ " en color "+product.color}
+                    }                                     
+                                   
+                    
+
+                    //dbInventory = await dbInventory.save({session: session});
+                    dbInventory.quantity -= product.quantity;
+                    await dbInventory.save({session: session});
+                //}
+                // if(validation.fails()){
+                //     throw {
+                //         status: "fail",
+                //         message: validation.messages()[0].message
+                //     }
+                // }
+            }
+            
+        }
+
+        const sale = new Sale(inputs);     
+        sale.products = products;
+        sale.isPaid = true;
+        //sale.totalSale = total;
+        sale._id = mongoose.Types.ObjectId();
+        let offset = await getOffsetSetting();              
+        let date = new Date ();    
+        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+             date.setHours(date.getHours() - offset);
+             date.setHours(offset,0,0,0);    
+             // date.setHours(offset, 0, 0, 0);
+        }
+        else{
+             date.setHours(0,0,0,0);
+             date.setHours(0, 0, 0, 0);
+        }
+        let nextDay = addDays(date,1)
+        let branchSales = await Sale.find({
+            isDeleted:false, 
+            branchId:req.body.branchId,
+            createdAt:{"$gte": date,"$lte":nextDay}
+        }) 
+
+        let day = date.getDate();
+        let month = date.getMonth() + 1
+        let year = date.getFullYear();
+        let dayString = day > 9 ? day : "0"+day;
+        let monthString = month > 9 ? month : "0"+month;  
+        let nextFolio = branchSales.length+1
+        nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+        let branchCode = activeBranch.code;
+        sale.folio = "VT-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+
+        await sale.save()
+
+        let paymentInput={
+            branchId:req.body.branchId,
+            operationType:'single',
+            saleId:sale._id,
+            amount:inputs.totalSale,
+            paidOn:new Date(),
+            paymentType:req.body.paymentType.toLowerCase()
+    
+        }
+        
+        const payment = new Payment(paymentInput);
+        payment._id = mongoose.Types.ObjectId();     
+        await payment.save();   
+        this.newPayment = payment;
+
+        this.newSale = sale;
+        return           
+    });              
+
+
+    }).catch((err) => {
+        this.newSale = err;
+    });
+
+
+    if(this.newSale == null || this.newSale.message){
+        console.error(this.newSale);
+        return reply.code(400).send({
+            status:"fail",
+            message:this.newSale && this.newSale.message? this.newSale.message : "Error en las transacciones en la base de datos"
+        });
+    }
+
+    // let branchId = req.body.branchId;    
+    // let modelId = req.body.modelId;  
+    // let clientId = req.body.clientId;    
+    // let employeeId= req.body.employeeId;    
+    // let color = req.body.color  
+    // delete req.body.branchId;  
+    
+    // let inventoryValidation = await Inventory.findOne({
+    //     modelId:req.body.modelId,
+    //     isDeleted:false,
+    //     color:req.body.color.toLowerCase()
+    // })   
+
+    // if(!inventoryValidation){
+    //     return reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'No existe inventario para el modelo y color seleccionado'
+    //     })
     // }
 
-    let branchId = req.body.branchId;    
-    let modelId = req.body.modelId;  
-    let clientId = req.body.clientId;    
-    let employeeId= req.body.employeeId;    
-    let color = req.body.color  
-    delete req.body.branchId;  
-    
-    let inventoryValidation = await Inventory.findOne({
-        modelId:req.body.modelId,
-        isDeleted:false,
-        color:req.body.color.toLowerCase()
-    })   
-
-    if(!inventoryValidation){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'No existe inventario para el modelo y color seleccionado'
-        })
-    }
-
-    if (inventoryValidation.quantity<req.body.quantity){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'No hay existencias suficientes para completar la cantidad indicada.'
-        })
-    }
+    // if (inventoryValidation.quantity<req.body.quantity){
+    //     return reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'No hay existencias suficientes para completar la cantidad indicada.'
+    //     })
+    // }
 
 
 
-    const sale = new Sale(req.body);     
-    if(branchId){
-        sale.branchId=branchId;
-    }
-    if(modelId){
-        sale.modelId=modelId;
-    }
-    if(clientId){
-        sale.clientId=clientId;
-    }
-    if(employeeId){
-        sale.employeeId=employeeId;
-    }
-    if (color){
-        sale.color=color.toLowerCase()
-    }
-    sale.price = req.body.price;
-    sale.quantity = req.body.quantity;
-    sale.isPaid = true;
-    let total = req.body.price * req.body.quantity;
-    sale.totalSale = total;
-    sale._id = mongoose.Types.ObjectId();
+    // const sale = new Sale(req.body);     
+    // if(branchId){
+    //     sale.branchId=branchId;
+    // }
+    // if(modelId){
+    //     sale.modelId=modelId;
+    // }
+    // if(clientId){
+    //     sale.clientId=clientId;
+    // }
+    // if(employeeId){
+    //     sale.employeeId=employeeId;
+    // }
+    // if (color){
+    //     sale.color=color.toLowerCase()
+    // }
+    // sale.price = req.body.price;
+    // sale.quantity = req.body.quantity;
+    // sale.isPaid = true;
+    // let total = req.body.price * req.body.quantity;
+    // sale.totalSale = total;
+    // sale._id = mongoose.Types.ObjectId();
 
-    let offset = await getOffsetSetting();              
-    let date = new Date ();    
-    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-         date.setHours(date.getHours() - offset);
-         date.setHours(offset,0,0,0);    
-         // date.setHours(offset, 0, 0, 0);
-    }
-    else{
-         date.setHours(0,0,0,0);
-         date.setHours(0, 0, 0, 0);
-    }
-    let nextDay = addDays(date,1)
-    let branchSales = await Sale.find({
-        isDeleted:false, 
-        branchId:branchId,
-        createdAt:{"$gte": date,"$lte":nextDay}
-    }) 
+    // let offset = await getOffsetSetting();              
+    // let date = new Date ();    
+    // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+    //      date.setHours(date.getHours() - offset);
+    //      date.setHours(offset,0,0,0);    
+    //      // date.setHours(offset, 0, 0, 0);
+    // }
+    // else{
+    //      date.setHours(0,0,0,0);
+    //      date.setHours(0, 0, 0, 0);
+    // }
+    // let nextDay = addDays(date,1)
+    // let branchSales = await Sale.find({
+    //     isDeleted:false, 
+    //     branchId:branchId,
+    //     createdAt:{"$gte": date,"$lte":nextDay}
+    // }) 
 
-    let day = date.getDate();
-    let month = date.getMonth() + 1
-    let year = date.getFullYear();
-    let dayString = day > 9 ? day : "0"+day;
-    let monthString = month > 9 ? month : "0"+month;  
-    let nextFolio = branchSales.length+1
-    nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
-    nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
-    nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
-    let branchCode = activeBranch.code;
-    sale.folio = "VT-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+    // let day = date.getDate();
+    // let month = date.getMonth() + 1
+    // let year = date.getFullYear();
+    // let dayString = day > 9 ? day : "0"+day;
+    // let monthString = month > 9 ? month : "0"+month;  
+    // let nextFolio = branchSales.length+1
+    // nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+    // nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+    // nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+    // let branchCode = activeBranch.code;
+    // sale.folio = "VT-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
 
-    await sale.save()
-    await sale.populate([
+    // await sale.save()
+    await this.newSale.populate([
         {path:'branchId', select:'_id name code'},
-        {path:'modelId', select:'_id name'},
+        //{path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
-        {path:'clientId', select:'_id fullName email phone'}
+        //{path:'clientId', select:'_id fullName email phone'}
     ]); 
    
-    let paymentInput={
-        branchId:req.body.branchId,
-        operationType:'single',
-        saleId:sale._id,
-        amount:total,
-        paidOn:new Date(),
-        paymentType:req.body.paymentType.toLowerCase()
-
-    }
-    
-    const payment = new Payment(paymentInput);
-    payment._id = mongoose.Types.ObjectId();     
-    await payment.save();    
+ 
 
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
 
-    const saleObj = await sale.toObject()
-    const paymentObj = await payment.toObject()
+    const saleObj = await this.newSale.toObject()
+    const paymentObj = await this.newPayment.toObject()
     // if (saleObj.branchId){
     //     saleObj.branchCode=saleObj.branchId.code ? saleObj.branchId.code :"";
     //     saleObj.branchName=saleObj.branchId.name ? saleObj.branchId.name :"";
@@ -299,8 +405,8 @@ const saleCreate = async function (req, reply){
     }
     delete saleObj.__v
     saleObj.payments.push(paymentObj)
-    inventoryValidation.quantity-=req.body.quantity;
-    await inventoryValidation.save();
+    // inventoryValidation.quantity-=req.body.quantity;
+    // await inventoryValidation.save();
 
     return reply.code(201).send({
         status: 'success',
@@ -308,6 +414,7 @@ const saleCreate = async function (req, reply){
      }) 
 
 }
+
 
 const saleShow = async function (req, reply){
     const sale = await Sale.findOne({_id:req.params.saleId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
@@ -320,9 +427,9 @@ const saleShow = async function (req, reply){
     
     await sale.populate([
         {path:'branchId', select:'_id name code'},
-        {path:'modelId', select:'_id name'},
+        //{path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
-        {path:'clientId', select:'_id fullName email phone'}
+        //{path:'clientId', select:'_id fullName email phone'}
     ]);  
     let saleObj = await sale.toObject();
     let payment = await Payment.findOne({saleId:sale._id,isDeleted:false})            
@@ -347,21 +454,6 @@ const saleShow = async function (req, reply){
             _id:null,
             name:"",
             code:"",
-        }
-    }
-    if(!saleObj.modelId || !saleObj.modelId._id){
-        saleObj.modelId={
-            _id:null,
-            name:"",            
-        }
-    }
-
-    if(!saleObj.clientId || !saleObj.clientId._id){
-        saleObj.clientId={
-            _id:null,
-            fullName:"",            
-            phone:"",
-            email:""
         }
     }
     
@@ -395,10 +487,7 @@ const saleList = async function (req, reply){
         searchQuery['employeeId']=req.query.employeeId
     }
     if(req.query.modelId){
-        searchQuery['modelId']=req.query.modelId
-    }
-    if(req.query.clientId){
-        searchQuery['clientId']=req.query.clientId
+        searchQuery['products.modelId']=req.query.modelId
     }
 
     if (req.query.initialDate!=null && req.query.finalDate!=null){      
@@ -711,22 +800,7 @@ const saleList = async function (req, reply){
                   'as': 'branchInfo'
                 }
               },
-              {
-                '$lookup': {
-                    'from': 'modelos', 
-                    'localField': 'modelId', 
-                    'foreignField': '_id', 
-                    'as': 'modelInfo'
-                  }
-             },
-            {
-                '$lookup': {
-                    'from': 'clients', 
-                    'localField': 'clientId', 
-                    'foreignField': '_id', 
-                    'as': 'clientInfo'
-                  }
-             },
+              
              {
                 '$lookup': {
                     'from': 'users', 
@@ -758,39 +832,23 @@ const saleList = async function (req, reply){
                   } ,
                   'branchId.name': {
                     '$first': '$branchInfo.name'
+                  },                  
+                  'client':1,                  
+                  'employeeId._id': {
+                    '$first': '$employeeInfo._id'
                   },
-                  'modelId._id': {
-                    '$first': '$modelInfo._id'
-                  },
-                  'modelId.name': {
-                    '$first': '$modelInfo.name'
+                  'employeeId.fullName': {
+                    '$first': '$employeeInfo.fullName'
                   }, 
-                  'color':1,
-                  'clientId._id': {
-                    '$first': '$clientInfo._id'
-                  },
-                  'client.fullName': {
-                    '$first': '$clientInfo.fullName'
+                  'employeeId.phone': {
+                    '$first': '$employeeInfo.phone'
                   }, 
-                  'client.phone': {
-                    '$first': '$clientInfo.phone'
+                  'employeeId.email': {
+                    '$first': '$employeeInfo.email'
                   }, 
-                  'client.email': {
-                    '$first': '$clientInfo.email'
-                  }, 
-                  'userId._id': {
-                    '$first': '$userInfo._id'
-                  },
-                  'userId.fullName': {
-                    '$first': '$userInfo.fullName'
-                  }, 
-                  'userId.phone': {
-                    '$first': '$userInfo.phone'
-                  }, 
-                  'userId.email': {
-                    '$first': '$userInfo.email'
-                  }, 
-                  'payments':'$payments.Info',
+                  'products':1,
+                  'payments':'$paymentsInfo',
+
 
                   'createdAt':1,
                   'updatedAt':1,                 
@@ -798,12 +856,7 @@ const saleList = async function (req, reply){
               }, {
                 '$match': {
                   '$or': [                    
-                    {
-                      'color': {
-                        '$regex': searchString, 
-                        '$options': 'i'
-                      }
-                    },
+                    
                     {
                         'branchId.code': {
                           '$regex': searchString, 
@@ -817,25 +870,31 @@ const saleList = async function (req, reply){
                         }
                     },
                     {
-                        'modelId.name': {
+                        'products.modelName': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
                     },
                     {
-                        'clientId.fullName': {
+                        'products.color': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'client.fullName': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
                     },
                     {
-                        'clientId.phone': {
+                        'client.phone': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
                     },
                     {
-                        'clientId.email': {
+                        'client.email': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
