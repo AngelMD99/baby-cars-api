@@ -5,6 +5,10 @@ const balanceSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    balanceType:{
+        type: String,
+        enum:['rentals', 'payments']
+    },
     branchId: {
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Branch", 

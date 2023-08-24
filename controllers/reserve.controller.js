@@ -45,6 +45,13 @@ const reserveCreate = async function (req,reply){
         })
     }
 
+    if(!req.body.expirationDate || req.body.expirationDate ==""){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'La fecha de expiración es requerida'
+        })
+    }
+
     if(req.body.branchId!=null && req.body.branchId!=""){        
         let branchValidation= isValidObjectId(req.body.branchId)
         if (branchValidation==false){
@@ -123,115 +130,144 @@ const reserveCreate = async function (req,reply){
 
             }
         }
-    }  
+    } 
+    
+    this.newReserve={};
+    this.newSale={};
 
-    let branchId = req.body.branchId;    
-    let modelId = req.body.modelId;  
-    let clientId = req.body.clientId;    
-    let employeeId= req.body.employeeId;    
-    let color = req.body.color  
+    let db = await mongoose.startSession()
+    .then(async session => {
+        await session.withTransaction(async () => {
+        let products = req.body.products;
+        //let products = req.body('products');
+        let inputs={};        
+        inputs.branchId = req.body.branchId;    
+        inputs.client = req.body.client;    
+        inputs.employeeId= req.body.employeeId;                 
+        //let inputs = request.only(['clientId', 'branchId', 'hasIva', 'ivaType', 'type', 'deliveryDate', 'deliveryLocation', 'validity', 'comments', 'discount', 'percentageDiscount']);
+        inputs.totalSale = 0;        
+        inputs.totalSale = _.sumBy(products, (product) => {
+            return Number(((product.price *100)*(product.quantity*100) /10000).toFixed(2))
+        });
+        for (const product of products) {
 
-    let inventoryValidation = await Inventory.findOne({
-        modelId:req.body.modelId,
-        isDeleted:false,
-        color:req.body.color.toLowerCase()
-    })   
+            if(product.modelId!=null && product.modelId!=""){        
+                let modelValidation= isValidObjectId(product.modelId)
+                if (modelValidation==false){
+                    // return reply.code(400).send({
+                    //     status: 'fail',
+                    //     message: 'Modelo no valido'
+                    // })
+                    throw {message: "Modelo no valido"}
 
-    if(!inventoryValidation){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'No existe inventario para el modelo y color seleccionado'
-        })
-    }
+                }
+                else{
+                    let activeModel= await Modelo.findOne({_id:product.modelId,isDeleted:false})
+                    if(!activeModel){
+                        // return reply.code(400).send({
+                        //     status: 'fail',
+                        //     message: 'Modelo no encontrado'
+                        // })        
+                        throw {message: "Modelo no encontrado"}
+                    }
+                    
+                }
+            }
 
-    if (inventoryValidation.quantity<req.body.quantity){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'No hay existencias suficientes para completar la cantidad indicada.'
-        })
-    }
+            if(!product.color || product.color==""){
+                // return reply.code(400).send({
+                //     status: 'fail',
+                //     message: 'La cantidad es requerida'
+                // })
+                throw {message: "El color es requerido"}
+            }
 
-    if(req.body.amount && !req.body.paymentType){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'El metodo de pago es requerido si se va ingresar el primer pago.'
-        })
-    }
+            if(!product.quantity || product.quantity=="" || Number(product.quantity)==NaN || Number(product.quantity)<=0){
+                // return reply.code(400).send({
+                //     status: 'fail',
+                //     message: 'Cantidad requerida, debe ser mayor a 0'
+                // })
+                throw {message: "Cantidad requerida, debe ser mayor a 0"}
+            }
 
-    if(req.body.paymentType){
-        if(!req.body.amount){
-            return reply.code(400).send({
-                status: 'fail',
-                message: 'El monto del pago es requerido si va  a registrar el primer pago.'
-            })
+            if(!product.price || product.price=="" || Number(product.price)==NaN || Number(product.price)<=0){
+                // return reply.code(400).send({
+                //     status: 'fail',
+                //     message: 'Cantidad requerida, debe ser mayor a 0'
+                // })
+                throw {message: "Precio requerido, debe ser mayor a 0"}
 
+            }
+            
+            if(product.modelId || product.color){
+                let dbInventory = await Inventory.findOne({ modelId: product.modelId, color:product.color.toLowerCase(), isDeleted:false});                                
+
+                    if(!dbInventory){
+                        throw {message: "No hay inventario para modelo "+product.modelName+ " en color "+product.color}
+                    }
+
+                    if(dbInventory.quantity<product.quantity){
+                        throw {message: "No hay existencia suficiente para  modelo "+product.modelName+ " en color "+product.color}
+                    }                                     
+                                   
+                    
+
+                    //dbInventory = await dbInventory.save({session: session});
+                    dbInventory.quantity -= product.quantity;
+                    await dbInventory.save({session: session});
+                //}
+                // if(validation.fails()){
+                //     throw {
+                //         status: "fail",
+                //         message: validation.messages()[0].message
+                //     }
+                // }
+            }
+            
         }
-        
-    }
 
-    const reserve = new Reserve(req.body);     
-    if(branchId){
-        reserve.branchId=branchId;
-    }
-    if(modelId){
-        reserve.modelId=modelId;
-    }
-    if(clientId){
-        reserve.clientId=clientId;
-    }
-    if(employeeId){
-        reserve.employeeId=employeeId;
-    }
-    if (color){
-        reserve.color=color.toLowerCase()
-    }
-    reserve.price = req.body.price;
-    reserve.quantity = req.body.quantity;    
-    let total = req.body.price * req.body.quantity;
-    reserve.totalSale = total;
-    reserve.pendingBalance = total;
+        const sale = new Sale(inputs);     
+        sale.products = products;
+        sale.isPaid = true;
+        //sale.totalSale = total;
+        sale._id = mongoose.Types.ObjectId();
+        let offset = await getOffsetSetting();              
+        let date = new Date ();    
+        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+             date.setHours(date.getHours() - offset);
+             date.setHours(offset,0,0,0);    
+             // date.setHours(offset, 0, 0, 0);
+        }
+        else{
+             date.setHours(0,0,0,0);
+             date.setHours(0, 0, 0, 0);
+        }
+        let nextDay = addDays(date,1)
+        let branchSales = await Sale.find({
+            isDeleted:false, 
+            branchId:req.body.branchId,
+            createdAt:{"$gte": date,"$lte":nextDay}
+        }) 
 
-    reserve._id = mongoose.Types.ObjectId();
+        let day = date.getDate();
+        let month = date.getMonth() + 1
+        let year = date.getFullYear();
+        let dayString = day > 9 ? day : "0"+day;
+        let monthString = month > 9 ? month : "0"+month;  
+        let nextFolio = branchSales.length+1
+        nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+        let branchCode = activeBranch.code;
+        sale.folio = "VT-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
 
+        await sale.save()
 
-    let offset = await getOffsetSetting();              
-    let date = new Date ();    
-    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-         date.setHours(date.getHours() - offset);
-         date.setHours(offset,0,0,0);    
-         // date.setHours(offset, 0, 0, 0);
-    }
-    else{
-         date.setHours(0,0,0,0);
-         date.setHours(0, 0, 0, 0);
-    }
-    let nextDay = addDays(date,1)
-    let branchReserves = await Reserve.find({
-        isDeleted:false, 
-        branchId:branchId,
-        createdAt:{"$gte": date,"$lte":nextDay}
-    }) 
-
-    let day = date.getDate();
-    let month = date.getMonth() + 1
-    let year = date.getFullYear();
-    let dayString = day > 9 ? day : "0"+day;
-    let monthString = month > 9 ? month : "0"+month;  
-    let nextFolio = branchReserves.length+1
-    nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
-    nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
-    nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
-    let branchCode = activeBranch.code;
-    reserve.folio = "RS-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
-    let totalPaid = 0;
-
-    let receivedPayments=[];
-    if(req.body.amount && req.body.paymentType){
         let paymentInput={
             branchId:req.body.branchId,
-            operationType:'reserve',
-            reserveId:reserve._id,
-            amount:req.body.amount,
+            operationType:'single',
+            saleId:sale._id,
+            amount:inputs.totalSale,
             paidOn:new Date(),
             paymentType:req.body.paymentType.toLowerCase()
     
@@ -239,32 +275,160 @@ const reserveCreate = async function (req,reply){
         
         const payment = new Payment(paymentInput);
         payment._id = mongoose.Types.ObjectId();     
-        await payment.save(); 
-        reserve.pendingBalance -=  req.body.amount;
-        const paymentObj = await payment.toObject()
-        delete paymentObj.__v;
-        delete paymentObj.createdAt;
-        delete paymentObj.updateAt;
-        totalPaid +=req.body.amount;
-        receivedPayments.push(paymentObj)  
+        await payment.save();   
+        this.newPayment = payment;
+        this.newSale = sale;
+        return           
+    });              
+
+
+    }).catch((err) => {
+        this.newSale = err;
+    });
+
+
+    if(this.newSale == null || this.newSale.message){
+        console.error(this.newSale);
+        return reply.code(400).send({
+            status:"fail",
+            message:this.newSale && this.newSale.message? this.newSale.message : "Error en las transacciones en la base de datos"
+        });
     }
-    reserve.isPaid = reserve.pendingBalance <= 0 ? true: false;
-    await reserve.save()
-    await reserve.populate([
+
+
+   // let branchId = req.body.branchId;    
+    //let modelId = req.body.modelId;  
+    //let clientId = req.body.clientId;    
+    //let employeeId= req.body.employeeId;    
+    //let color = req.body.color  
+
+    // let inventoryValidation = await Inventory.findOne({
+    //     modelId:req.body.modelId,
+    //     isDeleted:false,
+    //     color:req.body.color.toLowerCase()
+    // })   
+
+    // if(!inventoryValidation){
+    //     return reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'No existe inventario para el modelo y color seleccionado'
+    //     })
+    // }
+
+    // if (inventoryValidation.quantity<req.body.quantity){
+    //     return reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'No hay existencias suficientes para completar la cantidad indicada.'
+    //     })
+    // }
+
+    // if(req.body.amount && !req.body.paymentType){
+    //     return reply.code(400).send({
+    //         status: 'fail',
+    //         message: 'El metodo de pago es requerido si se va ingresar el primer pago.'
+    //     })
+    // }
+
+    // if(req.body.paymentType){
+    //     if(!req.body.amount){
+    //         return reply.code(400).send({
+    //             status: 'fail',
+    //             message: 'El monto del pago es requerido si va  a registrar el primer pago.'
+    //         })
+
+    //     }
+        
+    // }
+
+    // const reserve = new Reserve(req.body);     
+    // if(branchId){
+    //     reserve.branchId=branchId;
+    // }
+    // if(modelId){
+    //     reserve.modelId=modelId;
+    // }
+    // if(clientId){
+    //     reserve.clientId=clientId;
+    // }
+    // if(employeeId){
+    //     reserve.employeeId=employeeId;
+    // }
+    // if (color){
+    //     reserve.color=color.toLowerCase()
+    // }
+    // reserve.price = req.body.price;
+    // reserve.quantity = req.body.quantity;    
+    // let total = req.body.price * req.body.quantity;
+    // reserve.totalSale = total;
+    // reserve.pendingBalance = total;
+
+    // reserve._id = mongoose.Types.ObjectId();
+
+
+    // let offset = await getOffsetSetting();              
+    // let date = new Date ();    
+    // if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+    //      date.setHours(date.getHours() - offset);
+    //      date.setHours(offset,0,0,0);    
+    //      // date.setHours(offset, 0, 0, 0);
+    // }
+    // else{
+    //      date.setHours(0,0,0,0);
+    //      date.setHours(0, 0, 0, 0);
+    // }
+    // let nextDay = addDays(date,1)
+    // let branchReserves = await Reserve.find({
+    //     isDeleted:false, 
+    //     branchId:branchId,
+    //     createdAt:{"$gte": date,"$lte":nextDay}
+    // }) 
+
+    // let day = date.getDate();
+    // let month = date.getMonth() + 1
+    // let year = date.getFullYear();
+    // let dayString = day > 9 ? day : "0"+day;
+    // let monthString = month > 9 ? month : "0"+month;  
+    // let nextFolio = branchReserves.length+1
+    // nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+    // nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+    // nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+    // let branchCode = activeBranch.code;
+    // reserve.folio = "RS-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+    // let totalPaid = 0;
+
+    // let receivedPayments=[];
+    // if(req.body.amount && req.body.paymentType){
+    //     let paymentInput={
+    //         branchId:req.body.branchId,
+    //         operationType:'reserve',
+    //         reserveId:reserve._id,
+    //         amount:req.body.amount,
+    //         paidOn:new Date(),
+    //         paymentType:req.body.paymentType.toLowerCase()
+    
+    //     }
+        
+    //     const payment = new Payment(paymentInput);
+    //     payment._id = mongoose.Types.ObjectId();     
+    //     await payment.save(); 
+    //     reserve.pendingBalance -=  req.body.amount;
+    //     const paymentObj = await payment.toObject()
+    //     delete paymentObj.__v;
+    //     delete paymentObj.createdAt;
+    //     delete paymentObj.updateAt;
+    //     totalPaid +=req.body.amount;
+    //     receivedPayments.push(paymentObj)  
+    // }
+    // reserve.isPaid = reserve.pendingBalance <= 0 ? true: false;
+    // await reserve.save()
+    await this.newReserve.populate([
         {path:'branchId', select:'_id name code'},
         {path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
         {path:'clientId', select:'_id fullName email phone'}
     ]); 
 
-    await reserve.populate([
-        {path:'branchId', select:'_id name code'},
-        {path:'modelId', select:'_id name'},
-        {path:'employeeId', select:'_id fullName email'},
-        {path:'clientId', select:'_id fullName email phone'}
-    ]); 
-
-    const reserveObj = await reserve.toObject()       
+    const reserveObj = await this.newReserve.toObject()       
     reserveObj.payments=receivedPayments;    
     if(!reserveObj.branchId || !reserveObj.branchId._id){
         reserveObj.branchId={
@@ -273,21 +437,21 @@ const reserveCreate = async function (req,reply){
             code:"",
         }
     }
-    if(!reserveObj.modelId || !reserveObj.modelId._id){
-        reserveObj.modelId={
-            _id:null,
-            name:"",            
-        }
-    }
+    // if(!reserveObj.modelId || !reserveObj.modelId._id){
+    //     reserveObj.modelId={
+    //         _id:null,
+    //         name:"",            
+    //     }
+    // }
 
-    if(!reserveObj.clientId || !reserveObj.clientId._id){
-        reserveObj.clientId={
-            _id:null,
-            fullName:"",            
-            phone:"",
-            email:""
-        }
-    }
+    // if(!reserveObj.clientId || !reserveObj.clientId._id){
+    //     reserveObj.clientId={
+    //         _id:null,
+    //         fullName:"",            
+    //         phone:"",
+    //         email:""
+    //     }
+    // }
     
     if(!reserveObj.employeeId || !reserveObj.employeeId._id){
         reserveObj.modelId={
@@ -298,8 +462,8 @@ const reserveCreate = async function (req,reply){
     }
     delete reserveObj.__v
     reserveObj.totalPaid = totalPaid;
-    inventoryValidation.quantity-=req.body.quantity;
-    await inventoryValidation.save();
+    // inventoryValidation.quantity-=req.body.quantity;
+    // await inventoryValidation.save();
     return reply.code(201).send({
         status: 'success',
         data: reserveObj

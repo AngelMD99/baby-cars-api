@@ -138,7 +138,8 @@ const reserveDef = {
 
         }, 
         totalPaid:{type:'number'},                  
-        pendingBalance:{type:'number'},                  
+        pendingBalance:{type:'number'}, 
+        expirationDate:{type:'string'},
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -181,7 +182,8 @@ const postReserveUpOpts = {
                     }
                 },                
                 paymentType:{type:'string'},
-                amount:{type:'number'}                
+                amount:{type:'number'},
+                expirationDate:{type:'string'} 
             },
         },
         response: {

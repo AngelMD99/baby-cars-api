@@ -16,7 +16,8 @@ const errResponse = {
 const balanceDef={
     type:'object',
     properties: {
-        _id:{type:'string'},                               
+        _id:{type:'string'}, 
+        balanceType:{type:'string'}                              ,
         amount:{type:'number'},
         loginDate:{type:'number'},
         logoutDate:{type:'number'},

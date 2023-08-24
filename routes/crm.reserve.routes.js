@@ -99,6 +99,7 @@ const reserveDef = {
         totalPaid:{type:'number'},                  
         pendingBalance:{type:'number'},                  
         createdAt:{type:'string'},
+        expirationDate:{type:'string'},
         updatedAt:{type:'string'}        
     }
 }

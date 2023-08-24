@@ -79,6 +79,7 @@ const reserveSchema = new mongoose.Schema({
     products:[productSchema],
     totalSale:Number,
     pendingBalance:Number,
+    expirationDate:Date,
 },{
     timestamps: true,
   }

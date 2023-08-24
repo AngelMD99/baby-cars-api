@@ -89,6 +89,36 @@ const branchDef = {
     }
 }
 
+// const balanceDef={
+//     type:'object',
+//     properties: {
+//         _id:{type:'string'}, 
+//         balanceType:{type:'string'}                              ,
+//         amount:{type:'number'},
+//         loginDate:{type:'number'},
+//         logoutDate:{type:'number'},
+//         userId:{
+//             type:'object',
+//             properties:{
+//                 _id:{type:'string'},
+//                 fullName:{type:'string'},
+//                 email:{type:'string'}
+//             }
+//         },                
+//         branchId:{
+//             type:'object',
+//             properties:{
+//                 _id:{type:'string'},
+//                 name:{type:'string'},
+//                 code:{type:'string'}
+//             }
+//         },                
+//         createdAt:{type:'string'},
+//         updatedAt:{type:'string'}
+//       }
+
+// }
+
 const balanceDef={
     type:'object',
     properties:{

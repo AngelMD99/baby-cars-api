@@ -311,6 +311,7 @@ exports.options = {
             deliveredBy:{type:'string'},            
             totalSale:{type:'number'},
             pendingBalance:{type:'number'},
+            expirationDate:{type:'timestamp'},
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}           
           }
@@ -335,6 +336,7 @@ exports.options = {
           required: ['amount','branchId','userId','loginDate','logoutDate'],
           properties: {
             _id:{type:'string'},
+            balanceType:{type:'string'},
             isDeleted:{type:'boolean'},
             userId:{type:'string'},             
             branchId:{type:'string'},
