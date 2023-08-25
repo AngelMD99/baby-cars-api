@@ -13,6 +13,7 @@ const Modelo = require('../models/Modelo');
 const Car = require('../models/Car');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+var _ = require('lodash');
 const { getOffsetSetting } = require('../controllers/base.controller');
 
 
@@ -24,26 +25,20 @@ const reserveCreate = async function (req,reply){
         })
     }
 
-    if(!req.body.clientId){
+    if(!req.body.paymentType){
         return reply.code(400).send({
             status: 'fail',
-            message: 'El cliente es requerido'
+            message: 'El tipo de pago es requerido'
         })
     }
 
-    if(!req.body.price){
+    if(!req.body.amount || req.body.amount==""|| Number(req.body.amount)==NaN || Number(req.body.amount)<=0 ){        
         return reply.code(400).send({
             status: 'fail',
-            message: 'El costo es requerido'
+            message: 'El monto del enganche es requerido'
         })
     }
 
-    if(!req.body.quantity){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'La cantidad es requerida'
-        })
-    }
 
     if(!req.body.expirationDate || req.body.expirationDate ==""){
         return reply.code(400).send({
@@ -72,45 +67,37 @@ const reserveCreate = async function (req,reply){
         }
     }  
 
-    if(req.body.clientId!=null && req.body.clientId!=""){        
-        let clientValidation= isValidObjectId(req.body.clientId)
-        if (clientValidation==false){
-            return reply.code(400).send({
-                status: 'fail',
-                message: 'Cliente no válido'
-            })
-        }
-        else{
-            let activeClient= await Client.findOne({_id:req.body.clientId,isDeleted:false})
-            if(!activeClient){
-                return reply.code(400).send({
-                    status: 'fail',
-                    message: 'Cliente no encontrado'
-                })
-
-            }
-        }
-    }  
-
-    if(req.body.modelId!=null && req.body.modelId!=""){        
-        let modelValidation= isValidObjectId(req.body.modelId)
-        if (modelValidation==false){
-            return reply.code(400).send({
-                status: 'fail',
-                message: 'Modelo no valido'
-            })
-        }
-        else{
-            let activeModel= await Modelo.findOne({_id:req.body.modelId,isDeleted:false})
-            if(!activeModel){
-                return reply.code(400).send({
-                    status: 'fail',
-                    message: 'Modelo no encontrado'
-                })
-
-            }
-        }
+    if(!req.body.products){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Es necesario indicar los productos de la venta.'
+        })        
     }
+
+    if(!req.body.client){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'La información del cliente es necesaria'
+        })
+
+    }
+
+    if(!req.body.client  && (!req.body.client.fullName || !req.body.client.fullName=="")){                
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El nombre del cliente es necesario'
+            })
+    }
+     
+    if(!req.body.client  && (!req.body.client.phone || !req.body.client.phone=="")){                
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El telefono del cliente es necesario'
+        })
+    }
+
+
+    
 
     if(req.body.employeeId!=null && req.body.employeeId!=""){        
         let userValidation= isValidObjectId(req.body.employeeId)
@@ -133,7 +120,7 @@ const reserveCreate = async function (req,reply){
     } 
     
     this.newReserve={};
-    this.newSale={};
+    this.newPayment={};
 
     let db = await mongoose.startSession()
     .then(async session => {
@@ -149,6 +136,8 @@ const reserveCreate = async function (req,reply){
         inputs.totalSale = _.sumBy(products, (product) => {
             return Number(((product.price *100)*(product.quantity*100) /10000).toFixed(2))
         });
+
+
         for (const product of products) {
 
             if(product.modelId!=null && product.modelId!=""){        
@@ -187,7 +176,7 @@ const reserveCreate = async function (req,reply){
                 //     status: 'fail',
                 //     message: 'Cantidad requerida, debe ser mayor a 0'
                 // })
-                throw {message: "Cantidad requerida, debe ser mayor a 0"}
+                throw {message: "Cantidad requerida en producto "+product.modelName+" de color "+product.color+" debe ser mayor a 0"}
             }
 
             if(!product.price || product.price=="" || Number(product.price)==NaN || Number(product.price)<=0){
@@ -195,7 +184,7 @@ const reserveCreate = async function (req,reply){
                 //     status: 'fail',
                 //     message: 'Cantidad requerida, debe ser mayor a 0'
                 // })
-                throw {message: "Precio requerido, debe ser mayor a 0"}
+                throw {message: "Precio requerido en producto "+product.modelName+" de color "+product.color+" debe ser mayor a 0"}
 
             }
             
@@ -226,11 +215,11 @@ const reserveCreate = async function (req,reply){
             
         }
 
-        const sale = new Sale(inputs);     
-        sale.products = products;
-        sale.isPaid = true;
+        const reserve = new Reserve(inputs);     
+        reserve.products = products;
+        reserve.isPaid = false;
         //sale.totalSale = total;
-        sale._id = mongoose.Types.ObjectId();
+        reserve._id = mongoose.Types.ObjectId();
         let offset = await getOffsetSetting();              
         let date = new Date ();    
         if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
@@ -243,7 +232,7 @@ const reserveCreate = async function (req,reply){
              date.setHours(0, 0, 0, 0);
         }
         let nextDay = addDays(date,1)
-        let branchSales = await Sale.find({
+        let branchReserves = await Reserve.find({
             isDeleted:false, 
             branchId:req.body.branchId,
             createdAt:{"$gte": date,"$lte":nextDay}
@@ -254,20 +243,20 @@ const reserveCreate = async function (req,reply){
         let year = date.getFullYear();
         let dayString = day > 9 ? day : "0"+day;
         let monthString = month > 9 ? month : "0"+month;  
-        let nextFolio = branchSales.length+1
+        let nextFolio = branchReserves.length+1
         nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
         nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
         nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
         let branchCode = activeBranch.code;
-        sale.folio = "VT-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+        reserve.folio = "AP-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
 
-        await sale.save()
+        await reserve.save()
 
         let paymentInput={
             branchId:req.body.branchId,
-            operationType:'single',
-            saleId:sale._id,
-            amount:inputs.totalSale,
+            operationType:'reserve',
+            reserveId:reserve._id,
+            amount:req.body.amount,
             paidOn:new Date(),
             paymentType:req.body.paymentType.toLowerCase()
     
@@ -277,21 +266,21 @@ const reserveCreate = async function (req,reply){
         payment._id = mongoose.Types.ObjectId();     
         await payment.save();   
         this.newPayment = payment;
-        this.newSale = sale;
+        this.newReserve = reserve;
         return           
     });              
 
 
     }).catch((err) => {
-        this.newSale = err;
+        this.newReserve = err;
     });
 
 
-    if(this.newSale == null || this.newSale.message){
-        console.error(this.newSale);
+    if(this.newReserve == null || this.newReserve.message){
+        console.error(this.newReserve);
         return reply.code(400).send({
             status:"fail",
-            message:this.newSale && this.newSale.message? this.newSale.message : "Error en las transacciones en la base de datos"
+            message:this.newReserve && this.newReserve.message? this.newReserve.message : "Error en las transacciones en la base de datos"
         });
     }
 
@@ -423,13 +412,14 @@ const reserveCreate = async function (req,reply){
     // await reserve.save()
     await this.newReserve.populate([
         {path:'branchId', select:'_id name code'},
-        {path:'modelId', select:'_id name'},
+        //{path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
-        {path:'clientId', select:'_id fullName email phone'}
+        //{path:'clientId', select:'_id fullName email phone'}
     ]); 
 
     const reserveObj = await this.newReserve.toObject()       
-    reserveObj.payments=receivedPayments;    
+    reserveObj.payments=[];    
+    reserveObj.payments.push(this.newPayment);    
     if(!reserveObj.branchId || !reserveObj.branchId._id){
         reserveObj.branchId={
             _id:null,
@@ -461,7 +451,7 @@ const reserveCreate = async function (req,reply){
         }
     }
     delete reserveObj.__v
-    reserveObj.totalPaid = totalPaid;
+    reserveObj.totalPaid = req.body.amount;
     // inventoryValidation.quantity-=req.body.quantity;
     // await inventoryValidation.save();
     return reply.code(201).send({
