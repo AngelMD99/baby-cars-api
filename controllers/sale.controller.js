@@ -25,6 +25,8 @@ const saleCreate = async function (req, reply){
         })
     }
 
+    
+
     if(!req.body.paymentType){
         return reply.code(400).send({
             status: 'fail',
@@ -159,7 +161,7 @@ const saleCreate = async function (req, reply){
                 //     status: 'fail',
                 //     message: 'Cantidad requerida, debe ser mayor a 0'
                 // })
-                throw {message: "Cantidad requerida, debe ser mayor a 0"}
+                throw {message: "Cantidad requerida en producto "+product.modelName+" de color "+product.color+" debe ser mayor a 0"}
             }
 
             if(!product.price || product.price=="" || Number(product.price)==NaN || Number(product.price)<=0){
@@ -167,7 +169,7 @@ const saleCreate = async function (req, reply){
                 //     status: 'fail',
                 //     message: 'Cantidad requerida, debe ser mayor a 0'
                 // })
-                throw {message: "Precio requerido, debe ser mayor a 0"}
+                throw {message: "Precio requerido en producto "+product.modelName+" de color "+product.color+" debe ser mayor a 0"}
 
             }
             
