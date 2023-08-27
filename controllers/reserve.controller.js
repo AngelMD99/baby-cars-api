@@ -1309,7 +1309,12 @@ const reserveList = async function (req,reply){
                     code:"",
                     name:""
                 }
-            }            
+            }
+            doc.totalPaid= _.sumBy(doc.payments, (payment) => {
+                return Number(payment.amount.toFixed(2))
+            });
+            
+            doc.pendingBalance=doc.totalSale-doc.totalPaid;
         })
         reservesPaginated.totalPages = Math.ceil(reservesPaginated.totalDocs / reservesPaginated.perPage);
 
