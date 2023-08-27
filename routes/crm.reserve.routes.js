@@ -1,4 +1,4 @@
-const { reserveCreate, reserveAddPayment, reserveShow, reserveList, reserveShowCrm  } = require('../controllers/reserve.controller');
+const { reserveCreate, reserveAddPayment, reserveShow, reserveList, reserveShowCrm, reserveCancel  } = require('../controllers/reserve.controller');
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const errResponse = {
@@ -193,10 +193,38 @@ const getSingleReserveOpts={
     
 }
 
+const cancelSingleReserveOpts={
+    schema: {
+         description:"Cancels the reserve with the id provided.",
+         tags:['Reserves'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveCancel,
+    
+}
+
 function crmReserveRoutes(fastify, options, done) {
 
     //fastify.post('/app/:id/reserves', postReserveUpOpts)
     fastify.get('/crm/reserves/:reserveId', getSingleReserveOpts)
+    fastify.delete('/crm/reserves/:reserveId', cancelSingleReserveOpts)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        

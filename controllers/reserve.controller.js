@@ -460,10 +460,6 @@ const reserveCreate = async function (req,reply){
         data: reserveObj
      }) 
 
-
-
-
-
 }
 
 const reserveShow = async function (req,reply){    
@@ -775,7 +771,7 @@ const reserveShowCrm = async function (req,reply){
 }
 
 const reserveCancel = async function (req,reply){
-    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
+    const reserve = await Reserve.findOne({_id:req.params.reserveId}).select('-createdAt -updatedAt -__v');
     if (!reserve){
         return reply.code(400).send({
             status: 'fail',
@@ -790,19 +786,14 @@ const reserveCancel = async function (req,reply){
         })
     }
 
-    let updatedReserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
+    let updatedReserve = await Reserve.findOne({_id:req.params.reserveId}).select('-createdAt -updatedAt -__v');
     updatedReserve.isCancelled=true;
     await updatedReserve.save();
         reply.code(200).send({
         status: 'success',
-        message: 'Reserve '+updatedReserve.folio+' cancelado.'           
+        message: 'Apartado '+updatedReserve.folio+' cancelado.'           
         
-    }) 
-    
-
-
-
-    
+    })      
     
 }
 
