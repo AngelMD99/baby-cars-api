@@ -220,11 +220,47 @@ const cancelSingleReserveOpts={
     
 }
 
+const getReservesOpts={
+    schema: {
+         description:"Retrieves the information of all the reserves stored on the database.",
+         tags:['Sales'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:reserveDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveList,
+    
+}
+
 function crmReserveRoutes(fastify, options, done) {
 
     //fastify.post('/app/:id/reserves', postReserveUpOpts)
     fastify.get('/crm/reserves/:reserveId', getSingleReserveOpts)
-    fastify.delete('/crm/reserves/:reserveId', cancelSingleReserveOpts)
+    fastify.get('/crm/reserves', getReservesOpts)
+    fastify.delete('/crm/reserves/:reserveId', getSingleReserveOpts)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
