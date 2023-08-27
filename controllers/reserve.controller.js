@@ -189,7 +189,7 @@ const reserveCreate = async function (req,reply){
 
             }
             
-            if(product.modelId || product.color){
+            if(product.modelId && product.color){
                 let dbInventory = await Inventory.findOne({ modelId: product.modelId, color:product.color.toLowerCase(), isDeleted:false});                                
 
                     if(!dbInventory){
@@ -786,12 +786,65 @@ const reserveCancel = async function (req,reply){
         })
     }
 
-    let updatedReserve = await Reserve.findOne({_id:req.params.reserveId}).select('-createdAt -updatedAt -__v');
-    updatedReserve.isCancelled=true;
-    await updatedReserve.save();
-        reply.code(200).send({
+    this.reserve={}
+
+    let db = await mongoose.startSession()
+    .then(async session => {
+        await session.withTransaction(async () => {
+        let products = reserve.products;       
+
+        for (const product of products) {            
+                      
+            if(product.modelId || product.color){
+                let dbInventory = await Inventory.findOne({ modelId: product.modelId, color:product.color.toLowerCase(), isDeleted:false});                                                    
+                    if(!dbInventory){
+                        let inventoryInputs={
+                            isDeleted:false,
+                            modelId:product.modelId,
+                            color:product.color.toLowerCase(),
+                            quantity:product.quantity && Number(product.quantity)!= NaN ? product.quantity : 0                         
+
+                        }
+                        const inventory = new Inventory(inventoryInputs);
+                        inventory._id=mongoose.Types.ObjectId();
+                        await inventory.save()
+                        
+                    }
+                    else{
+                        let currentQuantity=dbInventory.quantity
+                        dbInventory.quantity = currentQuantity+product.quantity;
+                        await dbInventory.save({session: session})                       
+                    }                                                     
+                    
+                
+            }
+            product.quantity=0;
+            
+        }        
+        reserve.isCancelled=true;
+        reserve.products=products;
+        await reserve.save()        
+        this.reserve = reserve;
+        return           
+    });              
+
+
+    }).catch((err) => {
+        this.reserve = err;
+    });
+
+
+    if(this.reserve == null || this.reserve.message){
+        console.error(this.reserve);
+        return reply.code(400).send({
+            status:"fail",
+            message:this.reserve && this.reserve.message? this.reserve.message : "Error en las transacciones en la base de datos"
+        });
+    }
+    
+    return reply.code(200).send({
         status: 'success',
-        message: 'Apartado '+updatedReserve.folio+' cancelado.'           
+        message: 'Apartado '+this.reserve.folio+' cancelado.'           
         
     })      
     
