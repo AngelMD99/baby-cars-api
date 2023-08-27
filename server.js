@@ -86,6 +86,7 @@ fastify.register(require("./routes/crm.payment.routes"));
 fastify.register(require("./routes/crm.rentals.routes"));
 fastify.register(require("./routes/crm.reports.routes"));
 fastify.register(require("./routes/crm.sales.routes"));
+fastify.register(require("./routes/crm.reserve.routes"));
 fastify.register(require("./routes/crm.status.routes"));
 fastify.register(require("./routes/crm.users.routes"));
 

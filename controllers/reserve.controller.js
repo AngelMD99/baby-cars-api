@@ -130,7 +130,8 @@ const reserveCreate = async function (req,reply){
         let inputs={};        
         inputs.branchId = req.body.branchId;    
         inputs.client = req.body.client;    
-        inputs.employeeId= req.body.employeeId;                 
+        inputs.employeeId= req.body.employeeId; 
+        inputs.expirationDate=req.body.expirationDate;                
         //let inputs = request.only(['clientId', 'branchId', 'hasIva', 'ivaType', 'type', 'deliveryDate', 'deliveryLocation', 'validity', 'comments', 'discount', 'percentageDiscount']);
         inputs.totalSale = 0;        
         inputs.totalSale = _.sumBy(products, (product) => {
@@ -465,8 +466,8 @@ const reserveCreate = async function (req,reply){
 
 }
 
-const reserveShow = async function (req,reply){
-    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
+const reserveShow = async function (req,reply){    
+    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-updatedAt -__v');
     if (!reserve){
         return reply.code(400).send({
             status: 'fail',
@@ -706,6 +707,73 @@ const reserveShow = async function (req,reply){
     
 }
 
+const reserveShowCrm = async function (req,reply){    
+    const reserve = await Reserve.findOne({_id:req.params.reserveId}).select('-updatedAt -__v');
+    if (!reserve){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado no registrado'
+        })        
+    } 
+    
+    await reserve.populate([
+        {path:'branchId', select:'_id name code'},
+        //{path:'modelId', select:'_id name'},
+        {path:'employeeId', select:'_id fullName email'},
+        //{path:'clientId', select:'_id fullName email phone'},
+        {path:'cancelledBy', select:'_id fullName email phone'}
+    ]);  
+    let reserveObj = await reserve.toObject();
+    let payments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:false})                
+    let cancelledPayments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:true})                
+    
+    let totalPaid = 0;
+    payments.forEach(payment=>{
+        totalPaid+=payment.amount;
+    })
+    reserveObj.payments=payments;
+    reserveObj.totalPaid=totalPaid; 
+    reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
+    reserveObj.cancelledPayments=cancelledPayments;  
+
+    if(!reserveObj.branchId || !reserveObj.branchId._id){
+        reserveObj.branchId={
+            _id:null,
+            name:"",
+            code:"",
+        }
+    }
+    if(!reserveObj.modelId || !reserveObj.modelId._id){
+        reserveObj.modelId={
+            _id:null,
+            name:"",            
+        }
+    }
+
+    
+    
+    if(!reserveObj.employeeId || !reserveObj.employeeId._id){
+        reserveObj.modelId={
+            _id:null,
+            fullName:"",                        
+            email:""
+        }
+    }
+    if(!reserveObj.cancelledBy || !reserveObj.cancelledBy){
+        reserveObj.cancelledBy={
+            _id:null,
+            fullName:"",                        
+            email:""
+        }
+    }
+    delete reserveObj.__v
+    return reply.code(200).send({
+        status: 'success',
+        data: reserveObj
+    })    
+    
+}
+
 const reserveCancel = async function (req,reply){
     const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
     if (!reserve){
@@ -714,6 +782,26 @@ const reserveCancel = async function (req,reply){
             message: 'Apartado no registrado'
         })        
     } 
+
+    if(reserve.isCancelled==true){
+        return reply.code(400).send({
+            status:'fail',
+            message:'Apartado ya se encuentra cancelado'
+        })
+    }
+
+    let updatedReserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-createdAt -updatedAt -__v');
+    updatedReserve.isCancelled=true;
+    await updatedReserve.save();
+        reply.code(200).send({
+        status: 'success',
+        message: 'Reserve '+updatedReserve.folio+' cancelado.'           
+        
+    }) 
+    
+
+
+
     
     
 }
@@ -785,4 +873,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { reserveCreate, reserveDelete, reserveList, reserveShow, reserveUpdate, reserveAddPayment, reserveCancel}
+module.exports = { reserveCreate, reserveDelete, reserveList, reserveShow, reserveUpdate, reserveAddPayment, reserveCancel, reserveShowCrm}

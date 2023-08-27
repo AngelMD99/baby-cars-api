@@ -1,10 +1,49 @@
-const { reserveCreate, reserveAddPayment, reserveShow, reserveList  } = require('../controllers/reserve.controller');
+const { reserveCreate, reserveAddPayment, reserveShow, reserveList, reserveShowCrm  } = require('../controllers/reserve.controller');
 const bcrypt = require('bcrypt');
+const User = require('../models/User');
 const errResponse = {
     type: 'object',
     properties: {
         status: { type: 'string' },
         message: {type: 'string'}
+    }
+}
+
+const authorizeFunc = async function (req, reply) {
+    try {
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+
+        const decoded = await req.jwtVerify()
+        if (!decoded._id || (decoded.role!='admin' && decoded.role!='supervisor') ) {
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Token de usuario no válido'
+            })
+        }
+    
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(user == null){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario autentificado no encontrado'
+            })
+        }
+        // if(user.isEnabled == false){
+        //     return reply.code(404).send({
+        //         status: 'fail',
+        //         message: 'user_disabled'
+        //     })
+        // }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
     }
 }
 
@@ -126,10 +165,38 @@ const reserveDef = {
     }
 }
 
+const getSingleReserveOpts={
+    schema: {
+         description:"Retrieves the information of a single reserve with the reserveId provided for the id of the branch ",
+         tags:['Reserve'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'},
+            saleId:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: reserveDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveShowCrm,
+    
+}
+
 function crmReserveRoutes(fastify, options, done) {
 
     //fastify.post('/app/:id/reserves', postReserveUpOpts)
-    fastify.get('/app/:id/reserves/:reserveId', getSingleReserveOpts)
+    fastify.get('/crm/reserves/:reserveId', getSingleReserveOpts)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        

@@ -228,7 +228,7 @@ const postReserveUpOpts = {
 const getSingleReserveOpts={
     schema: {
          description:"Retrieves the information of a single reserve with the reserveId provided for the id of the branch ",
-         tags:['Sale'],
+         tags:['Reserve'],
         //  headers:{
         //     authorization:{type:'string'}
         // },
