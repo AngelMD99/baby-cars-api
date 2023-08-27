@@ -205,7 +205,7 @@ const getSingleSaleOpts={
 
 const getBranchSalesOpts={
     schema: {
-         description:"Retrieves the information of all the rentals for the branch with id provided in URL, stored on the database.",
+         description:"Retrieves the information of all the sales for the branch with id provided in URL, stored on the database.",
          tags:['Sales'], 
         //  headers:{
         //     authorization:{type:'string'}
