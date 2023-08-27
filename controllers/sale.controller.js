@@ -522,7 +522,7 @@ const saleList = async function (req, reply){
         searchQuery['createdAt']={"$lte": finalDay}
     }
     const options = {
-        select: `-isDeleted -__v -updatedAt -createdAt`, 
+        select: `-isDeleted -__v -updatedAt`, 
 
     }
     if (req.query.page){
@@ -538,14 +538,14 @@ const saleList = async function (req, reply){
         options.sort[column]=order    
     }
     else{
-        options.sort={"name":1}
+        options.sort={"createdAt":-1}
     }
     let salesPaginated={};
     if(!req.query.search){         
         //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
-        let allModels = await Modelo.find({});
-        let allClients = await Client.find({});
+        //let allModels = await Modelo.find({});
+        //let allClients = await Client.find({});
         let allUsers = await User.find({});
         let allPayments = await Payment.find({})
         if(options.page!=null && options.limit!=null){
@@ -555,9 +555,8 @@ const saleList = async function (req, reply){
                 let newObj={
                     _id:sale._id,
                     folio:sale.folio,
-                    color:sale.color,
-                    quantity:sale.quantity,
-                    price:sale.price,
+                    client:sale.client,
+                    products:sale.products,
                     totalSale:sale.totalSale,
                     createdAt:sale.createdAt,
                     updateAt:sale.updatedAt,                   
@@ -572,26 +571,26 @@ const saleList = async function (req, reply){
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
                 }
-                let modelInfo = allModels.find(modelo=>{
-                    return String(modelo._id) == String(sale.modelId)
-                })
-                newObj.modelId={
-                    _id:sale.modelId ? sale.modelId :null,
-                    name : modelInfo && modelInfo.name ? modelInfo.name : "",
-                    code : modelInfo && modelInfo.code ? modelInfo.code : "",
+                // let modelInfo = allModels.find(modelo=>{
+                //     return String(modelo._id) == String(sale.modelId)
+                // })
+                // newObj.modelId={
+                //     _id:sale.modelId ? sale.modelId :null,
+                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",
+                //     code : modelInfo && modelInfo.code ? modelInfo.code : "",
 
-                }
+                // }
 
-                let clientInfo = allClients.find(client=>{
-                    return String(client._id) == String(sale.clientId)
-                })
-                newObj.clientId={
-                    _id:sale.clientId ? sale.clientId :null,
-                    fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
-                    phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
-                    email : clientInfo && clientInfo.email ? clientInfo.email : "",
+                // let clientInfo = allClients.find(client=>{
+                //     return String(client._id) == String(sale.clientId)
+                // })
+                // newObj.clientId={
+                //     _id:sale.clientId ? sale.clientId :null,
+                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
+                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
+                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
 
-                }
+                // }
 
                 let userInfo = allUsers.find(user=>{
                     return String(user._id) == String(sale.employeeId)
@@ -641,25 +640,25 @@ const saleList = async function (req, reply){
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
                 } 
-                let modelInfo = allModels.find(modelo=>{
-                    return String(modelo._id) == String(sale.modelId)
-                }) 
-                let modelId={
-                    _id:sale.modelId ? sale.modelId :null,
-                    name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
-                }
+                // let modelInfo = allModels.find(modelo=>{
+                //     return String(modelo._id) == String(sale.modelId)
+                // }) 
+                // let modelId={
+                //     _id:sale.modelId ? sale.modelId :null,
+                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
+                // }
                 
-                let clientInfo = allClients.find(client=>{
-                    return String(client._id) == String(sale.clientId)
-                })
+                // let clientInfo = allClients.find(client=>{
+                //     return String(client._id) == String(sale.clientId)
+                // })
 
-                let clientId={
-                    _id:sale.clientId ? sale.clientId :null,
-                    fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
-                    phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
-                    email : clientInfo && clientInfo.email ? clientInfo.email : "",
+                // let clientId={
+                //     _id:sale.clientId ? sale.clientId :null,
+                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
+                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
+                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
 
-                }
+                // }
 
                 let userInfo = allUsers.find(user=>{
                     return String(user._id) == String(sale.employeeId)
@@ -676,8 +675,8 @@ const saleList = async function (req, reply){
                     return String(payment.saleId) == String(sale._id)
                 })
                 sale.branchId=branchId;         
-                sale.modelId=modelId;         
-                sale.clientId=clientId;         
+                // sale.modelId=modelId;         
+                // sale.clientId=clientId;         
                 sale.employeeId=userId;         
                 sale.payments=payments;         
 
