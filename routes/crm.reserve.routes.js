@@ -96,8 +96,30 @@ const reserveDef = {
 
 
         }, 
-        totalPaid:{type:'number'},                  
-        pendingBalance:{type:'number'},                  
+        totalPaid:{type:'number'},
+        pendingBalance:{type:'number'},
+        cancelledPayments:{
+            type:'array',
+            items:{
+                isDiscarded:{type:'boolean'},
+                amount:{type:'number'},
+                paid:{type:'string'},
+                paymentType:{type:'string'},
+                cancellationReason:{type:'string'},
+                cancelledBy:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},
+                        fullName:{type:'string'},
+                        email:{type:'string'},
+                        phone:{type:'string'}
+                    }
+                }, 
+
+            }
+
+
+        },                                             
         createdAt:{type:'string'},
         expirationDate:{type:'string'},
         updatedAt:{type:'string'}        

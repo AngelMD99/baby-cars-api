@@ -476,13 +476,14 @@ const reserveShow = async function (req,reply){
     
     await reserve.populate([
         {path:'branchId', select:'_id name code'},
-        {path:'modelId', select:'_id name'},
+        //{path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
-        {path:'clientId', select:'_id fullName email phone'},
+        //{path:'clientId', select:'_id fullName email phone'},
         {path:'cancelledBy', select:'_id fullName email phone'}
     ]);  
     let reserveObj = await reserve.toObject();
     let payments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:false})                
+    let cancelledPayments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:true})                
     
     // letpayments = await Payment.aggregate([
     //     {
@@ -650,10 +651,9 @@ const reserveShow = async function (req,reply){
         totalPaid+=payment.amount;
     })
     reserveObj.payments=payments;
-    reserveObj.totalPaid=totalPaid;
-    
-
-
+    reserveObj.totalPaid=totalPaid; 
+    reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
+    reserveObj.cancelledPayments=cancelledPayments;  
 
     
     // if (reserveObj.branchId){
@@ -675,14 +675,14 @@ const reserveShow = async function (req,reply){
         }
     }
 
-    if(!reserveObj.clientId || !reserveObj.clientId._id){
-        reserveObj.clientId={
-            _id:null,
-            fullName:"",            
-            phone:"",
-            email:""
-        }
-    }
+    // if(!reserveObj.clientId || !reserveObj.clientId._id){
+    //     reserveObj.clientId={
+    //         _id:null,
+    //         fullName:"",            
+    //         phone:"",
+    //         email:""
+    //     }
+    // }
     
     if(!reserveObj.employeeId || !reserveObj.employeeId._id){
         reserveObj.modelId={

@@ -137,8 +137,31 @@ const reserveDef = {
 
 
         }, 
-        totalPaid:{type:'number'},                  
+
+        totalPaid:{type:'number'},
         pendingBalance:{type:'number'}, 
+        cancelledPayments:{
+            type:'array',
+            items:{
+                isDiscarded:{type:'boolean'},
+                amount:{type:'number'},
+                paid:{type:'string'},
+                paymentType:{type:'string'},
+                cancellationReason:{type:'string'},
+                cancelledBy:{
+                    type:'object',
+                    properties:{
+                        _id:{type:'string'},
+                        fullName:{type:'string'},
+                        email:{type:'string'},
+                        phone:{type:'string'}
+                    }
+                }, 
+
+            }
+
+
+        },                           
         expirationDate:{type:'string'},
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
@@ -230,11 +253,47 @@ const getSingleReserveOpts={
     
 }
 
+const getBranchReservesOpts={
+    schema: {
+         description:"Retrieves the information of all the reserves for the branch with id provided in URL, stored on the database.",
+         tags:['Sales'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:reserveDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveList,
+    
+}
+
 
 
 function appReserveRoutes(fastify, options, done) {
 
     fastify.post('/app/:id/reserves', postReserveUpOpts)
+    fastify.get('/app/:id/reserves', getBranchReservesOpts)
     fastify.get('/app/:id/reserves/:reserveId', getSingleReserveOpts)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
