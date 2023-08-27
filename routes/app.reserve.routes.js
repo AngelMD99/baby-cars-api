@@ -288,6 +288,32 @@ const getBranchReservesOpts={
     
 }
 
+const putSinglePaymentReserve={
+    schema: {
+         description:"Adds a single payment to the reserve with reserveId provided in URL branch with branchId provided in URL",
+         tags:['Reserves'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveAddPayment,
+    
+}
 
 
 function appReserveRoutes(fastify, options, done) {
@@ -295,6 +321,7 @@ function appReserveRoutes(fastify, options, done) {
     fastify.post('/app/:id/reserves', postReserveUpOpts)
     fastify.get('/app/:id/reserves', getBranchReservesOpts)
     fastify.get('/app/:id/reserves/:reserveId', getSingleReserveOpts)
+    fastify.put('/app/:branchId/reserves/:reserveId/payments', putSinglePaymentReserve)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        

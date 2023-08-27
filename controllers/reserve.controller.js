@@ -1346,12 +1346,118 @@ const reserveList = async function (req,reply){
 }
 
 
-const reserveUpdate = async function (req,reply){
+const reserveUpdate = async function (req,reply){    
     
 }
 
 
 const reserveAddPayment = async function (req,reply){
+    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.branchId}).select('-updatedAt -__v');
+    // console.log("PARAMS: ", req.params)
+    // console.log("RESERVE: ",reserve)
+    if (!reserve){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado no registrado'
+        })        
+    } 
+
+    if (reserve.isCancelled==true){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado cancelado'
+        })        
+    } 
+
+    if (reserve.isPaid==true){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado pagado'
+        })        
+    } 
+
+    if (reserve.isDelivered==true){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado entregado'
+        })        
+    }
+
+    if(!req.body.paymentType){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El tipo de pago es requerido'
+        })
+    }
+
+    if(!req.body.amount || req.body.amount==""|| Number(req.body.amount)==NaN || Number(req.body.amount)<=0 ){        
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El monto del pago es requerido'
+        })
+    }
+
+    if(!req.body.paidOn || req.body.paidOn ==""){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'La fecha de pago es requerida.'
+        })
+    }
+
+    this.newPayment={};
+    
+    let db = await mongoose.startSession()
+    .then(async session => {
+        await session.withTransaction(async () => {             
+        
+        await reserve.save()
+        let paymentInput={
+            isDeleted:false,
+            isDiscarded:false,
+            branchId:req.body.branchId,
+            operationType:'reserve',
+            reserveId:req.params.reserveId,
+            amount:req.body.amount,
+            paymentType:req.body.paymentType.toLowerCase(),
+            paidOn:new Date(req.body.paidOn)              
+        }
+        
+        const payment = new Payment(paymentInput);
+        payment._id = mongoose.Types.ObjectId();     
+        await payment.save();   
+        let reservePayments = await Payment.find({reserveId:req.params.reserveId, isDiscarded:false })
+        let totalPaid = _.sumBy(reservePayments, (payment) => {
+            return Number(payment.amount.toFixed(2))
+        });
+        reserve.pendingBalance = reserve.totalSale - totalPaid
+        //reserve.totalPaid = totalPaid;
+        if (reserve.pendingBalance<=0){
+            reserve.isPaid=true;
+        }
+        await reserve.save();
+        this.newPayment = payment;
+                
+        return           
+    });              
+
+    }).catch((err) => {
+        this.newPayment = err;
+    });
+
+    if(this.newPayment == null || this.newPayment.message){
+        console.error(this.newPayment);
+        return reply.code(400).send({
+            status:"fail",
+            message:this.newPayment && this.newReserve.Payment? this.newPayment.message : "Error en las transacciones en la base de datos"
+        });
+    }
+
+    return reply.code(200).send({
+        status: 'success',
+        message: 'Pago agregado al apartado '+reserve.folio+' correctamente.'
+     }) 
+
+    
     
 }
 

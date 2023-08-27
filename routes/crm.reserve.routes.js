@@ -260,7 +260,7 @@ function crmReserveRoutes(fastify, options, done) {
     //fastify.post('/app/:id/reserves', postReserveUpOpts)
     fastify.get('/crm/reserves/:reserveId', getSingleReserveOpts)
     fastify.get('/crm/reserves', getReservesOpts)
-    fastify.delete('/crm/reserves/:reserveId', getSingleReserveOpts)
+    fastify.delete('/crm/reserves/:reserveId', cancelSingleReserveOpts)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
