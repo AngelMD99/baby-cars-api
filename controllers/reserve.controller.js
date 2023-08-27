@@ -1196,14 +1196,28 @@ const reserveList = async function (req,reply){
                   'employeeId.email': {
                     '$first': '$employeeInfo.email'
                   }, 
-                  'products':1,
-                  'payments':'$paymentsInfo',
-
-
+                  'products':1,  
+                  'totalSale':1,
+                  'payments': {
+                    $filter: {
+                        input: "$paymentsInfo",
+                          as: "payment",
+                          cond: { $eq: [ "$$payment.isDiscarded", false ] },
+                       }
+                    },
+                   'cancelledPayments': {
+                      $filter: {
+                        input: "$paymentsInfo",
+                            as: "payment",
+                            cond: { $eq: [ "$$payment.isDiscarded", true ] },
+                         }
+                     },                              
                   'createdAt':1,
                   'updatedAt':1,                 
                 }
-              }, {
+              }, 
+              
+              {
                 '$match': {
                   '$or': [                    
                     
@@ -1295,14 +1309,7 @@ const reserveList = async function (req,reply){
                     code:"",
                     name:""
                 }
-            }
-            if (!doc.modelId || !doc.modelId._id){
-                doc.modelId ={
-                    _id:null,
-                    code:"",
-                    name:""
-                }
-            }
+            }            
         })
         reservesPaginated.totalPages = Math.ceil(reservesPaginated.totalDocs / reservesPaginated.perPage);
 

@@ -947,13 +947,6 @@ const saleList = async function (req, reply){
                     name:""
                 }
             }
-            if (!doc.modelId || !doc.modelId._id){
-                doc.modelId ={
-                    _id:null,
-                    code:"",
-                    name:""
-                }
-            }
         })
         salesPaginated.totalPages = Math.ceil(salesPaginated.totalDocs / salesPaginated.perPage);
 
