@@ -27,8 +27,8 @@ const listPayments = async function (req, reply){
     if(!req.params.id && req.query.branchId){
         searchQuery['branchId']=req.query.branchId
     }
-    if(req.query.employeeId){
-        searchQuery['employeeId']=req.query.employeeId
+    if(req.query.collectedBy){
+        searchQuery['collectedBy']=req.query.collectedBy
     }
     // if(req.query.modelId){
     //     searchQuery['products.modelId']=req.query.modelId
@@ -81,52 +81,51 @@ const listPayments = async function (req, reply){
     else{
         options.sort={"createdAt":-1}
     }
-    let reservesPaginated={};
+    let paymentsPaginated={};
     if(!req.query.search){         
         //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
         //let allModels = await Modelo.find({});
         //let allClients = await Client.find({});
-        let allUsers = await User.find({});
-        let allPayments = await Payment.find({})
+        let allUsers = await User.find({});        
         if(options.page!=null && options.limit!=null){
-            reservesPaginated.docs=[];
-            let reservesQuery = await Reserve.paginate(searchQuery, options);
-            reservesQuery.docs.forEach(reserve => {
+            paymentsPaginated.docs=[];
+            let paymentsQuery = await Payment.paginate(searchQuery, options);
+            paymentsQuery.docs.forEach(payment => {
                 let newObj={
-                    _id:reserve._id,
-                    folio:reserve.folio,
-                    client:reserve.client,
-                    products:reserve.products,                    
-                    totalSale:reserve.totalSale,
-                    createdAt:reserve.createdAt,
-                    updateAt:reserve.updatedAt,                   
+                    _id:payment._id,
+                    folio:payment.folio,
+                    client:payment.client,
+                    products:payment.products,                    
+                    totalSale:payment.totalSale,
+                    createdAt:payment.createdAt,
+                    updateAt:payment.updatedAt,                   
 
                 }
                 let branchInfo = allBranches.find(branch=>{
-                    return String(branch._id) == String(reserve.branchId)
+                    return String(branch._id) == String(payment.branchId)
                 })
                 newObj.branchId={
-                    _id:reserve.branchId ? reserve.branchId :null,
+                    _id:payment.branchId ? payment.branchId :null,
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
                 }
                 // let modelInfo = allModels.find(modelo=>{
-                //     return String(modelo._id) == String(reserve.modelId)
+                //     return String(modelo._id) == String(payment.modelId)
                 // })
                 // newObj.modelId={
-                //     _id:reserve.modelId ? reserve.modelId :null,
+                //     _id:payment.modelId ? payment.modelId :null,
                 //     name : modelInfo && modelInfo.name ? modelInfo.name : "",
                 //     code : modelInfo && modelInfo.code ? modelInfo.code : "",
 
                 // }
 
                 // let clientInfo = allClients.find(client=>{
-                //     return String(client._id) == String(reserve.clientId)
+                //     return String(client._id) == String(payment.clientId)
                 // })
                 // newObj.clientId={
-                //     _id:reserve.clientId ? reserve.clientId :null,
+                //     _id:payment.clientId ? payment.clientId :null,
                 //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
                 //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
                 //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
@@ -134,40 +133,24 @@ const listPayments = async function (req, reply){
                 // }
 
                 let userInfo = allUsers.find(user=>{
-                    return String(user._id) == String(reserve.employeeId)
+                    return String(user._id) == String(payment.employeeId)
                 })
                 newObj.employeeId={
-                    _id:reserve.employeeId ? reserve.employeeId :null,
+                    _id:payment.employeeId ? payment.employeeId :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
                     email : userInfo && userInfo.email ? userInfo.email : "",
 
-                }
-
-                newObj.payments = allPayments.filter(payment=>{
-                    return String ( (payment.reserveId) == String(reserve._id) && payment.isDiscarded==false)
-                })
-
-                newObj.totalPaid = _.sumBy(newObj.payments, (payment) => {
-                    return Number(payment.amount.toFixed(2))
-                });
-
-                newObj.pendingBalance = newObj.totalSale - newObj.totalPaid;
-
-                newObj.cancelledPayments = allPayments.filter(payment=>{
-                    return String ( (payment.reserveId) == String(reserve._id) && payment.isDiscarded==true)
-                })
+                }                
                 
-                delete reserve.branchId;
-                delete reserve.modelId;                
-                delete reserve.clientId;                
-                delete reserve.employeeId;                
-                reservesPaginated.docs.push(newObj)                               
+                delete payment.branchId;                                
+                delete payment.employeeId;                
+                paymentsPaginated.docs.push(newObj)                               
             });
-            reservesPaginated.page=reservesQuery.page;
-            reservesPaginated.perPage=reservesQuery.limit;
-            reservesPaginated.totalDocs=reservesQuery.totalDocs;
-            reservesPaginated.totalPages=reservesQuery.totalPages;
+            paymentsPaginated.page=paymentsQuery.page;
+            paymentsPaginated.perPage=paymentsQuery.limit;
+            paymentsPaginated.totalDocs=paymentsQuery.totalDocs;
+            paymentsPaginated.totalPages=paymentsQuery.totalPages;
         }
         else{
             let sortOrder = {}
@@ -180,31 +163,31 @@ const listPayments = async function (req, reply){
                     createdAt:1
                 }
             }
-            reservesPaginated.docs=[]
-            let reservesQuery = await Reserve.find(searchQuery).sort(sortOrder).lean();
-            reservesQuery.forEach(reserve => {
+            paymentsPaginated.docs=[]
+            let paymentsQuery = await Payment.find(searchQuery).sort(sortOrder).lean();
+            paymentsQuery.forEach(payment => {
                 let branchInfo = allBranches.find(branch=>{
-                    return String(branch._id) == String(reserve.branchId)
+                    return String(branch._id) == String(payment.branchId)
                 }) 
                 let branchId={
-                    _id:reserve.branchId ? reserve.branchId :null,
+                    _id:payment.branchId ? payment.branchId :null,
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
                 } 
                 // let modelInfo = allModels.find(modelo=>{
-                //     return String(modelo._id) == String(reserve.modelId)
+                //     return String(modelo._id) == String(payment.modelId)
                 // }) 
                 // let modelId={
-                //     _id:reserve.modelId ? reserve.modelId :null,
+                //     _id:payment.modelId ? payment.modelId :null,
                 //     name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
                 // }
                 
                 // let clientInfo = allClients.find(client=>{
-                //     return String(client._id) == String(reserve.clientId)
+                //     return String(client._id) == String(payment.clientId)
                 // })
 
                 // let clientId={
-                //     _id:reserve.clientId ? reserve.clientId :null,
+                //     _id:payment.clientId ? payment.clientId :null,
                 //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
                 //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
                 //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
@@ -212,10 +195,10 @@ const listPayments = async function (req, reply){
                 // }
 
                 let userInfo = allUsers.find(user=>{
-                    return String(user._id) == String(reserve.employeeId)
+                    return String(user._id) == String(payment.employeeId)
                 })
                 let userId={
-                    _id:reserve.employeeId ? reserve.employeeId :null,
+                    _id:payment.employeeId ? payment.employeeId :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
                     email : userInfo && userInfo.email ? userInfo.email : "",
@@ -223,28 +206,28 @@ const listPayments = async function (req, reply){
                 }
 
                 let payments = allPayments.filter(payment=>{
-                    return ( String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==false);
+                    return ( String(payment.paymentId) == String(payment._id) && payment.isDiscarded==false);
                 })
                 
-                reserve.totalPaid = _.sumBy(payments, (payment) => {
+                payment.totalPaid = _.sumBy(payments, (payment) => {
                     return Number(payment.amount.toFixed(2))
                 });
 
-                reserve.pendingBalance = reserve.totalSale - reserve.totalPaid;
+                payment.pendingBalance = payment.totalSale - payment.totalPaid;
 
                 let cancelledPayments = allPayments.filter(payment=>{
-                    return ( String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==true);
+                    return ( String(payment.paymentId) == String(payment._id) && payment.isDiscarded==true);
                 })
 
-                reserve.branchId=branchId;                         
-                reserve.employeeId=userId;         
-                reserve.payments=payments; 
-                reserve.cancelledPayments=cancelledPayments;        
+                payment.branchId=branchId;                         
+                payment.employeeId=userId;         
+                payment.payments=payments; 
+                payment.cancelledPayments=cancelledPayments;        
 
-                // reserve.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                // reserve.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
-                // delete reserve.branchId;                
-                reservesPaginated.docs.push(reserve)
+                // payment.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                // payment.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                // delete payment.branchId;                
+                paymentsPaginated.docs.push(payment)
                 
 
                 
@@ -258,8 +241,8 @@ const listPayments = async function (req, reply){
         
     }
     else{
-        // branchSearch = await reserve.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
-        // reservesPaginated.totalDocs = branchSearch.length;
+        // branchSearch = await Payment.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // paymentsPaginated.totalDocs = branchSearch.length;
         let diacriticSearch = diacriticSensitiveRegex(req.query.search);
         let searchString = '.*'+diacriticSearch+'.*';
 
@@ -375,7 +358,7 @@ const listPayments = async function (req, reply){
                 '$lookup': {
                     'from': 'payments', 
                     'localField': '_id', 
-                    'foreignField': 'reserveId', 
+                    'foreignField': 'paymentId', 
                     'as': 'paymentsInfo'
                   }
              },
@@ -504,17 +487,17 @@ const listPayments = async function (req, reply){
                 sortQuery['$sort']['name']=1;
             }
             aggregateQuery.push(sortQuery)        
-        let reservesSearch = await Reserve.aggregate(aggregateQuery);
-        reservesPaginated.docs = reservesSearch;
-        reservesPaginated.totalDocs = reservesPaginated.docs.length
+        let paymentsSearch = await Payment.aggregate(aggregateQuery);
+        paymentsPaginated.docs = paymentsSearch;
+        paymentsPaginated.totalDocs = paymentsPaginated.docs.length
 
-        reservesPaginated.page=req.query.page ? req.query.page : 1;
-        reservesPaginated.perPage=req.query.perPage ? req.query.perPage :reservesPaginated.totalDocs;
-        let limit = req.query.perPage ? req.query.perPage : reservesPaginated.totalDocs;
+        paymentsPaginated.page=req.query.page ? req.query.page : 1;
+        paymentsPaginated.perPage=req.query.perPage ? req.query.perPage :paymentsPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : paymentsPaginated.totalDocs;
         let page = req.query.page ? req.query.page : 1;
-        reservesPaginated.docs=paginateArray(reservesSearch,limit,page);
+        paymentsPaginated.docs=paginateArray(paymentsSearch,limit,page);
         
-        reservesPaginated.docs.forEach(doc=>{
+        paymentsPaginated.docs.forEach(doc=>{
             if (!doc.branchId || !doc.branchId._id){
                 doc.branchId ={
                     _id:null,
@@ -528,10 +511,10 @@ const listPayments = async function (req, reply){
             
             doc.pendingBalance=doc.totalSale-doc.totalPaid;
         })
-        reservesPaginated.totalPages = Math.ceil(reservesPaginated.totalDocs / reservesPaginated.perPage);
+        paymentsPaginated.totalPages = Math.ceil(paymentsPaginated.totalDocs / paymentsPaginated.perPage);
 
     }
-    reservesPaginated.docs.forEach(doc=>{
+    paymentsPaginated.docs.forEach(doc=>{
         if(doc.isStarted== true && doc.expireDate){
             let currentDate = new Date ()
             let remainingTime = minutesDiff (currentDate,doc.expireDate);
@@ -541,17 +524,17 @@ const listPayments = async function (req, reply){
         
 
     })
-    let docs = JSON.stringify(reservesPaginated.docs);    
-    var reserves = JSON.parse(docs);
+    let docs = JSON.stringify(paymentsPaginated.docs);    
+    var payments = JSON.parse(docs);
     
 
     return reply.code(200).send({
         status: 'success',
-        data: reserves,
-        page: reservesPaginated.page,
-        perPage:reservesPaginated.perPage,
-        totalDocs: reservesPaginated.totalDocs,
-        totalPages: reservesPaginated.totalPages,
+        data: payments,
+        page: paymentsPaginated.page,
+        perPage:paymentsPaginated.perPage,
+        totalDocs: paymentsPaginated.totalDocs,
+        totalPages: paymentsPaginated.totalPages,
 
     })
 

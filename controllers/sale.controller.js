@@ -361,8 +361,7 @@ const saleCreate = async function (req, reply){
         //{path:'modelId', select:'_id name'},
         {path:'employeeId', select:'_id fullName email'},
         //{path:'clientId', select:'_id fullName email phone'}
-    ]); 
-   
+    ]);          
  
 
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
