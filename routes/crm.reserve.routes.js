@@ -120,8 +120,7 @@ const reserveDef = {
                 amount:{type:'number'},
                 paid:{type:'string'},
                 paymentType:{type:'string'},
-                cancellationReason:{type:'string'},
-                cancelledBy:{
+                collectedBy:{
                     type:'object',
                     properties:{
                         _id:{type:'string'},
@@ -129,7 +128,7 @@ const reserveDef = {
                         email:{type:'string'},
                         phone:{type:'string'}
                     }
-                }, 
+                },  
 
             }
 

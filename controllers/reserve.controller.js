@@ -118,6 +118,7 @@ const reserveCreate = async function (req,reply){
             }
         }
     } 
+    const decoded = await req.jwtVerify()  
     
     this.newReserve={};
     this.newPayment={};
@@ -259,7 +260,8 @@ const reserveCreate = async function (req,reply){
             reserveId:reserve._id,
             amount:req.body.amount,
             paidOn:new Date(),
-            paymentType:req.body.paymentType.toLowerCase()
+            paymentType:req.body.paymentType.toLowerCase(),
+            collectedBy:decoded._id           
     
         }
         
@@ -1484,8 +1486,8 @@ const reserveAddPayment = async function (req,reply){
         })
     }
 
-    this.newPayment={};
-    
+    const decoded = await req.jwtVerify()  
+    this.newPayment={};    
     let db = await mongoose.startSession()
     .then(async session => {
         await session.withTransaction(async () => {             
@@ -1499,7 +1501,8 @@ const reserveAddPayment = async function (req,reply){
             reserveId:req.params.reserveId,
             amount:req.body.amount,
             paymentType:req.body.paymentType.toLowerCase(),
-            paidOn:new Date(req.body.paidOn)              
+            paidOn:new Date(req.body.paidOn),
+            collectedBy:decoded._id,              
         }
         
         const payment = new Payment(paymentInput);

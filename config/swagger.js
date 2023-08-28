@@ -325,7 +325,7 @@ exports.options = {
             modelId:{type:'string'}, 
             clientId:{type:'string'},
             branchId:{type:'string'},
-            employeeId:{type:'string'},
+            collectedBy:{type:'string'},
             color:{type:'string'}, 
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}           

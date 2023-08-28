@@ -103,7 +103,9 @@ const saleCreate = async function (req, reply){
 
             }
         }
-    }  
+    } 
+    
+    const decoded = await req.jwtVerify();
     
     this.newSale = {};
     this.newPayment = {};
@@ -243,7 +245,8 @@ const saleCreate = async function (req, reply){
             saleId:sale._id,
             amount:inputs.totalSale,
             paidOn:new Date(),
-            paymentType:req.body.paymentType.toLowerCase()
+            paymentType:req.body.paymentType.toLowerCase(),
+            collectedBy:decoded._id
     
         }
         

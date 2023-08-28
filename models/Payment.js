@@ -27,6 +27,10 @@ const paymentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,              
         ref: "Reserve", 
     },
+    collectedBy:{
+        type: mongoose.Schema.Types.ObjectId,              
+        ref: "Users", 
+    },
     amount: {
         type: Number        
     },
