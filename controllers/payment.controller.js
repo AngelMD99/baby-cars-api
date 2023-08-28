@@ -205,24 +205,8 @@ const listPayments = async function (req, reply){
 
                 }
 
-                let payments = allPayments.filter(payment=>{
-                    return ( String(payment.paymentId) == String(payment._id) && payment.isDiscarded==false);
-                })
-                
-                payment.totalPaid = _.sumBy(payments, (payment) => {
-                    return Number(payment.amount.toFixed(2))
-                });
-
-                payment.pendingBalance = payment.totalSale - payment.totalPaid;
-
-                let cancelledPayments = allPayments.filter(payment=>{
-                    return ( String(payment.paymentId) == String(payment._id) && payment.isDiscarded==true);
-                })
-
                 payment.branchId=branchId;                         
-                payment.employeeId=userId;         
-                payment.payments=payments; 
-                payment.cancelledPayments=cancelledPayments;        
+                payment.employeeId=userId;                        
 
                 // payment.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
                 // payment.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
