@@ -1399,7 +1399,34 @@ const reserveList = async function (req,reply){
 }
 
 
-const reserveUpdate = async function (req,reply){    
+const reserveAppUpdate = async function (req,reply){  
+    const reserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-updatedAt -__v');
+    if (!reserve){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado no registrado'
+        })        
+    }   
+
+    if (reserve.isCancelled==true){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Apartado se encuentra cancelado'
+        })        
+    }
+
+
+    let updatedReserve = await Reserve.findOne({_id:req.params.reserveId, branchId:req.params.id}).select('-updatedAt -__v');
+    updatedReserve.client.fullName = req.body.client && req.body.client.fullName ? req.body.client.fullName : reserve.client.fullName;
+    updatedReserve.client.email = req.body.client && req.body.client.email ? req.body.client.email : reserve.client.email;
+    updatedReserve.client.phone = req.body.phone && req.body.client.phone ? req.body.client.phone : reserve.client.phone;
+    await updatedReserve.save();
+
+    return reply.code(200).send({
+        status: 'success',
+        message:'Datos del cliente en el apartado '+updatedReserve.folio+' actualizados.'
+    })    
+    
     
 }
 
@@ -1562,4 +1589,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { reserveCreate, reserveDelete, reserveList, reserveShow, reserveUpdate, reserveAddPayment, reserveCancel, reserveShowCrm}
+module.exports = { reserveCreate, reserveDelete, reserveList, reserveShow, reserveAppUpdate, reserveAddPayment, reserveCancel, reserveShowCrm}

@@ -1,5 +1,5 @@
 const Branch = require('../models/Branch');
-const { reserveCreate, reserveAddPayment, reserveShow, reserveList  } = require('../controllers/reserve.controller');
+const { reserveCreate, reserveAddPayment, reserveShow, reserveList, reserveAppUpdate  } = require('../controllers/reserve.controller');
 const bcrypt = require('bcrypt');
 const errResponse = {
     type: 'object',
@@ -297,7 +297,15 @@ const putSinglePaymentReserve={
         // },
          params:{
             id:{type:'string'}
-         },         
+         }, 
+         body: {
+            type: 'object',            
+            properties: {                                
+                paymentType:{type:'string'},
+                amount:{type:'number'},
+                paidOn:{type:'string'} 
+            },
+        },        
          response: {
             200: {
                 type:'object',
@@ -315,12 +323,55 @@ const putSinglePaymentReserve={
     
 }
 
+const putReserveOpts={
+    schema: {
+         description:"Allows to update only the client data for a reserve registered with the reserveId provided in the URL",
+         tags:['Reserves'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         }, 
+         body: {
+            type: 'object',            
+            properties: {
+                client:{
+                    type:'object',
+                    properties:{
+                        fullName:{type:'string'},
+                        email:{type:'number'},
+                        phone:{type:'string'} 
+
+                    }
+                },                                
+                
+            },
+        },        
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reserveAppUpdate,
+    
+}
+
 
 function appReserveRoutes(fastify, options, done) {
 
     fastify.post('/app/:id/reserves', postReserveUpOpts)
     fastify.get('/app/:id/reserves', getBranchReservesOpts)
     fastify.get('/app/:id/reserves/:reserveId', getSingleReserveOpts)
+    fastify.put('/app/:id/reserves/:reserveId', putReserveOpts)
     fastify.put('/app/:branchId/reserves/:reserveId/payments', putSinglePaymentReserve)
     // fastify.get('/app/:id/sales', getBranchSalesOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
