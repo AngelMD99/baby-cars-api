@@ -702,6 +702,7 @@ const userUpdate = async function (req, reply){
     inputs.password = req.body.password && req.body.password !="" ? hash : currentUser.password;
     inputs.role = req.body.role ? req.body.role : currentUser.role;    
     inputs.email = req.body.email ? req.body.email : currentUser.email;
+    inputs.phone = req.body.phone ? req.body.phone : currentUser.phone;
     inputs.branchId = req.body.branchId ? req.body.branchId : currentUser.branchId;    
     let updatedUser = await User.findByIdAndUpdate({_id: req.params.id},inputs,{
         new:true,

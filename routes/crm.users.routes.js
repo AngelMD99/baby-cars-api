@@ -19,6 +19,7 @@ const userDef={
         _id:{type:'string'},                       
         fullName:{type:'string'},
         email:{type:'string'},
+        phone:{type:'string'},
         contactLastName:{type:'string'},
         role:{type:'string'},
         branchId:{

@@ -1020,7 +1020,7 @@ const reserveList = async function (req,reply){
             }
             else{
                 sortOrder ={
-                    createdAt:1
+                    createdAt:-1
                 }
             }
             reservesPaginated.docs=[]
@@ -1487,6 +1487,7 @@ const reserveAddPayment = async function (req,reply){
     }
 
     const decoded = await req.jwtVerify()  
+    console.log("DECODED: ",)
     this.newPayment={};    
     let db = await mongoose.startSession()
     .then(async session => {

@@ -628,7 +628,7 @@ const saleList = async function (req, reply){
             }
             else{
                 sortOrder ={
-                    createdAt:1
+                    createdAt:-1
                 }
             }
             salesPaginated.docs=[]

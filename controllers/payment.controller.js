@@ -1,5 +1,8 @@
 const Payment = require('../models/Payment');
 const Sale = require('../models/Sale');
+const Reserve = require('../models/Reserve');
+const Branch = require('../models/Branch');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
@@ -85,6 +88,8 @@ const listPayments = async function (req, reply){
     if(!req.query.search){         
         //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
+        let allSales = await Sale.find({});
+        let allReserves = await Reserve.find({});
         //let allModels = await Modelo.find({});
         //let allClients = await Client.find({});
         let allUsers = await User.find({});        
@@ -111,6 +116,24 @@ const listPayments = async function (req, reply){
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
                 }
+                if(payment.saleId){
+                    let saleInfo = allSales.find(sale=>{
+                        return String(sale._id) == String(payment.saleId)
+                    })
+                    if(saleInfo){
+                        newObj.saleId=saleInfo;
+                    }
+
+                }
+                if(payment.reserveId){
+                    let reserveInfo = allReserves.find(reserve=>{
+                        return String(reserve._id) == String(payment.reserveId)
+                    })
+                    if(reserveInfo){
+                        newObj.reserveId=reserveInfo;
+                    }
+                    
+                }
                 // let modelInfo = allModels.find(modelo=>{
                 //     return String(modelo._id) == String(payment.modelId)
                 // })
@@ -133,9 +156,9 @@ const listPayments = async function (req, reply){
                 // }
 
                 let userInfo = allUsers.find(user=>{
-                    return String(user._id) == String(payment.employeeId)
+                    return String(user._id) == String(payment.collectedBy)
                 })
-                newObj.employeeId={
+                newObj.collectedBy={
                     _id:payment.employeeId ? payment.employeeId :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
@@ -160,7 +183,7 @@ const listPayments = async function (req, reply){
             }
             else{
                 sortOrder ={
-                    createdAt:1
+                    createdAt:-1
                 }
             }
             paymentsPaginated.docs=[]
@@ -195,10 +218,11 @@ const listPayments = async function (req, reply){
                 // }
 
                 let userInfo = allUsers.find(user=>{
-                    return String(user._id) == String(payment.employeeId)
+                    return String(user._id) == String(payment.collectedBy)
                 })
+                if(userInfo){console.log("USER INFO: ",userInfo, "PHONE: ",userInfo.phone)}
                 let userId={
-                    _id:payment.employeeId ? payment.employeeId :null,
+                    _id:payment.collectedBy ? payment.collectedBy :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
                     email : userInfo && userInfo.email ? userInfo.email : "",
@@ -206,7 +230,25 @@ const listPayments = async function (req, reply){
                 }
 
                 payment.branchId=branchId;                         
-                payment.employeeId=userId;                        
+                payment.collectedBy=userId;  
+                if(payment.saleId){
+                    let saleInfo = allSales.find(sale=>{
+                        return String(sale._id) == String(payment.saleId)
+                    })
+                    if(saleInfo){
+                        payment.saleId=saleInfo;
+                    }
+
+                }
+                if(payment.reserveId){
+                    let reserveInfo = allReserves.find(reserve=>{
+                        return String(reserve._id) == String(payment.reserveId)
+                    })
+                    if(reserveInfo){
+                        payment.reserveId=reserveInfo;
+                    }
+                    
+                }                      
 
                 // payment.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
                 // payment.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
