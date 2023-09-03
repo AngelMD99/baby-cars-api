@@ -33,6 +33,7 @@ const listPayments = async function (req, reply){
     if(req.query.collectedBy){
         searchQuery['collectedBy']=req.query.collectedBy
     }
+
     // if(req.query.modelId){
     //     searchQuery['products.modelId']=req.query.modelId
     // }
@@ -85,7 +86,15 @@ const listPayments = async function (req, reply){
         options.sort={"createdAt":-1}
     }
     let paymentsPaginated={};
-    if(!req.query.search){         
+    if(!req.query.search){  
+        let modelFilter=false;
+        let colorFilter=false;
+        if(req.query.modelId && req.query.modelId!=""){
+            modelFilter=true;
+        }
+        if(req.query.color && req.query.color!=""){
+            colorFilter=true;
+        }
         //let sortOrder={name:1}       
         let allBranches = await Branch.find({});
         let allSales = await Sale.find({});
@@ -133,33 +142,13 @@ const listPayments = async function (req, reply){
                         newObj.reserveId=reserveInfo;
                     }
                     
-                }
-                // let modelInfo = allModels.find(modelo=>{
-                //     return String(modelo._id) == String(payment.modelId)
-                // })
-                // newObj.modelId={
-                //     _id:payment.modelId ? payment.modelId :null,
-                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",
-                //     code : modelInfo && modelInfo.code ? modelInfo.code : "",
-
-                // }
-
-                // let clientInfo = allClients.find(client=>{
-                //     return String(client._id) == String(payment.clientId)
-                // })
-                // newObj.clientId={
-                //     _id:payment.clientId ? payment.clientId :null,
-                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
-                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
-                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
-
-                // }
+                }                
 
                 let userInfo = allUsers.find(user=>{
                     return String(user._id) == String(payment.collectedBy)
                 })
                 newObj.collectedBy={
-                    _id:payment.employeeId ? payment.employeeId :null,
+                    _id:payment.collectedBy ? payment.collectedBy :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
                     email : userInfo && userInfo.email ? userInfo.email : "",
@@ -167,12 +156,84 @@ const listPayments = async function (req, reply){
                 }                
                 
                 delete payment.branchId;                                
-                delete payment.employeeId;                
-                paymentsPaginated.docs.push(newObj)                               
+                delete payment.employeeId;  
+                if(modelFilter == false && colorFilter == false){
+                    paymentsPaginated.docs.push(newObj) 
+                }
+                else{
+                    //console.log("FILTERS")
+                    if(modelFilter == true && colorFilter == true){ 
+                        console.log("BOTH FILTERS")
+                        if(newObj.saleId){
+                            if(newObj.saleId.products && String(newObj.saleId.products.modelId) == String(req.query.modelId)  && newObj.saleId.products.color && newObj.saleId.products.color == req.query.color.toLowerCase() ){
+                                paymentsPaginated.docs.push(newObj) 
+                            }
+
+                        }
+                        if(newObj.reserveId){
+                            if(newObj.reserveId.products && String(newObj.reserveId.products.modelId) == String(req.query.modelId)  && newObj.reserveId.products.color && newObj.reserveId.products.color == req.query.color.toLowerCase() ){
+                                paymentsPaginated.docs.push(newObj) 
+                            }                            
+                        }
+                    }
+
+                    else{
+                        
+                        if(modelFilter == true && colorFilter == false){
+                            console.log("JUST MODEL FILTER")
+                            if(newObj.saleId){
+                                if(newObj.saleId.products  ){
+                                    let modelFilter = newObj.saleId.products.find(item=>{
+                                        return String(item.modelId) == String(req.query.modelId)
+                                    })                                    
+                                    if(modelFilter){
+                                        paymentsPaginated.docs.push(newObj) 
+                                    }                                    
+                                }   
+                                
+    
+                            }
+                            if(newObj.reserveId){
+                                let modelFilter = newObj.reserveId.products.find(item=>{
+                                    return String(item.modelId) == String(req.query.modelId)
+                                })                                    
+                                if(modelFilter){
+                                    paymentsPaginated.docs.push(newObj) 
+                                }                                   
+                            }
+                        }
+                        else{
+                            if(newObj.saleId){                             
+                                if(newObj.saleId.products  ){
+                                    let colorFilter = newObj.saleId.products.find(item=>{
+                                        return item.color.toLowerCase() == req.query.color.toLowerCase()
+                                    })                                    
+                                    if(colorFilter){
+                                        paymentsPaginated.docs.push(newObj) 
+                                    }                                    
+                                }    
+                            }
+                            if(newObj.reserveId){
+                                if(newObj.reserveId.products  ){
+                                    let colorFilter = newObj.reserveId.products.find(item=>{
+                                        return item.color.toLowerCase() == req.query.color.toLowerCase()
+                                    })
+                                    if(colorFilter){
+                                        paymentsPaginated.docs.push(newObj) 
+                                    }                                    
+                                }    
+                            }
+
+
+                        }
+                    
+                    }
+                }
+                
             });
             paymentsPaginated.page=paymentsQuery.page;
             paymentsPaginated.perPage=paymentsQuery.limit;
-            paymentsPaginated.totalDocs=paymentsQuery.totalDocs;
+            paymentsPaginated.totalDocs=paymentsQuery.length;
             paymentsPaginated.totalPages=paymentsQuery.totalPages;
         }
         else{
@@ -197,30 +258,10 @@ const listPayments = async function (req, reply){
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
                 } 
-                // let modelInfo = allModels.find(modelo=>{
-                //     return String(modelo._id) == String(payment.modelId)
-                // }) 
-                // let modelId={
-                //     _id:payment.modelId ? payment.modelId :null,
-                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
-                // }
-                
-                // let clientInfo = allClients.find(client=>{
-                //     return String(client._id) == String(payment.clientId)
-                // })
-
-                // let clientId={
-                //     _id:payment.clientId ? payment.clientId :null,
-                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
-                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
-                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
-
-                // }
-
+  
                 let userInfo = allUsers.find(user=>{
                     return String(user._id) == String(payment.collectedBy)
                 })
-                if(userInfo){console.log("USER INFO: ",userInfo, "PHONE: ",userInfo.phone)}
                 let userId={
                     _id:payment.collectedBy ? payment.collectedBy :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
@@ -250,14 +291,59 @@ const listPayments = async function (req, reply){
                     
                 }                      
 
-                // payment.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                // payment.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
-                // delete payment.branchId;                
-                paymentsPaginated.docs.push(payment)
-                
+                if(modelFilter == false && colorFilter == false){
+                    paymentsPaginated.docs.push(payment) 
+                }
+                else{
+                    if(modelFilter == true && colorFilter == true){ 
+                        if(newObj.saleId){
+                            if(newObj.saleId.products && String(newObj.saleId.products.modelId) == String(req.query.modelId)  && newObj.saleId.products.color && newObj.saleId.products.color == req.body.query.toLowerCase() ){
+                                paymentsPaginated.docs.push(payment) 
+                            }
 
+                        }
+                        if(newObj.reserveId){
+                            if(newObj.reserveId.products && String(newObj.reserveId.products.modelId) == String(req.query.modelId)  && newObj.reserveId.products.color && newObj.reserveId.products.color == req.query.color.toLowerCase() ){
+                                paymentsPaginated.docs.push(payment) 
+                            }                            
+                        }
+                    }
+
+                    else{
+                        if(modelFilter == true && colorFilter == false){
+                            if(newObj.saleId){
+                                if(newObj.saleId.products && String(newObj.saleId.products.modelId) == String(req.query.modelId) ){
+                                    paymentsPaginated.docs.push(payment) 
+                                }
+    
+                            }
+                            if(newObj.reserveId){
+                                if(newObj.reserveId.products && String(newObj.reserveId.products.modelId) == String(req.query.modelId) ){
+                                    paymentsPaginated.docs.push(payment) 
+                                }                            
+                            }
+                        }
+                        else{
+                            if(newObj.saleId){
+                                if(newObj.saleId.products.color && newObj.saleId.products.color == req.body.query.toLowerCase() ){
+                                    paymentsPaginated.docs.push(payment) 
+                                }
+    
+                            }
+                            if(newObj.reserveId){
+                                if(newObj.reserveId.products.color && newObj.reserveId.products.color == req.body.query.toLowerCase() ){
+                                    paymentsPaginated.docs.push(payment) 
+                                }                            
+                            }
+                        }
+                    
+                    }
+                }                            
+                //paymentsPaginated.docs.push(payment)               
                 
             });
+            paymentsPaginated.totalDocs=paymentsPaginated.length;
+
         }
         
         
@@ -290,25 +376,11 @@ const listPayments = async function (req, reply){
                 }
                 })
           }
-          if(req.query.modelId){
-            aggregateQuery.push({
-                '$match':{
-                    modelId:new ObjectId(req.query.modelId)
-                }
-                })
-          }
 
-          if(req.query.clientId){
+          if(req.query.collectedBy){
             aggregateQuery.push({
                 '$match':{
-                    clientId:new ObjectId(req.query.clientId)
-                }
-                })
-          }
-          if(req.query.userId){
-            aggregateQuery.push({
-                '$match':{
-                    userId:new ObjectId(req.query.userId)
+                    collectedBy:new ObjectId(req.query.userId)
                 }
                 })
           }
@@ -375,17 +447,25 @@ const listPayments = async function (req, reply){
              {
                 '$lookup': {
                     'from': 'users', 
-                    'localField': 'employeeId', 
+                    'localField': 'collectedBy', 
                     'foreignField': '_id', 
                     'as': 'employeeInfo'
                   }
              },
              {
                 '$lookup': {
-                    'from': 'payments', 
-                    'localField': '_id', 
-                    'foreignField': 'paymentId', 
-                    'as': 'paymentsInfo'
+                    'from': 'sales', 
+                    'localField': 'saleId', 
+                    'foreignField': '_Id', 
+                    'as': 'saleInfo'
+                  }
+             },
+             {
+                '$lookup': {
+                    'from': 'reserves', 
+                    'localField': '', 
+                    'foreignField': '_Id', 
+                    'as': 'saleInfo'
                   }
              },
 
