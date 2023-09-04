@@ -9,6 +9,8 @@ const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+var _ = require('lodash');
+
 
 const createPayment = async function (req, reply){
 
@@ -109,6 +111,7 @@ const listPayments = async function (req, reply){
                 let newObj={
                     _id:payment._id,
                     folio:payment.folio,
+                    operationType:payment.operationType,
                     client:payment.client,
                     products:payment.products,                    
                     totalSale:payment.totalSale,
@@ -160,27 +163,36 @@ const listPayments = async function (req, reply){
                 if(modelFilter == false && colorFilter == false){
                     paymentsPaginated.docs.push(newObj) 
                 }
-                else{
-                    //console.log("FILTERS")
+                else{                    
                     if(modelFilter == true && colorFilter == true){ 
-                        console.log("BOTH FILTERS")
+                        
                         if(newObj.saleId){
-                            if(newObj.saleId.products && String(newObj.saleId.products.modelId) == String(req.query.modelId)  && newObj.saleId.products.color && newObj.saleId.products.color == req.query.color.toLowerCase() ){
-                                paymentsPaginated.docs.push(newObj) 
+                            if(newObj.saleId.products){
+                                let bothFilters = newObj.saleId.products.find( item =>{
+                                    return String(item.modelId) == String(req.query.modelId) && item.color.toLowerCase() == req.query.color.toLowerCase()
+                                })                            
+                                if (bothFilters){
+                                    paymentsPaginated.docs.push(newObj) 
+                                }                              
+                           
                             }
 
                         }
                         if(newObj.reserveId){
-                            if(newObj.reserveId.products && String(newObj.reserveId.products.modelId) == String(req.query.modelId)  && newObj.reserveId.products.color && newObj.reserveId.products.color == req.query.color.toLowerCase() ){
-                                paymentsPaginated.docs.push(newObj) 
+                            if(newObj.reserveId.products){
+                                let bothFilters = newObj.reserveId.products.find( item =>{
+                                    return String(item.modelId) == String(req.query.modelId) && item.color.toLowerCase() == req.query.color.toLowerCase()
+                                })                            
+                                if (bothFilters){
+                                    paymentsPaginated.docs.push(newObj) 
+                                }                                                         
                             }                            
                         }
                     }
 
                     else{
                         
-                        if(modelFilter == true && colorFilter == false){
-                            console.log("JUST MODEL FILTER")
+                        if(modelFilter == true && colorFilter == false){                            
                             if(newObj.saleId){
                                 if(newObj.saleId.products  ){
                                     let modelFilter = newObj.saleId.products.find(item=>{
@@ -294,51 +306,84 @@ const listPayments = async function (req, reply){
                 if(modelFilter == false && colorFilter == false){
                     paymentsPaginated.docs.push(payment) 
                 }
-                else{
+                else{                    
                     if(modelFilter == true && colorFilter == true){ 
-                        if(newObj.saleId){
-                            if(newObj.saleId.products && String(newObj.saleId.products.modelId) == String(req.query.modelId)  && newObj.saleId.products.color && newObj.saleId.products.color == req.body.query.toLowerCase() ){
-                                paymentsPaginated.docs.push(payment) 
+                        
+                        if(payment.saleId){
+                            if(payment.saleId.products){
+                                let bothFilters = payment.saleId.products.find( item =>{
+                                    return String(item.modelId) == String(req.query.modelId) && item.color.toLowerCase() == req.query.color.toLowerCase()
+                                })                            
+                                if (bothFilters){
+                                    paymentsPaginated.docs.push(payment) 
+                                }                              
+                           
                             }
 
                         }
-                        if(newObj.reserveId){
-                            if(newObj.reserveId.products && String(newObj.reserveId.products.modelId) == String(req.query.modelId)  && newObj.reserveId.products.color && newObj.reserveId.products.color == req.query.color.toLowerCase() ){
-                                paymentsPaginated.docs.push(payment) 
+                        if(payment.reserveId){
+                            if(payment.reserveId.products){
+                                let bothFilters = payment.reserveId.products.find( item =>{
+                                    return String(item.modelId) == String(req.query.modelId) && item.color.toLowerCase() == req.query.color.toLowerCase()
+                                })                            
+                                if (bothFilters){
+                                    paymentsPaginated.docs.push(payment) 
+                                }                                                         
                             }                            
                         }
                     }
 
                     else{
-                        if(modelFilter == true && colorFilter == false){
-                            if(newObj.saleId){
-                                if(newObj.saleId.products && String(newObj.saleId.products.modelId) == String(req.query.modelId) ){
-                                    paymentsPaginated.docs.push(payment) 
-                                }
+                        
+                        if(modelFilter == true && colorFilter == false){                            
+                            if(payment.saleId){
+                                if(payment.saleId.products  ){
+                                    let modelFilter = payment.saleId.products.find(item=>{
+                                        return String(item.modelId) == String(req.query.modelId)
+                                    })                                    
+                                    if(modelFilter){
+                                        paymentsPaginated.docs.push(payment) 
+                                    }                                    
+                                }   
+                                
     
                             }
-                            if(newObj.reserveId){
-                                if(newObj.reserveId.products && String(newObj.reserveId.products.modelId) == String(req.query.modelId) ){
+                            if(payment.reserveId){
+                                let modelFilter = payment.reserveId.products.find(item=>{
+                                    return String(item.modelId) == String(req.query.modelId)
+                                })                                    
+                                if(modelFilter){
                                     paymentsPaginated.docs.push(payment) 
-                                }                            
+                                }                                   
                             }
                         }
                         else{
-                            if(newObj.saleId){
-                                if(newObj.saleId.products.color && newObj.saleId.products.color == req.body.query.toLowerCase() ){
-                                    paymentsPaginated.docs.push(payment) 
-                                }
-    
+                            if(payment.saleId){                             
+                                if(payment.saleId.products  ){
+                                    let colorFilter = payment.saleId.products.find(item=>{
+                                        return item.color.toLowerCase() == req.query.color.toLowerCase()
+                                    })                                    
+                                    if(colorFilter){
+                                        paymentsPaginated.docs.push(payment) 
+                                    }                                    
+                                }    
                             }
                             if(newObj.reserveId){
-                                if(newObj.reserveId.products.color && newObj.reserveId.products.color == req.body.query.toLowerCase() ){
-                                    paymentsPaginated.docs.push(payment) 
-                                }                            
+                                if(newObj.reserveId.products  ){
+                                    let colorFilter = newObj.reserveId.products.find(item=>{
+                                        return item.color.toLowerCase() == req.query.color.toLowerCase()
+                                    })
+                                    if(colorFilter){
+                                        paymentsPaginated.docs.push(newObj) 
+                                    }                                    
+                                }    
                             }
+
+
                         }
                     
                     }
-                }                            
+                }
                 //paymentsPaginated.docs.push(payment)               
                 
             });
@@ -371,10 +416,9 @@ const listPayments = async function (req, reply){
           if(!req.params.id && req.query.branchId){
             aggregateQuery.push({
                 '$match':{
-                    branchId:new ObjectId(req.query.branchId),
-                    isStarted:true
+                    branchId:new ObjectId(req.query.branchId)
                 }
-                })
+            })
           }
 
           if(req.query.collectedBy){
@@ -384,13 +428,7 @@ const listPayments = async function (req, reply){
                 }
                 })
           }
-          if(req.query.color){
-            aggregateQuery.push({
-                '$match':{
-                    userId:new ObjectId(req.query.color)
-                }
-                })
-          }
+
 
           if (req.query.initialDate!=null && req.query.finalDate!=null){                    
             let initialDay=new Date(req.query.initialDate);
@@ -456,16 +494,16 @@ const listPayments = async function (req, reply){
                 '$lookup': {
                     'from': 'sales', 
                     'localField': 'saleId', 
-                    'foreignField': '_Id', 
+                    'foreignField': '_id', 
                     'as': 'saleInfo'
                   }
              },
              {
                 '$lookup': {
                     'from': 'reserves', 
-                    'localField': '', 
-                    'foreignField': '_Id', 
-                    'as': 'saleInfo'
+                    'localField': 'reserveId', 
+                    'foreignField': '_id', 
+                    'as': 'reserveInfo'
                   }
              },
 
@@ -474,7 +512,8 @@ const listPayments = async function (req, reply){
                 '$project': {
                   'isDeleted':1,
                   //'branchId': 1,                   
-                  'folio': 1,                   
+                  'folio': 1, 
+                  'operationType':1,
                   'branchId._id': {
                     '$first': '$branchInfo._id'
                   },
@@ -483,103 +522,177 @@ const listPayments = async function (req, reply){
                   } ,
                   'branchId.name': {
                     '$first': '$branchInfo.name'
-                  },                  
-                  'client':1,                  
-                  'employeeId._id': {
+                  },                                    
+                  'collectedBy._id': {
                     '$first': '$employeeInfo._id'
                   },
-                  'employeeId.fullName': {
+                  'collectedBy.fullName': {
                     '$first': '$employeeInfo.fullName'
                   }, 
-                  'employeeId.phone': {
+                  'collectedBy.phone': {
                     '$first': '$employeeInfo.phone'
                   }, 
-                  'employeeId.email': {
+                  'collectedBy.email': {
                     '$first': '$employeeInfo.email'
                   }, 
-                  'products':1,  
-                  'totalSale':1,
-                  'payments': {
-                    $filter: {
-                        input: "$paymentsInfo",
-                          as: "payment",
-                          cond: { $eq: [ "$$payment.isDiscarded", false ] },
-                       }
-                    },
-                   'cancelledPayments': {
-                      $filter: {
-                        input: "$paymentsInfo",
-                            as: "payment",
-                            cond: { $eq: [ "$$payment.isDiscarded", true ] },
-                         }
-                     },                              
+                  'saleId':{
+                    '$first':'$saleInfo'
+
+                  },
+                  'reserveId':{
+                    '$first':'$reserveInfo'
+
+                  },
+                  
                   'createdAt':1,
                   'updatedAt':1,                 
                 }
               }, 
               
-              {
-                '$match': {
-                  '$or': [                    
-                    
-                    {
-                        'branchId.code': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'branchId.name': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'products.modelName': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'products.color': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                    {
-                        'client.fullName': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'client.phone': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'client.email': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'userId.fullName': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },                    
-                    {
-                        'userId.email': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    }
 
-                  ]
-                }
-              }
+            )
+
+            if(req.query.modelId){
+                aggregateQuery.push({
+                    '$match':{
+                        '$or':[
+                            {
+                                'saleId.products.modelId':new ObjectId(req.query.modelId)
+                            },
+                            {
+                                'reserveId.products.modelId':new ObjectId(req.query.modelId)
+
+                            }
+                        ]
+                    }
+                })
+            }
+
+            if(req.query.color){
+                aggregateQuery.push({
+                    '$match':{
+                        '$or':[
+                            {
+                                'saleId.products.color':req.query.color.toLowerCase()
+                            },
+                            {
+                                'reserveId.products.color':req.query.color.toLowerCase()
+
+                            }
+                        ]
+                    }
+                })
+            }
+
+
+            aggregateQuery.push(
+                {
+                    '$match': {
+                      '$or': [                    
+                        
+                        {
+                            'branchId.code': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                        },
+                        {
+                            'branchId.name': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                        },
+                        {
+                            'saleId.folio': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+
+                        {
+                            'saleId.products.modelName': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'saleId.products.color': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'saleId.client.fullName': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'saleId.client.phone': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'saleId.client.email': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+
+                        {
+                            'reserveId.folio': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+
+                        {
+                            'reserveId.products.modelName': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'reserveId.products.color': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                          {
+                            'reserveId.client.fullName': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'reserveId.client.phone': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },
+                        {
+                            'reseverId.client.email': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                          },                        
+                        {
+                            'collectedBy.fullName': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                        },                    
+                        {
+                            'collectedBy.email': {
+                              '$regex': searchString, 
+                              '$options': 'i'
+                            }
+                        }
+    
+                      ]
+                    }
+                  }
             )
             let sortQuery={
                 '$sort':{}
@@ -611,25 +724,16 @@ const listPayments = async function (req, reply){
                     name:""
                 }
             }
-            doc.totalPaid= _.sumBy(doc.payments, (payment) => {
-                return Number(payment.amount.toFixed(2))
-            });
+            // doc.totalPaid= _.sumBy(doc.payments, (payment) => {
+            //     return Number(payment.amount.toFixed(2))
+            // });
             
-            doc.pendingBalance=doc.totalSale-doc.totalPaid;
+            // doc.pendingBalance=doc.totalSale-doc.totalPaid;
         })
         paymentsPaginated.totalPages = Math.ceil(paymentsPaginated.totalDocs / paymentsPaginated.perPage);
 
     }
-    paymentsPaginated.docs.forEach(doc=>{
-        if(doc.isStarted== true && doc.expireDate){
-            let currentDate = new Date ()
-            let remainingTime = minutesDiff (currentDate,doc.expireDate);
-            doc.remainingTime=remainingTime
-
-        }
-        
-
-    })
+    
     let docs = JSON.stringify(paymentsPaginated.docs);    
     var payments = JSON.parse(docs);
     

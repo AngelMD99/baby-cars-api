@@ -21,6 +21,7 @@ const paymentDef={
         email:{type:'string'},
         contactLastName:{type:'string'},
         role:{type:'string'},
+        operationType:{type:'string'},
         branchId:{
             type:'object',
             properties:{
