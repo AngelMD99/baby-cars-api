@@ -1,6 +1,7 @@
 const Balance = require('../models/Balance');
 const Status = require('../models/Status');
 const Branch = require('../models/Branch');
+const Rental = require('../models/Branch');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
@@ -9,8 +10,75 @@ const Modelo = require('../models/Modelo');
 const Car = require('../models/Car');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
+const { getOffsetSetting } = require('../controllers/base.controller');
 
-const balanceCreate = async function (req,reply){
+const balanceRentalsCreate = async function (req,reply){
+    let branchInfo = await Branch.findOne({_id:req.params.id, isDeleted:false})
+    if(!branchInfo){
+        if (!branchInfo){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'sucursal_no_encontrada'
+            })        
+        } 
+    }
+
+    let offset = await getOffsetSetting(); 
+    let today = new Date ();
+    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+        today.setHours(today.getHours() - offset);    
+        today.setHours(offset,0,0,0);    
+        today.setHours(offset, 0, 0, 0);
+    }
+    else{
+        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
+    }
+
+    let nextDay = addDays(today,1);
+    let searchQuery = {
+        isDeleted: false,
+        branchId:ObjectId(req.params.id),
+        createdAt:{"$gte": today,"$lte":nextDay},
+        paymentType: "Efectivo"			
+    };
+
+    let rentalsQuery = await Rental.find(searchQuery) 
+
+    const decoded = await req.jwtVerify();
+    let balanceObj={
+        balanceType:'rentals',
+        branchId:req.query.branchId,
+        userId: decoded._id,
+        loginDate:decoded.lastLogin,
+        logoutDate:new Date(),
+        amount:0,
+        total:0
+
+    };
+
+    if (rentalsQuery.length>0){
+        balanceObj.quantity=cashRentals.length
+        cashRentals.forEach(cashRental=>{
+        balanceObj.total = balanceObj.total + cashRental.planType.price
+        })           
+        
+    }
+
+    const balance = new Balance(balanceObj);
+    balance._id = new mongoose.Types.ObjectId();
+    await balance.save();
+    await balance.populate([
+        { path:'branchId',select:'name code'},
+        { path:'userId',select:'fullName email phone'}
+    ])
+
+    const balanceSavedObj = await balance.toObject()
+    delete balanceSavedObj._v;
+    reply.code(201).send({
+        status: 'success',
+        data:balanceSavedObj
+    })      
 
 }
 
@@ -76,4 +144,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { balanceCreate, balanceDelete, balanceList, balanceShow, balanceUpdate}
+module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate}
