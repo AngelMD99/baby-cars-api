@@ -33,6 +33,11 @@ const rentalSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Car", 
     },
+    userId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+
+    },
     planType:planSchema,   
     paymentType: {
         type: String,

@@ -71,6 +71,15 @@ const rentalDef = {
 
             }
         },
+        userId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'}
+            }            
+        },
         planType: { 
             type: 'object',
             properties:{

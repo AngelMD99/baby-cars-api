@@ -122,6 +122,7 @@ exports.options = {
             folio:{type:'boolean'},
             branchId:{type:'string'},
             carId:{type:'string'},
+            userId:{type:'string'},
             planType:{
                 type:'object',
                 properties:{

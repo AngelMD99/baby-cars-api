@@ -22,30 +22,17 @@ const balanceRentalsCreate = async function (req,reply){
             })        
         } 
     }
-
-    let offset = await getOffsetSetting(); 
-    let today = new Date ();
-    if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-        today.setHours(today.getHours() - offset);    
-        today.setHours(offset,0,0,0);    
-        today.setHours(offset, 0, 0, 0);
-    }
-    else{
-        today.setHours(0,0,0,0);
-        today.setHours(0, 0, 0, 0);
-    }
-
-    let nextDay = addDays(today,1);
+    const decoded = await req.jwtVerify();
+    let today = new Date ();    
     let searchQuery = {
         isDeleted: false,
         branchId:ObjectId(req.params.id),
-        createdAt:{"$gte": today,"$lte":nextDay},
+        createdAt:{"$gte": decoded.lastLogin,"$lte":today},
         paymentType: "Efectivo"			
     };
 
     let rentalsQuery = await Rental.find(searchQuery) 
-
-    const decoded = await req.jwtVerify();
+    
     let balanceObj={
         balanceType:'rentals',
         branchId:req.query.branchId,
@@ -54,7 +41,6 @@ const balanceRentalsCreate = async function (req,reply){
         logoutDate:new Date(),
         amount:0,
         total:0
-
     };
 
     if (rentalsQuery.length>0){

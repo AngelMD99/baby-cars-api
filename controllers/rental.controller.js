@@ -1,5 +1,6 @@
 const Rental = require('../models/Rental');
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const Car = require('../models/Car');
 const Modelo = require('../models/Modelo');
 const mongoose = require('mongoose');
@@ -10,6 +11,7 @@ let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 const { getOffsetSetting } = require('../controllers/base.controller');
 const { findOneAndDelete } = require('../models/Branch');
+const _ = require('mongoose-paginate-v2');
 
 const rentalCreate = async function (req, reply){
     if(!req.body.branchId){
@@ -100,22 +102,24 @@ const rentalCreate = async function (req, reply){
         //}
     //}
     let branchId = mongoose.Types.ObjectId(req.body.branchId);
-    let carId= mongoose.Types.ObjectId(req.body.carId);    
+    let carId= mongoose.Types.ObjectId(req.body.carId);   
+    const decoded = await req.jwtVerify();
     delete req.body.branchId;
     delete req.bodycarId;
     const rental = new Rental(req.body);    
     rental._id = mongoose.Types.ObjectId();
     rental.carId = carId;
     rental.branchId = branchId;
+    rental.userId = decoded._id;
     //let branchId = mongoose.Types.ObjectId(req.body.branchId)
     
     // let offset = req.headers.offset ? req.headers.offset : 6
     let offset = await getOffsetSetting();              
     let date = new Date ();
-    console.log("NEW DATE UTC : ",date)
+    //console.log("NEW DATE UTC : ",date)
     if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
          date.setHours(date.getHours() - offset);
-         console.log("DATE GMT ADJUSTED: ",date)
+         //console.log("DATE GMT ADJUSTED: ",date)
          date.setHours(offset,0,0,0);    
          // date.setHours(offset, 0, 0, 0);
     }
@@ -123,7 +127,7 @@ const rentalCreate = async function (req, reply){
          date.setHours(0,0,0,0);
          date.setHours(0, 0, 0, 0);
     }
-    console.log("CURRENT DATE AND TIME ZONE: ",date);
+    //console.log("CURRENT DATE AND TIME ZONE: ",date);
     let nextDay = addDays(date,1)
 
     let branchRentals = await Rental.find({
@@ -149,9 +153,10 @@ const rentalCreate = async function (req, reply){
     await rental.save()
     await rental.populate(
         [{path: 'branchId', select: 'name code'},
-        {path: 'carId', select: 'name ipAddress'}]
+        {path: 'carId', select: 'name ipAddress'},
+        {path: 'userId',select: 'fullName email phone'}
+        ]
         ); 
-      
     //await saveHistory(loggedUser,"CREATED","Branch",branch)
     activeCar.isStarted=true;
     activeCar.startDate = new Date(); 
@@ -173,7 +178,7 @@ const rentalCreate = async function (req, reply){
     //     delete rentalObj.carId;
     // }
     
-    delete rentalObj.__v
+    delete rentalObj.__v  
 
     reply.code(201).send({
         status: 'success',
@@ -194,7 +199,9 @@ const rentalShow = async function (req, reply){
     
     await rental.populate(
         [{path: 'branchId', select: 'name code'},
-        {path: 'carId', select: 'name'}]
+        {path: 'carId', select: 'name'},
+        {path: 'userId',select:'fullName email phone'}
+        ]
         ); 
         
     let rentalObj = await rental.toObject();            
@@ -237,6 +244,9 @@ const rentalList = async function (req, reply){
     }
     if (req.query.carId){
         searchQuery['carId']=ObjectId(req.query.carId)        
+    }
+    if (req.query.userId){
+        searchQuery['userId']=ObjectId(req.query.userId)        
     }
     const options = {
         select: `-isDeleted -__v`, 
@@ -293,6 +303,7 @@ const rentalList = async function (req, reply){
     if(!req.query.search){        
         let allBranches = await Branch.find({});
         let allCars = await Car.find({});
+        let allUsers = await User.find({});
         if(options.page!=null && options.limit!=null){
             rentalsPaginated.docs=[]
             let rentalsQuery = await Rental.paginate(searchQuery, options);             
@@ -325,7 +336,17 @@ const rentalList = async function (req, reply){
                     modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
 
                 }
-                delete rental.carId;
+                let userInfo = allUsers.find(user=>{
+                    return String(user._id) == String(rental.userId)
+                })
+                newObj.userId={
+                    _id: rental.userId ? rental.userId :"",
+                    fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",  
+                    email: userInfo && userInfo.email ? userInfo.email : "",  
+                    phone: userInfo && userInfo.phone ? userInfo.phone : "",               
+
+                }
+                delete rental.userId;
                
                 rentalsPaginated.docs.push(newObj)                
             });
@@ -355,6 +376,11 @@ const rentalList = async function (req, reply){
                 let carInfo = allCars.find(branch=>{
                     return String(branch._id) == String(rental.carId)
                 })
+
+                let userInfo = allUsers.find(user=>{
+                    return String(user._id) == String(rental.userId)
+                })               
+
                 let carId = rental.carId;
                 let branchId = rental.branchId;
                 rental.carId={
@@ -370,6 +396,13 @@ const rentalList = async function (req, reply){
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
+                }
+
+                rental.userId={
+                    _id: rental.userId ? rental.userId :"",
+                    fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",  
+                    email: userInfo && userInfo.email ? userInfo.email : "",  
+                    phone: userInfo && userInfo.phone ? userInfo.phone : "",               
                 }
 
                 
@@ -417,8 +450,14 @@ const rentalList = async function (req, reply){
                 '$match': {
                   'branchId': ObjectId(req.query.carId)
                 }
-            })
-            
+            })            
+        }
+        if(req.query.userId){
+            aggregateQuery.push({
+                '$match': {
+                  'userId': ObjectId(req.query.userId)
+                }
+            })            
         }
         if (req.query.initialDate!=null && req.query.finalDate!=null){        
         let initialDay=new Date(req.query.initialDate);
@@ -463,7 +502,15 @@ const rentalList = async function (req, reply){
                   'localField': 'carId', 
                   'foreignField': '_id', 
                   'as': 'carInfo'
-            }
+                }
+            },
+            {
+                '$lookup': {
+                  'from': 'users', 
+                  'localField': 'userId', 
+                  'foreignField': '_id', 
+                  'as': 'userInfo'
+                }
             },
             {
                 '$project': {
@@ -479,6 +526,18 @@ const rentalList = async function (req, reply){
                   'branchId.code': {
                     '$first': '$branchInfo.code'
                   },
+                  'userId._id': {
+                    '$first': '$userInfo._id'
+                  },
+                  'userId.fullName': {
+                    '$first': '$userInfo.fullName'
+                  },
+                  'userId.email': {
+                    '$first': '$userInfo.email'
+                  },
+                  'userId.phone': {
+                    '$first': '$userInfo.phone'
+                  },                  
                   'carId._id': {
                     '$first': '$carInfo._id'
                   },
@@ -513,7 +572,13 @@ const rentalList = async function (req, reply){
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                      },
+                    },
+                    {
+                        'userId.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
                       
                   ]
                 }

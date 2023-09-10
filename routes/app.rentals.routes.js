@@ -1,4 +1,6 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
+const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { rentalCreate } = require('../controllers/rental.controller');
 
@@ -17,32 +19,37 @@ const authorizeFunc = async function (req, reply) {
             return reply.code(401).send({
                 status: 'fail',
                 message: 'Sesión expirada'
-            })
-            
+            })            
         }
 
-        const decoded = await req.jwtVerify()
+        const decoded = await req.jwtVerify()        
         // if (!decoded._id || (decoded.role!='admin') ) {
         //     return reply.code(401).send({
         //         status: 'fail',
         //         message: 'invalid_crm_token'
         //     })
+        // }    
+        // const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});       
+        // if(branch == null){
+        //     return reply.code(401).send({
+        //         status: 'fail',
+        //         message: 'Sucursal autentificada no existe'
+        //     })             
         // }
-    
-        const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
-    
-        if(branch == null){
+
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});        
+        if(user == null){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'Sucursal autentificada no existe'
+                message: 'Usuario autentificado no existe'
+            })             
+        }
+        if(user.isEnabled == false){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario deshabilitado'
             })
         }
-        // if(user.isEnabled == false){
-        //     return reply.code(404).send({
-        //         status: 'fail',
-        //         message: 'user_disabled'
-        //     })
-        // }
     
         return decoded
     } catch (err) {
@@ -69,6 +76,15 @@ const rentalDef = {
             _id:{type:'string'},
             name:{type:'string'},
             ipAddress:{type:'string'}
+        },
+        userId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'}
+            }            
         },
         //carName: { type: 'string'},
         planType: { 
