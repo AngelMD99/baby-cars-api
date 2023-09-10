@@ -168,7 +168,7 @@ const rentalsReport = async function (req, reply){
             }
         }
         if(rental.createdAt){            
-            rental.createdAt = adjustTimeStamp (rental.createdAt);
+            rental.createdAt = adjustTimeStamp (rental.createdAt,offset);
             rental.Fecha=dateDDMMAAAA(rental.createdAt);            
             rental.Hora=dateTimeHHSS(rental.createdAt);  
             
@@ -421,7 +421,7 @@ const rentalsReport = async function (req, reply){
 
     if(req.query.userId != null){
         let userInformation = await User.findOne({_id:req.query.userId}) 
-        wb.Sheets["Rentas"]["B3"].v= userInformation!=null ? userInformation.fullName+"-"+userInformation.email : "";
+        wb.Sheets["Rentas"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
         wb.Sheets["Rentas"]["B3"].s ={
             font:{
                 bold:false
