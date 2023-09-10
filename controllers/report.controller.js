@@ -2,6 +2,7 @@ const Rental = require('../models/Rental');
 const Modelo = require('../models/Modelo');
 const Car = require('../models/Car');
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
@@ -23,6 +24,11 @@ const rentalsReport = async function (req, reply){
     if(req.query.carId != null){
         let carId = mongoose.Types.ObjectId(req.query.carId)
         aggregateQuery.push({ "$match": {"carId": carId }});        
+    }
+
+    if(req.query.userId != null){
+        let userId = mongoose.Types.ObjectId(req.query.userId)
+        aggregateQuery.push({ "$match": {"userId": userId }});        
     }
 
     let dateMatchStage={};
@@ -92,6 +98,14 @@ const rentalsReport = async function (req, reply){
               'as': 'carInfo'
             }
           },
+          {
+            '$lookup': {
+              'from': 'users', 
+              'localField': 'userId', 
+              'foreignField': '_id', 
+              'as': 'userInfo'
+            }
+          },
          {
             '$project': {
                 'Folio':'$folio',
@@ -100,7 +114,15 @@ const rentalsReport = async function (req, reply){
                 },
                 'Sucursal nombre': {
                     '$first': '$branchInfo.name'
-                  },
+                
+                },
+                'Empleado nombre':{
+                    '$first': '$userInfo.fullName'
+                },
+                'Empleado correo': {
+                    '$first': '$userInfo.email'
+                
+                },
                 'Modelo'  :{
                     '$first': '$carInfo.modelId'
                 },
@@ -128,6 +150,7 @@ const rentalsReport = async function (req, reply){
     )
 
     let rentals = await Rental.aggregate(aggregateQuery); 
+    console.log("RENTALS: ", rentals[0]);
     let allModels = await Modelo.find({});
     rentals.forEach(rental=>{
         if(rental['Tipo de pago']){
@@ -161,6 +184,8 @@ const rentalsReport = async function (req, reply){
             rental.Modelo = "";
         }
     })
+
+    console.log("RENTALS DATE ADJUSTED: ", rentals[0]);
     
    
 
@@ -184,7 +209,7 @@ const rentalsReport = async function (req, reply){
     //let wbRows = rentals.length+4;   
     wb.SheetNames.push("Rentas");
     //addig the titles rows
-    var ws_data = [['Sucursal','','','','','','','','','','']]
+    var ws_data = [['Sucursal','','','','','','','','','','','','']]
     var ws = xlsx.utils.aoa_to_sheet(ws_data);       
     wb.Sheets["Rentas"] = ws;
     wb.Sheets["Rentas"]["A1"].s={        
@@ -194,7 +219,7 @@ const rentalsReport = async function (req, reply){
             },       
     }
     xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Etiqueta', '', '', '','','','','','','','']
+            ['Etiqueta', '', '', '','','','','','','','','','']
           ],{origin: -1});
     wb.Sheets["Rentas"]["A2"].s={        
         font: {				  		
@@ -202,25 +227,35 @@ const rentalsReport = async function (req, reply){
                 bold: true // negrita
         },       
     }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
+        ['Empleado', '', '', '','','','','','','','','','']
+      ],{origin: -1});
+    wb.Sheets["Rentas"]["A3"].s={        
+        font: {				  		
+            sz: 12, // tamaño de fuente
+            bold: true // negrita
+        },       
+    }
     
     if(req.query.initialDate != null && req.query.lastDate !=null ){        
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Fecha inicial', '', '', '','','','','','','','']
+            ['Fecha inicial', '', '', '','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Fecha final', '', '', '','','','','','','','']
+            ['Fecha final', '', '', '','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['', '', '', '','','','','','','','']
+            ['', '', '', '','','','','','','','','','']
           ], {origin: -1});
 
-        wb.Sheets["Rentas"]["A3"].s={        
+        wb.Sheets["Rentas"]["A4"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
             }               
         }
-        wb.Sheets["Rentas"]["A4"].s={        
+        wb.Sheets["Rentas"]["A5"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
@@ -229,15 +264,15 @@ const rentalsReport = async function (req, reply){
     }
     else{
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['Sin rango de fechas', '', '', '','','','','','','','']
+            ['Sin rango de fechas', '', '', '','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['', '', '', '','','','','','','','']
+            ['', '', '', '','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-            ['', '', '', '','','','','','','','']
+            ['', '', '', '','','','','','','','','','']
           ], {origin: -1});
-        wb.Sheets["Rentas"]["A3"].s={        
+        wb.Sheets["Rentas"]["A4"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
@@ -246,70 +281,82 @@ const rentalsReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-        ['Folio','Fecha','Hora','Sucursal código','Sucursal nombre','Modelo','Color','Etiqueta','Tiempo','Costo','Tipo de pago']
+        ['Folio','Fecha','Hora','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelo','Color','Etiqueta','Tiempo','Costo','Tipo de pago']
       ], {origin: -1});
     
-    wb.Sheets["Rentas"]["A6"].s={        
+    wb.Sheets["Rentas"]["A7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["B6"].s={        
+    wb.Sheets["Rentas"]["B7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["C6"].s={        
+    wb.Sheets["Rentas"]["C7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["D6"].s={        
+    wb.Sheets["Rentas"]["D7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["E6"].s={        
+    wb.Sheets["Rentas"]["E7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["F6"].s={        
+    wb.Sheets["Rentas"]["F7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["G6"].s={        
+    wb.Sheets["Rentas"]["G7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["H6"].s={        
+    wb.Sheets["Rentas"]["H7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["I6"].s={        
+    wb.Sheets["Rentas"]["I7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["J6"].s={        
+    wb.Sheets["Rentas"]["J7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Rentas"]["K6"].s={        
+    wb.Sheets["Rentas"]["K7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Rentas"]["L7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Rentas"]["M7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
@@ -371,6 +418,25 @@ const rentalsReport = async function (req, reply){
             }
         }
     }
+
+    if(req.query.userId != null){
+        let userInformation = await User.findOne({_id:req.query.userId}) 
+        wb.Sheets["Rentas"]["B3"].v= userInformation!=null ? userInformation.fullName+"-"+userInformation.email : "";
+        wb.Sheets["Rentas"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Rentas"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Rentas"]["B3"].v="Todos"
+        wb.Sheets["Rentas"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
 //     wb.Sheets["Rentas"]["A2"]={};
     if(req.query.initialDate != null && req.query.lastDate !=null ){ 
         let initialDate = parseDate(req.query.initialDate);
@@ -392,22 +458,24 @@ const rentalsReport = async function (req, reply){
     if (rentals.length>0){
         for (let index = 0; index < rentals.length; index++) {
             xlsx.utils.sheet_add_aoa(wb.Sheets["Rentas"], [
-                ['A', 'B', 'C','D','E','F','G','H',0,0,'K']
+                ['A', 'B','C','D','E','F','G','H','I','J',0,0,'M']
               ], {origin: -1});                     
         }
-        let currentRow=7;
+        let currentRow=8;
         rentals.forEach(purchase=>{
             wb.Sheets["Rentas"]["A"+String(currentRow)].v=purchase['Folio'];
             wb.Sheets["Rentas"]["B"+String(currentRow)].v=purchase['Fecha'];
             wb.Sheets["Rentas"]["C"+String(currentRow)].v=purchase['Hora'];
             wb.Sheets["Rentas"]["D"+String(currentRow)].v=purchase['Sucursal código'];
             wb.Sheets["Rentas"]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
-            wb.Sheets["Rentas"]["F"+String(currentRow)].v=purchase['Modelo'];
-            wb.Sheets["Rentas"]["G"+String(currentRow)].v=purchase['Color'];
-            wb.Sheets["Rentas"]["H"+String(currentRow)].v=purchase['Etiqueta'];
-            wb.Sheets["Rentas"]["I"+String(currentRow)].v=purchase['Tiempo'];
-            wb.Sheets["Rentas"]["J"+String(currentRow)].v=purchase['Costo'];            
-            wb.Sheets["Rentas"]["K"+String(currentRow)].v=purchase['Tipo de pago'];            
+            wb.Sheets["Rentas"]["F"+String(currentRow)].v=purchase['Empleado nombre'];
+            wb.Sheets["Rentas"]["G"+String(currentRow)].v=purchase['Empleado correo'];
+            wb.Sheets["Rentas"]["H"+String(currentRow)].v=purchase['Modelo'];
+            wb.Sheets["Rentas"]["I"+String(currentRow)].v=purchase['Color'];
+            wb.Sheets["Rentas"]["J"+String(currentRow)].v=purchase['Etiqueta'];
+            wb.Sheets["Rentas"]["K"+String(currentRow)].v=purchase['Tiempo'];
+            wb.Sheets["Rentas"]["L"+String(currentRow)].v=purchase['Costo'];            
+            wb.Sheets["Rentas"]["M"+String(currentRow)].v=purchase['Tipo de pago'];            
             currentRow ++;
            // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
 
@@ -415,7 +483,7 @@ const rentalsReport = async function (req, reply){
         })
     }
 
-     headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Modelo","Color","Etiqueta","Tiempo","Costo","Tipo de pago"]
+     headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelo","Color","Etiqueta","Tiempo","Costo","Tipo de pago"]
      //console.log(headers)
 
     // adjusting columns length added
@@ -426,6 +494,8 @@ const rentalsReport = async function (req, reply){
          columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
          columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
          columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
+         columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
+         columnWidth=headers[i]=='Empleado correo' ? columnWidth+45: columnWidth;
          columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
          columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
          columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
@@ -437,10 +507,10 @@ const rentalsReport = async function (req, reply){
      } 
     wb.Sheets['Rentas']['!cols']=wscols;
     //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
-    let row = 7;
+    let row = 8;
     while (wb.Sheets['Rentas']["G"+String(row)] != null) { 
-        wb.Sheets['Rentas']["G"+String(row)].z="0.00";
-        wb.Sheets['Rentas']["H"+String(row)].z="$0.00";
+        wb.Sheets['Rentas']["K"+String(row)].z="0.00";
+        wb.Sheets['Rentas']["L"+String(row)].z="$0.00";
         row+=1;
         
     }
