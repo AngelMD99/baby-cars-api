@@ -450,7 +450,7 @@ const statusList = async function (req,reply){
         
     } 
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: statusPaginated.docs,
         page: statusPaginated.page,

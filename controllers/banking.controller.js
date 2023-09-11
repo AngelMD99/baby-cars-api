@@ -58,7 +58,7 @@ const createBanking = async function (req, reply){
     }
     delete bankingObj.__v
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data: bankingObj
      })  
@@ -91,7 +91,7 @@ const showBanking = async function (req, reply){
         }
     }
     
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: bankingObj
     })   
@@ -110,7 +110,7 @@ const deleteBanking = async function (req, reply){
     let updatedBanking = await Banking.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedBanking.isDeleted=true;
     await updatedBanking.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Cuenta '+updatedBanking.account+' de '+updatedBanking.bank+' eliminada correctamente'           
         
@@ -349,7 +349,7 @@ const listBankings = async function (req, reply){
     var bankings = JSON.parse(docs);
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: bankings,
         page: bankingsPaginated.page,
@@ -416,7 +416,7 @@ const updateBanking = async function (req, reply){
         }
     }  
     delete updatedBankingObj.__v
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: updatedBankingObj
     }) 

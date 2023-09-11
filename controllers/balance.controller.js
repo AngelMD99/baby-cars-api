@@ -1,7 +1,8 @@
 const Balance = require('../models/Balance');
 const Status = require('../models/Status');
 const Branch = require('../models/Branch');
-const Rental = require('../models/Branch');
+const Rental = require('../models/Rental');
+const Payment = require('../models/Payment');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
@@ -11,6 +12,8 @@ const Car = require('../models/Car');
 let environment=process.env.ENVIRONMENT
 Moment().tz("Etc/Universal");
 const { getOffsetSetting } = require('../controllers/base.controller');
+const User = require('../models/User');
+const { integer } = require('sharp/lib/is');
 
 const balanceRentalsCreate = async function (req,reply){
     let branchInfo = await Branch.findOne({_id:req.params.id, isDeleted:false})
@@ -22,49 +25,183 @@ const balanceRentalsCreate = async function (req,reply){
             })        
         } 
     }
-    const decoded = await req.jwtVerify();
+    const decoded = await req.jwtVerify();    
+    let loggedUser = await User.findOne({_id:decoded._id})  
+    
+    if(loggedUser == null){
+        return reply.code(401).send({
+            status: 'fail',
+            message: 'Usuario autentificado no existe'
+        })
+    }
     let today = new Date ();    
     let searchQuery = {
         isDeleted: false,
         branchId:ObjectId(req.params.id),
-        createdAt:{"$gte": decoded.lastLogin,"$lte":today},
-        paymentType: "Efectivo"			
+        updatedAt:{"$gte": loggedUser.lastLogin,"$lte":today},        
+        paymentType:{ $regex:"efectivo",$options:'i'}
+		
     };
+    let rentalsQuery = await Rental.find(searchQuery)
+    let userBalanceValidation= await Balance.findOne({
+        balanceType:'payments',
+        branchId: req.params.id,
+        userId: loggedUser._id,
+        loginDate:loggedUser.lastLogin,
 
-    let rentalsQuery = await Rental.find(searchQuery) 
-    
-    let balanceObj={
-        balanceType:'rentals',
-        branchId:req.query.branchId,
-        userId: decoded._id,
-        loginDate:decoded.lastLogin,
-        logoutDate:new Date(),
-        amount:0,
-        total:0
-    };
-
-    if (rentalsQuery.length>0){
-        balanceObj.quantity=cashRentals.length
-        cashRentals.forEach(cashRental=>{
-        balanceObj.total = balanceObj.total + cashRental.planType.price
-        })           
-        
+    })
+    if(userBalanceValidation){
+        if (rentalsQuery.length>0){
+            let rentalSum = 0; 
+            userBalanceValidation.quantity=rentalsQuery.length
+            rentalsQuery.forEach(cashRental=>{
+            rentalSum = rentalSum + cashRental.planType.price
+            })        
+            userBalanceValidation.amount = rentalSum;           
+        }
+        await userBalanceValidation.save();
+        await userBalanceValidation.populate([
+            { path:'branchId',select:'name code'},
+            { path:'userId',select:'fullName email phone'}
+        ])    
+        const balanceSavedObj = await userBalanceValidation.toObject()
+        delete balanceSavedObj._v;
+        return reply.code(201).send({
+            status: 'success',
+            data:balanceSavedObj
+        })
     }
 
-    const balance = new Balance(balanceObj);
-    balance._id = new mongoose.Types.ObjectId();
-    await balance.save();
-    await balance.populate([
-        { path:'branchId',select:'name code'},
-        { path:'userId',select:'fullName email phone'}
-    ])
+    else{        
+        let balanceObj={
+            balanceType:'payments',
+            branchId:req.params.id,
+            userId: loggedUser._id,
+            loginDate:loggedUser.lastLogin,
+            amount:0,
+            quantity:0
+        };
+    
+        if (rentalsQuery.length>0){
+            balanceObj.quantity=rentalsQuery.length
+            rentalsQuery.forEach(cashRental=>{
+            balanceObj.amount = balanceObj.amount + cashRental.planType.price
+            })         
+            
+        }
+    
+        const balance = new Balance(balanceObj);
+        balance._id = new mongoose.Types.ObjectId();
+        await balance.save();
+        await balance.populate([
+            { path:'branchId',select:'name code'},
+            { path:'userId',select:'fullName email phone'}
+        ])
+    
+        const balanceSavedObj = await balance.toObject()
+        delete balanceSavedObj._v;
+        return reply.code(201).send({
+            status: 'success',
+            data:balanceSavedObj
+        })   
+    }              
 
-    const balanceSavedObj = await balance.toObject()
-    delete balanceSavedObj._v;
-    reply.code(201).send({
-        status: 'success',
-        data:balanceSavedObj
-    })      
+}
+
+const balancePaymentsCreate = async function (req,reply){
+    let branchInfo = await Branch.findOne({_id:req.params.id, isDeleted:false})
+    if(!branchInfo){
+        if (!branchInfo){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'sucursal_no_encontrada'
+            })        
+        } 
+    }
+    const decoded = await req.jwtVerify();    
+    let loggedUser = await User.findOne({_id:decoded._id})  
+    
+    if(loggedUser == null){
+        return reply.code(401).send({
+            status: 'fail',
+            message: 'Usuario autentificado no existe'
+        })
+    }
+    let today = new Date ();    
+    let searchQuery = {
+        isDeleted: false,
+        isDiscarded:false,
+        branchId:ObjectId(req.params.id),
+        paidOn:{"$gte": loggedUser.lastLogin,"$lte":today},
+        paymentType:{ $regex:"efectivo",$options:'i'}
+    };
+    console.log("SEARCH QUERY: ",searchQuery);
+    let paymentsQuery = await Payment.find(searchQuery)
+    console.log("RENTALS QUERY: ",paymentsQuery)
+
+    let userBalanceValidation= await Balance.findOne({
+        balanceType:'payments',
+        branchId: req.params.id,
+        userId: loggedUser._id,
+        loginDate:loggedUser.lastLogin,
+
+    })
+    if(userBalanceValidation){
+        if (paymentsQuery.length>0){
+            let rentalSum = 0; 
+            userBalanceValidation.quantity=paymentsQuery.length
+            paymentsQuery.forEach(cashPayment=>{
+            rentalSum = rentalSum + cashPayment.amount
+            })        
+            userBalanceValidation.amount = rentalSum;           
+        }
+        await userBalanceValidation.save();
+        await userBalanceValidation.populate([
+            { path:'branchId',select:'name code'},
+            { path:'userId',select:'fullName email phone'}
+        ])    
+        const balanceSavedObj = await userBalanceValidation.toObject()
+        delete balanceSavedObj._v;
+        return reply.code(201).send({
+            status: 'success',
+            data:balanceSavedObj
+        })
+    }
+
+    else{
+        console.log("NEW")
+        let balanceObj={
+            balanceType:'payments',
+            branchId:req.params.id,
+            userId: loggedUser._id,
+            loginDate:loggedUser.lastLogin,
+            amount:0,
+            quantity:0
+        };
+    
+        if (paymentsQuery.length>0){
+            balanceObj.quantity=paymentsQuery.length
+            paymentsQuery.forEach(cashPayment=>{
+            balanceObj.amount = balanceObj.amount + cashPayment.amount
+            })         
+            
+        }
+    
+        const balance = new Balance(balanceObj);
+        balance._id = new mongoose.Types.ObjectId();
+        await balance.save();
+        await balance.populate([
+            { path:'branchId',select:'name code'},
+            { path:'userId',select:'fullName email phone'}
+        ])
+    
+        const balanceSavedObj = await balance.toObject()
+        delete balanceSavedObj._v;
+        return reply.code(201).send({
+            status: 'success',
+            data:balanceSavedObj
+        })   
+    }              
 
 }
 
@@ -130,4 +267,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate}
+module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate, balancePaymentsCreate}

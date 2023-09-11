@@ -1,12 +1,10 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const { branchLogin } = require('../controllers/branch.controller');
 const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
 const { statusCreate, statusDelete, statusList, statusUpdate } = require('../controllers/status.controller');
 const { batteryCreate } = require('../controllers/battery.controller');
-const { balanceShow, balanceRentalsCreate, balanceList } = require('../controllers/balance.controller');
-
-
-
+const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate } = require('../controllers/balance.controller');
 
 const errResponse = {
     type: 'object',
@@ -49,6 +47,38 @@ const authorizeFunc = async function (req, reply) {
         //         message: 'user_disabled'
         //     })
         // }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
+
+const authorizeUserFunc = async function (req, reply) {
+    try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })
+            
+        }
+        const decoded = await req.jwtVerify()       
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(user == null){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Usuario autentificado no existe'
+            })
+        }
+        if(user.isEnabled == false){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario deshabilitado'
+            })
+        }
     
         return decoded
     } catch (err) {
@@ -341,10 +371,62 @@ const postBranchSignInOpts = {
 
 }
 
+const postRentalBalanceOpts={
+    schema: {
+         description:"Calculates the balance of rentals since time date and time logged users logged in to current date",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:balanceDef
+
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: balanceRentalsCreate,
+    
+}
+
+const postPaymentBalanceOpts={
+    schema: {
+         description:"Calculates the balance of rentals since time date and time logged users logged in to current date",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:balanceDef
+
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: balancePaymentsCreate,
+    
+}
+
 function appBranchesRoutes(fastify, options, done) {   
     fastify.post('/branches/in', postBranchSignInOpts) 
     fastify.get('/branches/:id/rentals', getRentalsOpts) 
     fastify.get('/branches/:id/balance', getBalanceOpts) 
+    fastify.post('/branches/:id/balance/rentals', postRentalBalanceOpts)
+    fastify.post('/branches/:id/balance/payments', postPaymentBalanceOpts)
     fastify.put('/branches/:id/status', putBranchStatusOpt) 
     fastify.put('/branches/:id/battery', putBatteryStatusOpt) 
 

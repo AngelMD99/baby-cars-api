@@ -340,7 +340,7 @@ const carDelete = async function (req, reply){
     let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedCar.isDeleted=true;
     await updatedCar.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Carrito '+updatedCar.name+' eliminado correctamente'           
         
@@ -370,7 +370,7 @@ const carBranchAutoOff = async function (req, reply){
         }
     }
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: {
             turnedOffCars:turnedOffCars,
@@ -410,7 +410,7 @@ const carsTurnedOff = async function(req,reply){
     }
 
     let inactiveCars = await Car.aggregate(aggregateQuery);  
-    reply.code(200).send({
+    return reply.code(200).send({
         status:'sucess',
         data:inactiveCars        
     })  
@@ -593,7 +593,7 @@ const carsAvailable = async function (req, reply){
     }     
    
      
-    reply.code(200).send({
+    return reply.code(200).send({
         status:'sucess',
         data:availableCars,
         models:allModelsObjects,
@@ -905,7 +905,7 @@ const carList = async function (req, reply){
     var cars = JSON.parse(docs);
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: cars,
         page: carsPaginated.page,
@@ -931,7 +931,7 @@ const carStart = async function (req, reply){
     let updatedCar = await Car.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedCar.isStarted=true;
     await updatedCar.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Carrito '+updatedCar.name+' encendido correctamente'           
         
@@ -953,7 +953,7 @@ const carStop = async function (req, reply){
     updatedCar.startDate=undefined;
     updatedCar.rentalTime=undefined;    
     await updatedCar.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Carrito '+updatedCar.name+' apagado correctamente'           
         

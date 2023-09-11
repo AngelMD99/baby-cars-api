@@ -450,7 +450,7 @@ const batteryList = async function (req,reply){
         
     } 
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: batteriesPaginated.docs,
         page: batteriesPaginated.page,

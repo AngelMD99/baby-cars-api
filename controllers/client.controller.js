@@ -10,14 +10,14 @@ Moment().tz("Etc/Universal");
 
 const clientCreate = async function (req,reply){    
     if(!req.body.fullName || req.body.fullName ==""){
-        reply.code(400).send({
+        return reply.code(400).send({
             status: 'fail',
             message:"El nombre completo del cliente es necesario"
         })
     }
 
     if(!req.body.phone || req.body.phone ==""){
-        reply.code(400).send({
+        return reply.code(400).send({
             status: 'fail',
             message:"El teléfono del cliente es necesario"
         })
@@ -483,7 +483,7 @@ const clientList = async function (req,reply){
     var clients = JSON.parse(docs);
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: clients,
         page: clientsPaginated.page,

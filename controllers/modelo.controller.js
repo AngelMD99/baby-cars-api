@@ -27,7 +27,7 @@ const modelCreate = async function (req, reply){
     
     delete modeloObj.__v
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data: modeloObj
      })      
@@ -45,7 +45,7 @@ const modelShow = async function (req, reply){
     
     let modeloObj = await modelo.toObject();                
     
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: modeloObj
     })    
@@ -64,7 +64,7 @@ const modelDelete = async function (req, reply){
     let updatedModel = await Modelo.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedModel.isDeleted=true;
     await updatedModel.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Modelo '+updatedModel.name+' eliminado correctamente'           
         
@@ -104,7 +104,7 @@ const modelUpdate = async function (req, reply){
     let updatedModelObj = await updatedModel.toObject()        
     delete updatedModelObj.__v
    
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: updatedModelObj           
         
@@ -143,7 +143,7 @@ const modelsAvailable = async function (req, reply){
     
 
     let availableModels = await Modelo.aggregate(aggregateQuery);
-    reply.code(200).send({
+    return reply.code(200).send({
         status:'sucess',
         data:availableModels
     })
@@ -298,7 +298,7 @@ const modelList = async function (req, reply){
     var models = JSON.parse(docs);
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: models,
         page: modelsPaginated.page,

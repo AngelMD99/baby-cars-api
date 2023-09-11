@@ -180,7 +180,7 @@ const rentalCreate = async function (req, reply){
     
     delete rentalObj.__v  
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data:rentalObj
      })      
@@ -216,7 +216,7 @@ const rentalShow = async function (req, reply){
     //     delete rentalObj.carId;
     // }
     delete rentalObj.__v
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: rentalObj
     })   
@@ -635,7 +635,7 @@ const rentalList = async function (req, reply){
         
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: rentals,
         page: rentalsPaginated.page,
@@ -1073,7 +1073,7 @@ const branchRentalsList = async function (req, reply){
         
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: rentals,
         page: rentalsPaginated.page,

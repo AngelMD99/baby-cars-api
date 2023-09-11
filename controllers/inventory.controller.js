@@ -69,7 +69,7 @@ const inventoryCreate = async function (req,reply){
     }
     delete inventoryObj.__v
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data: inventoryObj
      }) 
@@ -335,7 +335,7 @@ const inventoryList = async function (req,reply){
     })
     let docs = JSON.stringify(inventoriesPaginated.docs);    
     var inventories = JSON.parse(docs);   
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: inventories,
         page: inventoriesPaginated.page,
@@ -372,7 +372,7 @@ const inventoryShow = async function (req,reply){
             name:""            
         }
     }
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: inventoryObj
     }) 
@@ -391,7 +391,7 @@ const inventoryDelete = async function (req,reply){
     let updatedInventory = await Inventory.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedInventory.isDeleted=true;
     await updatedInventory.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Inventario eliminado correctamente'           
         
@@ -454,7 +454,7 @@ const inventoryUpdate = async function (req,reply){
         }
     }  
     delete updatedInventoryObj.__v   
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: updatedInventoryObj                   
     }) 

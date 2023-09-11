@@ -94,7 +94,7 @@ const userLogin = async function (req, reply) {
         delete userObj.password;
         delete userObj.lastLogin;
 
-        reply.code(200).send({
+        return reply.code(200).send({
             status: 'success',
             data: {
                 token: token,
@@ -182,7 +182,7 @@ const userBranchLogin = async function (req, reply) {
         delete userObj.password;
         delete userObj.lastLogin;
 
-        reply.code(200).send({
+        return reply.code(200).send({
             status: 'success',
             data: {
                 token: token,
@@ -285,7 +285,7 @@ const userCreate = async function (req, reply){
     delete userObj.__v
     delete userObj.password
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data: userObj
      })
@@ -319,7 +319,7 @@ const userShow = async function (req, reply){
     }
    
     
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: userObj
     })    
@@ -340,7 +340,7 @@ const userDelete = async function (req, reply){
     let updatedUser = await User.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedUser.isDeleted=true;
     await updatedUser.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Usuario '+updatedUser.fullName+' eliminado correctamente'           
         
@@ -588,7 +588,7 @@ const userList = async function (req, reply){
     var users = JSON.parse(docs);
     
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: users,
         page: usersPaginated.page,

@@ -46,7 +46,7 @@ const branchCreate = async function (req, reply){
 
     const branchObj = await branch.toObject()
 
-    reply.code(201).send({
+    return reply.code(201).send({
         status: 'success',
         data: branchObj
      })      
@@ -63,7 +63,7 @@ const branchShow = async function (req, reply){
     } 
    
     let branchObj = await branch.toObject();        
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: branchObj
     })    
@@ -182,7 +182,7 @@ const branchUpdate = async function (req, reply){
     delete updatedBranchObj.password
     delete updatedBranchObj.__v
    
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: updatedBranchObj           
         
@@ -203,7 +203,7 @@ const branchDelete = async function (req, reply){
     let updatedBranch = await Branch.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
     updatedBranch.isDeleted=true;
     await updatedBranch.save();
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         message: 'Sucursal '+updatedBranch.name+' eliminada correctamente'           
         
@@ -242,7 +242,7 @@ const branchesAvailable = async function (req, reply){
         }
     })
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status:'sucess',
         data:availableBranches
     })
@@ -280,7 +280,7 @@ const plansAvailable = async function (req, reply){
 
     let availablePlans = await Branch.aggregate(aggregateQuery);
 
-    reply.code(200).send({
+    return reply.code(200).send({
         status:'sucess',
         data:availablePlans
     })
@@ -410,7 +410,7 @@ const branchList = async function (req, reply){
         }
         
     });
-    reply.code(200).send({
+    return reply.code(200).send({
         status: 'success',
         data: branches,
         page: branchesPaginated.page,
@@ -505,7 +505,7 @@ const branchLogin = async function (req, reply){
 
         }
         delete branchObj.password;        
-        reply.code(200).send({
+        return reply.code(200).send({
             status: 'success',
             data: {
                 token: token,

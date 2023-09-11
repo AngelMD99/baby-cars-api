@@ -26,7 +26,7 @@ const balanceSchema = new mongoose.Schema({
         required: true
     },
     loginDate:Date,
-    logoutDate:Date,   
+    //logoutDate:Date,   
     
 },{
     timestamps: true,
