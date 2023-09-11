@@ -417,7 +417,35 @@ const postPaymentBalanceOpts={
          
     },
     preHandler: authorizeUserFunc,
-    handler: balancePaymentsCreate,
+    handler: balancePaymentsCreate,    
+}
+
+const getSingleBalanceOpts={
+    schema: {
+         description:"Retrieves the balance in the database with the balance id provided in URL",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:balanceDef
+
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: balanceShow,
     
 }
 
@@ -427,6 +455,7 @@ function appBranchesRoutes(fastify, options, done) {
     fastify.get('/branches/:id/balance', getBalanceOpts) 
     fastify.post('/branches/:id/balance/rentals', postRentalBalanceOpts)
     fastify.post('/branches/:id/balance/payments', postPaymentBalanceOpts)
+    fastify.get('/branches/:id/balance/:balanceId', getSingleBalanceOpts) 
     fastify.put('/branches/:id/status', putBranchStatusOpt) 
     fastify.put('/branches/:id/battery', putBatteryStatusOpt) 
 

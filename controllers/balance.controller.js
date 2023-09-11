@@ -44,6 +44,7 @@ const balanceRentalsCreate = async function (req,reply){
     };
     let rentalsQuery = await Rental.find(searchQuery)
     let userBalanceValidation= await Balance.findOne({
+        isDeleted:false,
         balanceType:'payments',
         branchId: req.params.id,
         userId: loggedUser._id,
@@ -114,7 +115,7 @@ const balancePaymentsCreate = async function (req,reply){
         if (!branchInfo){
             return reply.code(400).send({
                 status: 'fail',
-                message: 'sucursal_no_encontrada'
+                message: 'Sucursal_no_encontrada'
             })        
         } 
     }
@@ -135,17 +136,15 @@ const balancePaymentsCreate = async function (req,reply){
         paidOn:{"$gte": loggedUser.lastLogin,"$lte":today},
         paymentType:{ $regex:"efectivo",$options:'i'}
     };
-    console.log("SEARCH QUERY: ",searchQuery);
     let paymentsQuery = await Payment.find(searchQuery)
-    console.log("RENTALS QUERY: ",paymentsQuery)
-
     let userBalanceValidation= await Balance.findOne({
+        isDeleted:false,
         balanceType:'payments',
         branchId: req.params.id,
         userId: loggedUser._id,
         loginDate:loggedUser.lastLogin,
 
-    })
+    })    
     if(userBalanceValidation){
         if (paymentsQuery.length>0){
             let rentalSum = 0; 
@@ -155,7 +154,7 @@ const balancePaymentsCreate = async function (req,reply){
             })        
             userBalanceValidation.amount = rentalSum;           
         }
-        await userBalanceValidation.save();
+        await userBalanceValidation.save();        
         await userBalanceValidation.populate([
             { path:'branchId',select:'name code'},
             { path:'userId',select:'fullName email phone'}
@@ -206,6 +205,25 @@ const balancePaymentsCreate = async function (req,reply){
 }
 
 const balanceShow = async function (req,reply){
+    let balance = await Balance.findOne({_id:req.params.balanceId, isDeleted:false});
+    if(!balance){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'No se encontro el corte'
+        })   
+    }
+
+    await balance.populate([
+        { path:'branchId',select:'name code'},
+        { path:'userId',select:'fullName email phone'}
+    ])
+
+    const balanceSavedObj = await balance.toObject()
+    delete balanceSavedObj._v;
+    return reply.code(201).send({
+        status: 'success',
+        data:balanceSavedObj
+    })          
     
 }
 

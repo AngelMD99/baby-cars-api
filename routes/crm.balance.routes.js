@@ -1,6 +1,8 @@
 const users = require("../controllers/user.controller.js");
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate } = require('../controllers/balance.controller');
+
 
 
 
@@ -88,10 +90,39 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const getSingleBalanceOpts={
+    schema: {
+         description:"Retrieves the balance in the database with the balance id provided in URL",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:balanceDef
+
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: balanceShow,
+    
+}
+
 function crmBalancesRoutes(fastify, options, done) {    
     // fastify.post('/users/in', postUserSignInOpts);
     // fastify.post('/users', postUserSaveOpts);
-    // fastify.get('/users', getUsersOpts);
+    fastify.get('/crm/balance/:balanceId', getSingleBalanceOpts);
     // fastify.get('/users/:id', getSingleUserOpts);
     // fastify.delete('/users/:id', deleteSingleUserOpts);
     // fastify.put('/users/:id', putSingleUserOpts);
