@@ -229,9 +229,24 @@ const balanceShow = async function (req,reply){
 
 const balanceList = async function (req,reply){
     
+    
 }
 
 const balanceDelete = async function (req,reply){
+    let balance = await Balance.findOne({_id:req.params.balanceId, isDeleted:false});
+    if(!balance){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'No se encontro el corte'
+        })       
+    }
+
+    balance.isDeleted=false;
+    await balance.save();
+    return reply.code(201).send({
+        status: 'success',
+        data:'Se eliminó el corte correctamente.'
+    })
     
 }
 
