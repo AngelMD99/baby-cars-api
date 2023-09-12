@@ -4,7 +4,7 @@ const { branchLogin } = require('../controllers/branch.controller');
 const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
 const { statusCreate, statusDelete, statusList, statusUpdate } = require('../controllers/status.controller');
 const { batteryCreate } = require('../controllers/battery.controller');
-const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate } = require('../controllers/balance.controller');
+const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate, balanceVerifications } = require('../controllers/balance.controller');
 
 const errResponse = {
     type: 'object',
@@ -449,11 +449,30 @@ const getSingleBalanceOpts={
     
 }
 
+const getBalanceValidationOpts={
+    schema: {
+         description:"Checks if the balances of the logged user for the branchId in URL is valid",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+         response: {
+            200: errResponse,
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: balanceShow,
+    
+}
+
 function appBranchesRoutes(fastify, options, done) {   
     fastify.post('/branches/in', postBranchSignInOpts) 
     fastify.get('/branches/:id/rentals', getRentalsOpts) 
     fastify.get('/branches/:id/balance', getBalanceOpts) 
-    fastify.post('/branches/:id/balance/rentals', postRentalBalanceOpts)
+    fastify.get('/branches/:id/verifybalances', getBalanceValidationOpts) 
+    fastify.post('/branches/:id/balance/rentals', postRentalBalanceOpts)    
     fastify.post('/branches/:id/balance/payments', postPaymentBalanceOpts)
     fastify.get('/branches/:id/balance/:balanceId', getSingleBalanceOpts) 
     fastify.put('/branches/:id/status', putBranchStatusOpt) 

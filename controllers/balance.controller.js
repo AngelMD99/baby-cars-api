@@ -250,6 +250,56 @@ const balanceDelete = async function (req,reply){
     
 }
 
+const balanceVerifications = async function (req,reply){
+    const decoded = await req.jwtVerify();    
+    let loggedUser = await User.findOne({_id:decoded._id});
+    let now = new Date();
+    let nowDateTime = now.getTime();
+
+
+    let rentalsBalance = await Balance.findOne({
+        isDeleted:false,
+        balanceType:'rentals',
+        branchId: req.params.id,
+        userId: loggedUser._id,
+        loginDate:loggedUser.lastLogin,
+    }) 
+    if (rentalsBalance){
+        let datesDifference = nowDateTime - rentalsBalance.updatedAt.getTime();
+        if (datesDifference>90000){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El corte de rentas ha expirado, es necesario calcularlo de nuevo.'
+            })  
+        }
+    }
+
+    let paymentsBalance = await Balance.findOne({
+        isDeleted:false,
+        balanceType:'payments',
+        branchId: req.params.id,
+        userId: loggedUser._id,
+        loginDate:loggedUser.lastLogin,
+    }) 
+
+    if (paymentsBalance){
+        let datesDifference = nowDateTime - paymentsBalance.updatedAt.getTime();
+        if (datesDifference>90000){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El corte de pagos ha expirado, es necesario calcularlo de nuevo.'
+            })  
+        }
+    }
+
+    return reply.code(201).send({
+        status: 'success',
+        data:'Cortes con fecha valida'
+    })
+
+
+}
+
 const balanceUpdate = async function (req,reply){
     
 }
@@ -300,4 +350,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate, balancePaymentsCreate}
+module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate, balancePaymentsCreate, balanceVerifications }
