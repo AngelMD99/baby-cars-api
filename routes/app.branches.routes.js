@@ -151,12 +151,32 @@ const branchDef = {
 
 const balanceDef={
     type:'object',
-    properties:{
-        rentalType:{type:'string'},
-        quantity:{type:'number'},
-        total:{type:'number'},
-        branchName:{type:'string'}
-    }
+    properties: {
+        _id:{type:'string'}, 
+        balanceType:{type:'string'}                              ,
+        amount:{type:'number'},
+        loginDate:{type:'number'},
+        balanceDate:{type:'number'},
+        userId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'}
+            }
+        },                
+        branchId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},
+                code:{type:'string'}
+            }
+        },                
+        createdAt:{type:'string'},
+        updatedAt:{type:'string'}
+      }
+
 }
 
 const rentalDef = { 
@@ -463,15 +483,15 @@ const getBalanceValidationOpts={
          
     },
     preHandler: authorizeUserFunc,
-    handler: balanceShow,
+    handler: balanceVerifications,
     
 }
 
 function appBranchesRoutes(fastify, options, done) {   
     fastify.post('/branches/in', postBranchSignInOpts) 
     fastify.get('/branches/:id/rentals', getRentalsOpts) 
-    fastify.get('/branches/:id/balance', getBalanceOpts) 
     fastify.get('/branches/:id/verifybalances', getBalanceValidationOpts) 
+    fastify.get('/branches/:id/balance', getBalanceOpts)     
     fastify.post('/branches/:id/balance/rentals', postRentalBalanceOpts)    
     fastify.post('/branches/:id/balance/payments', postPaymentBalanceOpts)
     fastify.get('/branches/:id/balance/:balanceId', getSingleBalanceOpts) 

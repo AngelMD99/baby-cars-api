@@ -45,7 +45,7 @@ const balanceRentalsCreate = async function (req,reply){
     let rentalsQuery = await Rental.find(searchQuery)
     let userBalanceValidation= await Balance.findOne({
         isDeleted:false,
-        balanceType:'payments',
+        balanceType:'rentals',
         branchId: req.params.id,
         userId: loggedUser._id,
         loginDate:loggedUser.lastLogin,
@@ -58,7 +58,8 @@ const balanceRentalsCreate = async function (req,reply){
             rentalsQuery.forEach(cashRental=>{
             rentalSum = rentalSum + cashRental.planType.price
             })        
-            userBalanceValidation.amount = rentalSum;           
+            userBalanceValidation.amount = rentalSum;
+            userBalanceValidation.balanceDate = new Date();           
         }
         await userBalanceValidation.save();
         await userBalanceValidation.populate([
@@ -75,12 +76,12 @@ const balanceRentalsCreate = async function (req,reply){
 
     else{        
         let balanceObj={
-            balanceType:'payments',
+            balanceType:'rentals',
             branchId:req.params.id,
             userId: loggedUser._id,
             loginDate:loggedUser.lastLogin,
             amount:0,
-            quantity:0
+            quantity:0            
         };
     
         if (rentalsQuery.length>0){
@@ -93,6 +94,7 @@ const balanceRentalsCreate = async function (req,reply){
     
         const balance = new Balance(balanceObj);
         balance._id = new mongoose.Types.ObjectId();
+        balance.balanceDate = new Date()
         await balance.save();
         await balance.populate([
             { path:'branchId',select:'name code'},
@@ -152,7 +154,8 @@ const balancePaymentsCreate = async function (req,reply){
             paymentsQuery.forEach(cashPayment=>{
             rentalSum = rentalSum + cashPayment.amount
             })        
-            userBalanceValidation.amount = rentalSum;           
+            userBalanceValidation.amount = rentalSum; 
+            userBalanceValidation.balanceDate = new Date();          
         }
         await userBalanceValidation.save();        
         await userBalanceValidation.populate([
@@ -175,19 +178,22 @@ const balancePaymentsCreate = async function (req,reply){
             userId: loggedUser._id,
             loginDate:loggedUser.lastLogin,
             amount:0,
-            quantity:0
+            quantity:0,
+            
         };
     
         if (paymentsQuery.length>0){
             balanceObj.quantity=paymentsQuery.length
             paymentsQuery.forEach(cashPayment=>{
             balanceObj.amount = balanceObj.amount + cashPayment.amount
-            })         
-            
+            })                   
+
         }
+        
     
-        const balance = new Balance(balanceObj);
+        const balance = new Balance(balanceObj);        
         balance._id = new mongoose.Types.ObjectId();
+        balance.balanceDate = new Date()
         await balance.save();
         await balance.populate([
             { path:'branchId',select:'name code'},
@@ -254,6 +260,7 @@ const balanceVerifications = async function (req,reply){
     const decoded = await req.jwtVerify();    
     let loggedUser = await User.findOne({_id:decoded._id});
     let now = new Date();
+
     let nowDateTime = now.getTime();
 
 
@@ -264,8 +271,19 @@ const balanceVerifications = async function (req,reply){
         userId: loggedUser._id,
         loginDate:loggedUser.lastLogin,
     }) 
+    if(!rentalsBalance){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'No se ha generado el corte de rentas para la ultima sesión del usuario actual.'
+        })  
+
+    }
+    console.log("RENTALS BALANCE: ", rentalsBalance)
     if (rentalsBalance){
-        let datesDifference = nowDateTime - rentalsBalance.updatedAt.getTime();
+
+        let datesDifference = nowDateTime - rentalsBalance.balanceDate.getTime();
+        console.log("now:  ",now)
+        console.log("DATES DIFF:",datesDifference)
         if (datesDifference>90000){
             return reply.code(400).send({
                 status: 'fail',
@@ -282,8 +300,17 @@ const balanceVerifications = async function (req,reply){
         loginDate:loggedUser.lastLogin,
     }) 
 
+    if (!paymentsBalance){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'No se ha generado el corte de pagos para la ultima sesión del usuario actual.'
+        })  
+    }
+
+
+
     if (paymentsBalance){
-        let datesDifference = nowDateTime - paymentsBalance.updatedAt.getTime();
+        let datesDifference = nowDateTime - paymentsBalance.balanceDate.getTime();
         if (datesDifference>90000){
             return reply.code(400).send({
                 status: 'fail',

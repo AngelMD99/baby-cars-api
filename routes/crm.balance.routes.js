@@ -22,7 +22,7 @@ const balanceDef={
         balanceType:{type:'string'}                              ,
         amount:{type:'number'},
         loginDate:{type:'number'},
-        //logoutDate:{type:'number'},
+        balanceDate:{type:'number'},
         userId:{
             type:'object',
             properties:{

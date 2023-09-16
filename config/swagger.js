@@ -344,7 +344,7 @@ exports.options = {
             quantity:{type:'number'},
             amount:{type:'number'},
             loginDate:{type:'timestamp'},
-            logoutDate:{type:'timestamp'},
+            balanceDate:{type:'timestamp'},
             createdAt:{type:'timestamp'},
             updatedAt:{type:'timestamp'}           
           }
