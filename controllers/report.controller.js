@@ -1,6 +1,8 @@
 const Rental = require('../models/Rental');
 const Sale = require('../models/Sale');
+const Reserve = require('../models/Reserve');
 const Payment = require('../models/Payment');
+const Balance = require('../models/Balance');
 const Modelo = require('../models/Modelo');
 const Car = require('../models/Car');
 const Branch = require('../models/Branch');
@@ -1007,7 +1009,504 @@ const salesReport = async function (req, reply){
     return reply.send(buf); 
 
 }
+const reservesReport = async function (req, reply){    
+    let aggregateQuery=[];
+    let offset = await getOffsetSetting()
 
+    if(req.query.branchId != null){
+        let branchId = mongoose.Types.ObjectId(req.query.branchId)
+        aggregateQuery.push({ "$match": {"branchId": branchId }});        
+    }
+
+    if(req.query.employeeId != null){
+        let employeeId = mongoose.Types.ObjectId(req.query.employeeId)
+        aggregateQuery.push({ "$match": {"userId": employeeId }});        
+    }
+
+    let dateMatchStage={};
+    if (req.query.initialDate!=null && req.query.finalDate!=null){        
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
+        }
+
+        let finalDay= addDays(finalDayToDate,1)              
+        dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+    if (req.query.initialDate!=null && req.query.finalDate==null){        
+        let initialDay=new Date(req.query.initialDate);
+        dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+    }
+    
+    if (req.query.finalDate!=null && req.query.initialDate==null){
+        let finalDay= addDays(req.query.finalDate,1)
+        dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+        }
+
+    if(dateMatchStage['$match']!=null){
+        aggregateQuery.push(dateMatchStage)
+    }
+
+    
+    // if (req.query.initialDate != null && req.query.lastDate != null){
+    //     let initialDate = parseDate(req.query.initialDate);
+    //     //let offset = await getOffsetSetting();              
+    //     //let offset = req.headers.offset ? Number(req.headers.offset) : 6        
+
+    //     //initialDate.setHours(0,0,0,0);
+    //     let lastDate = parseDate(req.query.lastDate);
+    //     lastDate = addDays(lastDate, 1)
+    //     if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+    //         initialDate.setHours(offset,0,0,0);    
+    //         lastDate.setHours(offset, 0, 0, 0);
+    //     }
+    //     else{
+    //         initialDate.setHours(0,0,0,0);
+    //         lastDate.setHours(0, 0, 0, 0);
+    
+    //     }
+    //     aggregateQuery.push({ "$match": {"createdAt": {"$gte": initialDate,"$lte":lastDate}}});        
+    // }   
+         
+      
+    aggregateQuery.push(
+        {
+            '$lookup': {
+              'from': 'branches', 
+              'localField': 'branchId', 
+              'foreignField': '_id', 
+              'as': 'branchInfo'
+            }
+          },          
+          {
+            '$lookup': {
+              'from': 'users', 
+              'localField': 'employeeId', 
+              'foreignField': '_id', 
+              'as': 'employeeInfo'
+            }
+          },
+         {
+            '$project': {
+                'Folio':'$folio',
+                'Sucursal código':{
+                    '$first': '$branchInfo.code'
+                },
+                'Sucursal nombre': {
+                    '$first': '$branchInfo.name'
+                
+                },
+                'Empleado nombre':{
+                    '$first': '$employeeInfo.fullName'
+                },
+                'Empleado correo': {
+                    '$first': '$employeeInfo.email'
+                
+                },
+                'Modelos diferentes':{'$size': "$products"},
+                'Carritos totales':{'$sum': "$products.quantity"},
+                "Total apartado":"$totalSale",                
+                "createdAt":'$createdAt'                               
+                
+            }
+          } 
+        //   {
+        //     '$group': {
+        //       '_id': '$_id', 
+        //       'count': {
+        //         '$sum': 1
+        //       }
+        //     }
+        //   }
+    )
+
+    let reserves = await Reserve.aggregate(aggregateQuery);
+    let allPayments = await Payment.find({operationType:'reserve', isDeleted:false});    
+    //console.log("reserves: ", reserves[0]);    
+    reserves.forEach(reserve=>{        
+        let reservePayments = allPayments.filter(payment=>{
+            return String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==false;
+        })
+
+        let reserveDiscardedPayments = allPayments.filter(payment=>{
+            return String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==true;
+        })
+
+        reserve['Pagos actuales']=reservePayments.length;
+        reserve['Total pagado']=0;
+        reserve['Pagos cancelados']=reserveDiscardedPayments.length;
+
+        reservePayments.forEach(payment=>{
+            reserve['Total pagado']+=payment.amount
+        })
+
+        reserve['Saldo restante']=reserve['Total apartado']-reserve['Total pagado'];
+
+        if(reserve.createdAt){            
+            reserve.createdAt = adjustTimeStamp (reserve.createdAt,offset);
+            reserve.Fecha=dateDDMMAAAA(reserve.createdAt);            
+            reserve.Hora=dateTimeHHSS(reserve.createdAt);  
+            
+        }
+        
+        
+    })
+
+    console.log("reserves DATE ADJUSTED: ", reserves[0]);
+    
+   
+
+    // if (reserves.length==0){
+    //     let emptyPurchaseObj = {
+    //         'Nombre': '', 
+    //         'Habilitado general':'',
+    //         'Cantidad de ventas':''            
+    //     }
+    //     reserves.push(emptyPurchaseObj)
+    // }
+   	
+    let headers=[]; //created array for column names
+    let wscols=[]; //array to store the width of the columns
+    // create the export file
+    //
+    let wb = xlsx.utils.book_new();
+    wb.Props = {
+        Title: "Apartados",                
+    };
+    //let wbRows = reserves.length+4;   
+    wb.SheetNames.push("Apartados");
+    //addig the titles rows
+    var ws_data = [['Sucursal','','','','','','','','','','','','','']]
+    var ws = xlsx.utils.aoa_to_sheet(ws_data);       
+    wb.Sheets["Apartados"] = ws;
+    wb.Sheets["Apartados"]["A1"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            },       
+    }
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['Etiqueta', '', '', '','','','','','','','','','','']
+          ],{origin: -1});
+    wb.Sheets["Apartados"]["A2"].s={        
+        font: {				  		
+                sz: 12, // tamaño de fuente
+                bold: true // negrita
+        },       
+    }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['Empleado', '', '', '','','','','','','','','','','']
+      ],{origin: -1});
+    wb.Sheets["Apartados"]["A3"].s={        
+        font: {				  		
+            sz: 12, // tamaño de fuente
+            bold: true // negrita
+        },       
+    }
+    
+    if(req.query.initialDate != null && req.query.lastDate !=null ){        
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['Fecha inicial', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['Fecha final', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+
+        wb.Sheets["Apartados"]["A4"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        wb.Sheets["Apartados"]["A5"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+    }
+    else{
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['Sin rango de fechas', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+            ['', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        wb.Sheets["Apartados"]["A4"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+    }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['Folio','Fecha','Hora','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total apartado','Pagos actuales','Pagos cancelados','Total pagado','Saldo restante']
+      ], {origin: -1});
+    
+    wb.Sheets["Apartados"]["A7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["B7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["C7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["D7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["E7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["F7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["G7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["H7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["I7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["J7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["K7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["L7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["M7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+
+    wb.Sheets["Apartados"]["N7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+
+//     wb.Sheets={
+//         Apartados:{
+//         }
+//     }
+//     wb.Sheets["Apartados"]["A1"]={
+//         v:'Sucursal',
+//         s: 
+//         {				
+//             font: {				  		
+//                   sz: 12, // tamaño de fuente
+//                   bold: true // negrita
+//             },
+//         }
+//     }
+    
+//     wb.Sheets["Apartados"]["B1"]={};
+
+
+    if(req.query.branchId != null){
+        let branchInformation = await Branch.findOne({_id:req.query.branchId}) 
+        wb.Sheets["Apartados"]["B1"].v= branchInformation!=null ? branchInformation.code+"-"+branchInformation.name : "";
+        wb.Sheets["Apartados"]["B1"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Apartados"]["B1"].v="Todas"
+        wb.Sheets["Apartados"]["B1"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+
+    // if(req.query.carId != null){
+    //     let carInformation = await Car.findOne({_id:req.query.carId}) 
+    //     wb.Sheets["Apartados"]["B2"].v= carInformation!=null ? carInformation.name+"-"+carInformation.color : "";
+    //     wb.Sheets["Apartados"]["B2"].s ={
+    //         font:{
+    //             bold:false
+    //         }
+    //     }
+    //     //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    // }
+    //else{
+        wb.Sheets["Apartados"]["B2"].v="Todos"
+        wb.Sheets["Apartados"]["B2"].s ={
+            font:{
+                bold:false
+            }
+        }
+    //}
+
+    if(req.query.userId != null){
+        let userInformation = await User.findOne({_id:req.query.userId}) 
+        wb.Sheets["Apartados"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
+        wb.Sheets["Apartados"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Apartados"]["B3"].v="Todos"
+        wb.Sheets["Apartados"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+//     wb.Sheets["Apartados"]["A2"]={};
+    if(req.query.initialDate != null && req.query.lastDate !=null ){ 
+        let initialDate = parseDate(req.query.initialDate);
+        let offset = req.headers.offset ? Number(req.headers.offset) : 6        
+        let lastDate = parseDate(req.query.lastDate);
+
+        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+            initialDate.setHours(offset,0,0,0);    
+            lastDate.setHours(offset, 0, 0, 0);
+        }
+        else{
+            initialDate.setHours(0,0,0,0);
+            lastDate.setHours(0, 0, 0, 0);
+    
+        }      
+        wb.Sheets["Apartados"]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
+        wb.Sheets["Apartados"]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
+    }
+    if (reserves.length>0){
+        for (let index = 0; index < reserves.length; index++) {
+            xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+                ['A', 'B','C','D','E','F','G',0,0,0,0,0,0,0]
+              ], {origin: -1});                     
+        }
+        let currentRow=8;
+        reserves.forEach(purchase=>{
+            wb.Sheets["Apartados"]["A"+String(currentRow)].v=purchase['Folio'];
+            wb.Sheets["Apartados"]["B"+String(currentRow)].v=purchase['Fecha'];
+            wb.Sheets["Apartados"]["C"+String(currentRow)].v=purchase['Hora'];
+            wb.Sheets["Apartados"]["D"+String(currentRow)].v=purchase['Sucursal código'];
+            wb.Sheets["Apartados"]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
+            wb.Sheets["Apartados"]["F"+String(currentRow)].v=purchase['Empleado nombre'];
+            wb.Sheets["Apartados"]["G"+String(currentRow)].v=purchase['Empleado correo'];
+            wb.Sheets["Apartados"]["H"+String(currentRow)].v=purchase['Modelos diferentes'];
+            wb.Sheets["Apartados"]["I"+String(currentRow)].v=purchase['Carritos totales'];
+            wb.Sheets["Apartados"]["J"+String(currentRow)].v=purchase['Total apartado'];
+            wb.Sheets["Apartados"]["K"+String(currentRow)].v=purchase['Pagos actuales'];
+            wb.Sheets["Apartados"]["L"+String(currentRow)].v=purchase['Pagos cancelados'];            
+            wb.Sheets["Apartados"]["M"+String(currentRow)].v=purchase['Total pagado'];            
+            wb.Sheets["Apartados"]["N"+String(currentRow)].v=purchase['Saldo restante'];            
+            currentRow ++;
+           // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de Apartados','Importe total']
+
+
+        })
+    }
+
+     headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelos diferentes","Carritos totales","Total apartado","Pagos actuales","Pagos cancelados","Total pagado","Saldo restante"]
+     //console.log(headers)
+
+    // adjusting columns length added
+     for (let i = 0; i < headers.length; i++) {  
+         let columnWidth=headers[i].length;
+         columnWidth=headers[i]=='Folio' ? columnWidth+20 : columnWidth;
+         columnWidth=headers[i]=='Fecha' ? columnWidth+15 : columnWidth;
+         columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
+         columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
+         columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
+         columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
+         columnWidth=headers[i]=='Empleado correo' ? columnWidth+15: columnWidth;
+         columnWidth=headers[i]=='Total apartado' ? columnWidth+15: columnWidth;
+        //  columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
+        //  columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
+        //  columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
+        //  columnWidth=headers[i]=='Tiempo' ? columnWidth+5: columnWidth;        
+        //  columnWidth=headers[i]=='Costo' ? columnWidth+5: columnWidth;
+        //  columnWidth=headers[i]=='Tipo de pago' ? columnWidth+20: columnWidth;        
+        
+         wscols.push({ wch: columnWidth })
+     } 
+    wb.Sheets['Apartados']['!cols']=wscols;
+    //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
+    let row = 8;
+    while (wb.Sheets['Apartados']["H"+String(row)] != null) { 
+        wb.Sheets['Apartados']["H"+String(row)].z="0";
+        wb.Sheets['Apartados']["I"+String(row)].z="0";
+        wb.Sheets['Apartados']["J"+String(row)].z="$0.00";
+        wb.Sheets['Apartados']["K"+String(row)].z="0";
+        wb.Sheets['Apartados']["L"+String(row)].z="0";
+        wb.Sheets['Apartados']["M"+String(row)].z="$0.00";
+        wb.Sheets['Apartados']["N"+String(row)].z="$0.00";
+        row+=1;
+        
+    }
+
+    let buf = XLSXStyle.write(wb, { type: "buffer" });
+
+    reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    reply.header("Content-Disposition", 'attachment; filename="Apartados.xlsx"');
+    return reply.send(buf); 
+
+}
 function parseDate(input) {
     let parts = input.split('-');      
     // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
@@ -1075,4 +1574,4 @@ function dateTimeHHSS(timestamp){
 
 
 
-module.exports = { rentalsReport, salesReport }
+module.exports = { rentalsReport, salesReport, reservesReport }

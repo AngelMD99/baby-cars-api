@@ -1,4 +1,4 @@
-const { rentalsReport, salesReport } = require('../controllers/report.controller');
+const { rentalsReport, salesReport, reservesReport } = require('../controllers/report.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -86,7 +86,7 @@ const getSalesReportOpts={
         //     authorization:{type:'string'}
         // },
         querystring:{
-            carId:{type:'string'},
+            //carId:{type:'string'},
             branchId:{type:'string'},
             userId:{type:'string'},
             initialDate:{type:'string'},
@@ -108,9 +108,39 @@ const getSalesReportOpts={
     
 }
 
+const getReservesReportOpts={
+    schema: {
+         description:"Retrieves a MS Excel file with the information of the reserves for the carrs, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
+         tags:['Reports'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+        querystring:{            
+            branchId:{type:'string'},
+            userId:{type:'string'},
+            initialDate:{type:'string'},
+            lastDate:{type:'string'}
+        }, 
+        response: {
+            200: {
+            //     description:'An XLS file',            
+                 type:'string',
+                 format:'binary',
+                 //content: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',                    
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: reservesReport
+    
+}
+
 function crmReportsRoutes(fastify, options, done) {
     fastify.get('/crm/reports/rentals', getRentalsReportOpts)
     fastify.get('/crm/reports/sales', getSalesReportOpts)
+    fastify.get('/crm/reports/reserves', getReservesReportOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     // fastify.post('/crm/branches', postBranchUpOpts)
     // fastify.put('/crm/branches/:id', putSingleBranchOpts)
