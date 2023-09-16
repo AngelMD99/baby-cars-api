@@ -1,4 +1,4 @@
-const { rentalsReport } = require('../controllers/report.controller');
+const { rentalsReport, salesReport } = require('../controllers/report.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -50,7 +50,7 @@ const authorizeFunc = async function (req, reply) {
 
 const getRentalsReportOpts={
     schema: {
-         description:"Retrieves a MS Excel file with the information of the rentals for the products, if branchId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
+         description:"Retrieves a MS Excel file with the information of the rentals for the cars, if branchId, userId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
          tags:['Reports'], 
         //  headers:{
         //     authorization:{type:'string'}
@@ -58,6 +58,7 @@ const getRentalsReportOpts={
         querystring:{
             carId:{type:'string'},
             branchId:{type:'string'},
+            userId:{type:'string'},
             initialDate:{type:'string'},
             lastDate:{type:'string'}
         }, 
@@ -77,8 +78,39 @@ const getRentalsReportOpts={
     
 }
 
+const getSalesReportOpts={
+    schema: {
+         description:"Retrieves a MS Excel file with the information of the sales for the carrs, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
+         tags:['Reports'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+        querystring:{
+            carId:{type:'string'},
+            branchId:{type:'string'},
+            userId:{type:'string'},
+            initialDate:{type:'string'},
+            lastDate:{type:'string'}
+        }, 
+        response: {
+            200: {
+            //     description:'An XLS file',            
+                 type:'string',
+                 format:'binary',
+                 //content: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',                    
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: salesReport
+    
+}
+
 function crmReportsRoutes(fastify, options, done) {
     fastify.get('/crm/reports/rentals', getRentalsReportOpts)
+    fastify.get('/crm/reports/sales', getSalesReportOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     // fastify.post('/crm/branches', postBranchUpOpts)
     // fastify.put('/crm/branches/:id', putSingleBranchOpts)
