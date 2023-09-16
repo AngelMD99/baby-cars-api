@@ -278,7 +278,6 @@ const balanceVerifications = async function (req,reply){
         })  
 
     }
-    console.log("RENTALS BALANCE: ", rentalsBalance)
     if (rentalsBalance){
 
         let datesDifference = nowDateTime - rentalsBalance.balanceDate.getTime();
