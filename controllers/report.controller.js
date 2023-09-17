@@ -1023,6 +1023,11 @@ const reservesReport = async function (req, reply){
         aggregateQuery.push({ "$match": {"userId": employeeId }});        
     }
 
+    if (req.isCancelled!=null && req.query.initialDate!=""){
+        let cancelationFilter = req.isCancelled.toLowerCase() == "true" ? true : false
+        aggregateQuery.push({ "$match": {"isCancelled": cancelationFilter }});        
+    }
+
     let dateMatchStage={};
     if (req.query.initialDate!=null && req.query.finalDate!=null){        
         let initialDay=new Date(req.query.initialDate);
@@ -1045,7 +1050,11 @@ const reservesReport = async function (req, reply){
     if (req.query.finalDate!=null && req.query.initialDate==null){
         let finalDay= addDays(req.query.finalDate,1)
         dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
-        }
+    }
+
+    
+
+    
 
     if(dateMatchStage['$match']!=null){
         aggregateQuery.push(dateMatchStage)
@@ -1091,8 +1100,9 @@ const reservesReport = async function (req, reply){
             }
           },
          {
-            '$project': {
+            '$project': {                
                 'Folio':'$folio',
+                'Cancelado':'$isCancelled',
                 'Sucursal código':{
                     '$first': '$branchInfo.code'
                 },
@@ -1145,6 +1155,7 @@ const reservesReport = async function (req, reply){
         })
 
         reserve['Saldo restante']=reserve['Total apartado']-reserve['Total pagado'];
+        reserve.Cancelado  = reserve.Cancelado == true ? 'Si' :'No'
 
         if(reserve.createdAt){            
             reserve.createdAt = adjustTimeStamp (reserve.createdAt,offset);
@@ -1180,7 +1191,7 @@ const reservesReport = async function (req, reply){
     //let wbRows = reserves.length+4;   
     wb.SheetNames.push("Apartados");
     //addig the titles rows
-    var ws_data = [['Sucursal','','','','','','','','','','','','','']]
+    var ws_data = [['Sucursal','','','','','','','','','','','','','','']]
     var ws = xlsx.utils.aoa_to_sheet(ws_data);       
     wb.Sheets["Apartados"] = ws;
     wb.Sheets["Apartados"]["A1"].s={        
@@ -1190,7 +1201,7 @@ const reservesReport = async function (req, reply){
             },       
     }
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Etiqueta', '', '', '','','','','','','','','','','']
+            ['Etiqueta', '', '', '','','','','','','','','','','','']
           ],{origin: -1});
     wb.Sheets["Apartados"]["A2"].s={        
         font: {				  		
@@ -1200,7 +1211,7 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Empleado', '', '', '','','','','','','','','','','']
+        ['Empleado', '', '', '','','','','','','','','','','','']
       ],{origin: -1});
     wb.Sheets["Apartados"]["A3"].s={        
         font: {				  		
@@ -1211,13 +1222,13 @@ const reservesReport = async function (req, reply){
     
     if(req.query.initialDate != null && req.query.lastDate !=null ){        
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Fecha inicial', '', '', '','','','','','','','','','','']
+            ['Fecha inicial', '', '', '','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Fecha final', '', '', '','','','','','','','','','','']
+            ['Fecha final', '', '', '','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['', '', '', '','','','','','','','','','','']
+            ['', '', '', '','','','','','','','','','','','']
           ], {origin: -1});
 
         wb.Sheets["Apartados"]["A4"].s={        
@@ -1235,13 +1246,13 @@ const reservesReport = async function (req, reply){
     }
     else{
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Sin rango de fechas', '', '', '','','','','','','','','','','']
+            ['Sin rango de fechas', '', '', '','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['', '', '', '','','','','','','','','','','']
+            ['', '', '', '','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['', '', '', '','','','','','','','','','','']
+            ['', '', '', '','','','','','','','','','','','']
           ], {origin: -1});
         wb.Sheets["Apartados"]["A4"].s={        
             font: {				  		
@@ -1252,7 +1263,7 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Folio','Fecha','Hora','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total apartado','Pagos actuales','Pagos cancelados','Total pagado','Saldo restante']
+        ['Folio','Cancelado','Fecha','Hora','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total apartado','Pagos actuales','Pagos cancelados','Total pagado','Saldo restante']
       ], {origin: -1});
     
     wb.Sheets["Apartados"]["A7"].s={        
@@ -1335,6 +1346,12 @@ const reservesReport = async function (req, reply){
     }
 
     wb.Sheets["Apartados"]["N7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["O7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
@@ -1436,25 +1453,26 @@ const reservesReport = async function (req, reply){
     if (reserves.length>0){
         for (let index = 0; index < reserves.length; index++) {
             xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-                ['A', 'B','C','D','E','F','G',0,0,0,0,0,0,0]
+                ['A', 'B','C','D','E','F','G','H',0,0,0,0,0,0,0]
               ], {origin: -1});                     
         }
         let currentRow=8;
         reserves.forEach(purchase=>{
             wb.Sheets["Apartados"]["A"+String(currentRow)].v=purchase['Folio'];
-            wb.Sheets["Apartados"]["B"+String(currentRow)].v=purchase['Fecha'];
-            wb.Sheets["Apartados"]["C"+String(currentRow)].v=purchase['Hora'];
-            wb.Sheets["Apartados"]["D"+String(currentRow)].v=purchase['Sucursal código'];
-            wb.Sheets["Apartados"]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
-            wb.Sheets["Apartados"]["F"+String(currentRow)].v=purchase['Empleado nombre'];
-            wb.Sheets["Apartados"]["G"+String(currentRow)].v=purchase['Empleado correo'];
-            wb.Sheets["Apartados"]["H"+String(currentRow)].v=purchase['Modelos diferentes'];
-            wb.Sheets["Apartados"]["I"+String(currentRow)].v=purchase['Carritos totales'];
-            wb.Sheets["Apartados"]["J"+String(currentRow)].v=purchase['Total apartado'];
-            wb.Sheets["Apartados"]["K"+String(currentRow)].v=purchase['Pagos actuales'];
-            wb.Sheets["Apartados"]["L"+String(currentRow)].v=purchase['Pagos cancelados'];            
-            wb.Sheets["Apartados"]["M"+String(currentRow)].v=purchase['Total pagado'];            
-            wb.Sheets["Apartados"]["N"+String(currentRow)].v=purchase['Saldo restante'];            
+            wb.Sheets["Apartados"]["B"+String(currentRow)].v=purchase['Cancelado'];
+            wb.Sheets["Apartados"]["C"+String(currentRow)].v=purchase['Fecha'];
+            wb.Sheets["Apartados"]["D"+String(currentRow)].v=purchase['Hora'];
+            wb.Sheets["Apartados"]["E"+String(currentRow)].v=purchase['Sucursal código'];
+            wb.Sheets["Apartados"]["F"+String(currentRow)].v=purchase['Sucursal nombre'];
+            wb.Sheets["Apartados"]["G"+String(currentRow)].v=purchase['Empleado nombre'];
+            wb.Sheets["Apartados"]["H"+String(currentRow)].v=purchase['Empleado correo'];
+            wb.Sheets["Apartados"]["I"+String(currentRow)].v=purchase['Modelos diferentes'];
+            wb.Sheets["Apartados"]["J"+String(currentRow)].v=purchase['Carritos totales'];
+            wb.Sheets["Apartados"]["L"+String(currentRow)].v=purchase['Total apartado'];
+            wb.Sheets["Apartados"]["L"+String(currentRow)].v=purchase['Pagos actuales'];
+            wb.Sheets["Apartados"]["M"+String(currentRow)].v=purchase['Pagos cancelados'];            
+            wb.Sheets["Apartados"]["N"+String(currentRow)].v=purchase['Total pagado'];            
+            wb.Sheets["Apartados"]["O"+String(currentRow)].v=purchase['Saldo restante'];            
             currentRow ++;
            // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de Apartados','Importe total']
 
@@ -1462,7 +1480,7 @@ const reservesReport = async function (req, reply){
         })
     }
 
-     headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelos diferentes","Carritos totales","Total apartado","Pagos actuales","Pagos cancelados","Total pagado","Saldo restante"]
+     headers=["Folio","Cancelado","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelos diferentes","Carritos totales","Total apartado","Pagos actuales","Pagos cancelados","Total pagado","Saldo restante"]
      //console.log(headers)
 
     // adjusting columns length added
@@ -1488,14 +1506,14 @@ const reservesReport = async function (req, reply){
     wb.Sheets['Apartados']['!cols']=wscols;
     //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
     let row = 8;
-    while (wb.Sheets['Apartados']["H"+String(row)] != null) { 
-        wb.Sheets['Apartados']["H"+String(row)].z="0";
+    while (wb.Sheets['Apartados']["I"+String(row)] != null) { 
         wb.Sheets['Apartados']["I"+String(row)].z="0";
-        wb.Sheets['Apartados']["J"+String(row)].z="$0.00";
-        wb.Sheets['Apartados']["K"+String(row)].z="0";
+        wb.Sheets['Apartados']["J"+String(row)].z="0";
+        wb.Sheets['Apartados']["K"+String(row)].z="$0.00";
         wb.Sheets['Apartados']["L"+String(row)].z="0";
-        wb.Sheets['Apartados']["M"+String(row)].z="$0.00";
+        wb.Sheets['Apartados']["M"+String(row)].z="0";
         wb.Sheets['Apartados']["N"+String(row)].z="$0.00";
+        wb.Sheets['Apartados']["O"+String(row)].z="$0.00";
         row+=1;
         
     }
