@@ -18,7 +18,8 @@ const errResponse = {
 const balanceDef={
     type:'object',
     properties: {
-        _id:{type:'string'}, 
+        _id:{type:'string'},
+        folio:{type:'string'},
         balanceType:{type:'string'}                              ,
         amount:{type:'number'},
         loginDate:{type:'number'},
@@ -122,7 +123,7 @@ const getSingleBalanceOpts={
 const deleteSingleBalanceOpts={
     schema: {
          description:"Deletes the balance with the id provided in the URL.",
-         tags:['Cars'],
+         tags:['Balances'],
         //  headers:{
         //     authorization:{type:'string'}
         // },
@@ -146,11 +147,52 @@ const deleteSingleBalanceOpts={
     
 }
 
+const getBalancesOpts={
+    schema: {
+         description:"Retrieves the information of all the balances stored on the database.",
+         tags:['Balances'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'},
+            userId:{type:'string'},
+            initialDate:{type:'string'},
+            lastDate:{type:'string'},
+            balanceType:{type:'string'},
+
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:balanceDef,
+                  },
+                   page:{type:'number'},
+                   perPage:{type:'number'},
+                   totalDocs:{type:'number'},
+                   totalPages:{type:'number'}
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: balanceList,
+    
+}
+
 function crmBalancesRoutes(fastify, options, done) {    
     // fastify.post('/users/in', postUserSignInOpts);
     // fastify.post('/users', postUserSaveOpts);
     fastify.get('/crm/balance/:balanceId', getSingleBalanceOpts);
-    fastify.delete('/crm/balance/:balanceId', getSingleBalanceOpts);
+    fastify.delete('/crm/balance/:balanceId', deleteSingleBalanceOpts);
+    fastify.get('/crm/balance', getBalancesOpts);
     // fastify.get('/users/:id', getSingleUserOpts);
     // fastify.delete('/users/:id', deleteSingleUserOpts);
     // fastify.put('/users/:id', putSingleUserOpts);

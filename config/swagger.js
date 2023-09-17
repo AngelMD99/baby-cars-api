@@ -337,6 +337,7 @@ exports.options = {
           required: ['amount','branchId','userId','loginDate','logoutDate'],
           properties: {
             _id:{type:'string'},
+            folio:{type:'string'},
             balanceType:{type:'string'},
             isDeleted:{type:'boolean'},
             userId:{type:'string'},             

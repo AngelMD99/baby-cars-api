@@ -194,6 +194,37 @@ const balancePaymentsCreate = async function (req,reply){
         const balance = new Balance(balanceObj);        
         balance._id = new mongoose.Types.ObjectId();
         balance.balanceDate = new Date()
+        let offset = await getOffsetSetting();              
+        let date = new Date ();    
+        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+             date.setHours(date.getHours() - offset);
+             date.setHours(offset,0,0,0);    
+             // date.setHours(offset, 0, 0, 0);
+        }
+        else{
+             date.setHours(0,0,0,0);
+             date.setHours(0, 0, 0, 0);
+        }
+        let nextDay = addDays(date,1);
+        let branchBalances = await Reserve.find({
+            isDeleted:false, 
+            branchId:req.params.id,
+            balanceDate:{"$gte": date,"$lte":nextDay},
+            balanceType:'payments'
+        })
+        
+        let day = date.getDate();
+        let month = date.getMonth() + 1
+        let year = date.getFullYear();
+        let dayString = day > 9 ? day : "0"+day;
+        let monthString = month > 9 ? month : "0"+month;  
+        let nextFolio = branchReserves.length+1
+        nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+        let branchCode = branchInfo.code;
+        balance.folio="PAG-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+
         await balance.save();
         await balance.populate([
             { path:'branchId',select:'name code'},
@@ -233,9 +264,479 @@ const balanceShow = async function (req,reply){
     
 }
 
-const balanceList = async function (req,reply){
+const balanceList = async function (req, reply){
+    let searchQuery = {
+        isDeleted: false,			
+    };
+    if(req.params.id && !req.query.branchId){
+        searchQuery['branchId']=req.params.id
+    }
+
+    if(!req.params.id && req.query.branchId){
+        searchQuery['branchId']=req.query.branchId
+    }
+    if(req.query.userId){
+        searchQuery['userId']=req.query.userId
+    }
+
+    if(req.query.balanceType != null && req.query.balanceType != ""){
+        if(req.query.balanceType.toLowerCase() !='rentals' ||req.query.balanceType.toLowerCase() !='payments'){
+            return reply.code(400).send({
+                status:'fail',
+                message:'El tipo de operación recibido no es válido'
+            })
+
+        }
+        let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
+        aggregateQuery.push({ "$match": {"userId": operationType }});        
+    }
     
+
+    if (req.query.initialDate!=null && req.query.finalDate!=null){      
+        
+        
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
+        }
+
+        let finalDay= addDays(finalDayToDate,1)
+        console.log("INITIAL DATE RECEIVED CRM RENTALS: ", req.query.initialDate);
+        console.log("INITIAL DATE ADJUSTED CRM RENTALS: ", initialDay);
+        console.log("FINAL DATE RECEIVED CRM RENTALS: ", req.query.finalDate);                       
+        console.log("FINAL DATE RECEIVED CRM RENTALS: ", finalDay);                       
+        searchQuery['balanceDate']={"$gte": initialDay,"$lte":finalDay}
+    }
+    if (req.query.initialDate!=null && req.query.finalDate==null){        
+        let initialDay=new Date(req.query.initialDate);
+        searchQuery['balanceDate']={"$gte": initialDay}
+
+    }
+    if (req.query.finalDate!=null && req.query.initialDate==null){
+        let finalDay= addDays(req.query.finalDate,1)
+        searchQuery['balanceDate']={"$lte": finalDay}
+    }
+    const options = {
+        select: `-isDeleted -__v -updatedAt`, 
+
+    }
+    if (req.query.page){
+        options.page = req.query.page;
+    }
+    if (req.query.perPage){
+        options.limit = req.query.perPage;
+    }
+    if (req.query.column){
+        let column= req.query.column
+        let order = req.query.order =='desc' ? -1 :1
+        options.sort={};
+        options.sort[column]=order    
+    }
+    else{
+        options.sort={"balanceDate":-1}
+    }
+    let balancesPaginated={};
+    if(!req.query.search){                 
+        let allBranches = await Branch.find({});        
+        let allUsers = await User.find({});        
+        if(options.page!=null && options.limit!=null){
+            balancesPaginated.docs=[];
+            let balancesQuery = await Balance.paginate(searchQuery, options);
+            balancesQuery.docs.forEach(sale => {
+                let newObj={
+                    _id:sale._id,
+                    folio:sale.folio,
+                    client:sale.client,
+                    products:sale.products,
+                    totalSale:sale.totalSale,
+                    createdAt:sale.createdAt,
+                    updateAt:sale.updatedAt,                   
+
+                }
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(sale.branchId)
+                })
+                newObj.branchId={
+                    _id:sale.branchId ? sale.branchId :null,
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+
+                }
+                // let modelInfo = allModels.find(modelo=>{
+                //     return String(modelo._id) == String(sale.modelId)
+                // })
+                // newObj.modelId={
+                //     _id:sale.modelId ? sale.modelId :null,
+                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",
+                //     code : modelInfo && modelInfo.code ? modelInfo.code : "",
+
+                // }
+
+                // let clientInfo = allClients.find(client=>{
+                //     return String(client._id) == String(sale.clientId)
+                // })
+                // newObj.clientId={
+                //     _id:sale.clientId ? sale.clientId :null,
+                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
+                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
+                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
+
+                // }
+
+                let userInfo = allUsers.find(user=>{
+                    return String(user._id) == String(sale.employeeId)
+                })
+                newObj.employeeId={
+                    _id:sale.employeeId ? sale.employeeId :null,
+                    fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
+                    phone : userInfo && userInfo.phone ? userInfo.phone : "",
+                    email : userInfo && userInfo.email ? userInfo.email : "",
+
+                }                
+                
+                delete sale.branchId;
+                delete sale.modelId;                
+                delete sale.clientId;                
+                delete sale.employeeId;                
+                balancesPaginated.docs.push(newObj)                               
+            });
+            balancesPaginated.page=balancesQuery.page;
+            balancesPaginated.perPage=balancesQuery.limit;
+            balancesPaginated.totalDocs=balancesQuery.totalDocs;
+            balancesPaginated.totalPages=balancesQuery.totalPages;
+        }
+        else{
+            let sortOrder = {}
+            if(req.query.column){
+                
+                sortOrder[req.query.column] = req.query.order == "desc" ? -1:1
+            }
+            else{
+                sortOrder ={
+                    createdAt:-1
+                }
+            }
+            balancesPaginated.docs=[]
+            let balancesQuery = await Balance.find(searchQuery).sort(sortOrder).lean();
+            balancesQuery.forEach(sale => {
+                let branchInfo = allBranches.find(branch=>{
+                    return String(branch._id) == String(sale.branchId)
+                }) 
+                let branchId={
+                    _id:sale.branchId ? sale.branchId :null,
+                    name : branchInfo && branchInfo.name ? branchInfo.name : "",
+                    code : branchInfo && branchInfo.code ? branchInfo.code : "",
+                } 
+                // let modelInfo = allModels.find(modelo=>{
+                //     return String(modelo._id) == String(sale.modelId)
+                // }) 
+                // let modelId={
+                //     _id:sale.modelId ? sale.modelId :null,
+                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
+                // }
+                
+                // let clientInfo = allClients.find(client=>{
+                //     return String(client._id) == String(sale.clientId)
+                // })
+
+                // let clientId={
+                //     _id:sale.clientId ? sale.clientId :null,
+                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
+                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
+                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
+
+                // }
+
+                let userInfo = allUsers.find(user=>{
+                    return String(user._id) == String(sale.employeeId)
+                })
+                let userId={
+                    _id:sale.employeeId ? sale.employeeId :null,
+                    fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
+                    phone : userInfo && userInfo.phone ? userInfo.phone : "",
+                    email : userInfo && userInfo.email ? userInfo.email : "",
+
+                }
+                
+                sale.branchId=branchId;         
+                // sale.modelId=modelId;         
+                // sale.clientId=clientId;         
+                sale.employeeId=userId;                              
+                // sale.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
+                // sale.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
+                // delete sale.branchId;                
+                balancesPaginated.docs.push(sale)
+                
+
+                
+            });
+        }
+        
+        
+        
+        
+
+        
+    }
+    else{
+        // branchSearch = await sale.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // balancesPaginated.totalDocs = branchSearch.length;
+        let diacriticSearch = diacriticSensitiveRegex(req.query.search);
+        let searchString = '.*'+diacriticSearch+'.*';
+
+  //    let searchString = '.*'+req.query.search+'.*';
+          delete options.select;
+          let aggregateQuery=[];
+          if(req.params.id && !req.query.branchId){
+            aggregateQuery.push({
+                '$match':{
+                    branchId:new ObjectId(req.params.id)
+                }
+                })
+          }
+          if(!req.params.id && req.query.branchId){
+            aggregateQuery.push({
+                '$match':{
+                    branchId:new ObjectId(req.query.branchId),
+                    isStarted:true
+                }
+                })
+          }          
+          if(req.query.userId){
+            aggregateQuery.push({
+                '$match':{
+                    userId:new ObjectId(req.query.userId)
+                }
+                })
+          }
+          if(req.query.balanceType){
+            aggregateQuery.push({
+                '$match':{
+                    balanceType:req.query.balanceType.toLowerCase()
+                }
+                })
+          }
+
+          if (req.query.initialDate!=null && req.query.finalDate!=null){                    
+            let initialDay=new Date(req.query.initialDate);
+            let finalDayToDate =new Date(req.query.finalDate)            
+            if(initialDay.getTime() > finalDayToDate.getTime()){
+                return reply.code(400).send({
+                    status:'fail',
+                    message:'La fecha inicial no puede ser mayor que la fecha final'
+                })
+            }
     
+            let finalDay= addDays(finalDayToDate,1)
+            console.log("INITIAL DATE RECEIVED CRM RENTALS: ", req.query.initialDate);
+            console.log("INITIAL DATE ADJUSTED CRM RENTALS: ", initialDay);
+            console.log("FINAL DATE RECEIVED CRM RENTALS: ", req.query.finalDate);                       
+            console.log("FINAL DATE RECEIVED CRM RENTALS: ", finalDay);
+            aggregateQuery.push({
+                '$match':{
+                    balanceDate:{"$gte": initialDay,"$lte":finalDay}
+                }
+            })                                   
+        }
+        if (req.query.initialDate!=null && req.query.finalDate==null){        
+            let initialDay=new Date(req.query.initialDate);
+            aggregateQuery.push({
+                '$match':{
+                    balanceDate:{"$gte": initialDay}
+                }
+            })                                              
+        }
+        if (req.query.finalDate!=null && req.query.initialDate==null){
+            let finalDay= addDays(req.query.finalDate,1)
+            aggregateQuery.push({
+                '$match':{
+                    balanceDate:{"$lte": finalDay}
+                }
+            })                                                          
+        }
+          aggregateQuery.push(
+              {
+                '$match': {
+                  'isDeleted': false
+                }
+              }, 
+              {
+                '$lookup': {
+                  'from': 'branches', 
+                  'localField': 'branchId', 
+                  'foreignField': '_id', 
+                  'as': 'branchInfo'
+                }
+              },
+              
+             {
+                '$lookup': {
+                    'from': 'users', 
+                    'localField': 'userId', 
+                    'foreignField': '_id', 
+                    'as': 'employeeInfo'
+                  }
+             },
+              
+              {
+                '$project': {
+                  'isDeleted':1,
+                  //'branchId': 1,                   
+                  'folio': 1,                   
+                  'branchId._id': {
+                    '$first': '$branchInfo._id'
+                  },
+                  'branchId.code': {
+                    '$first': '$branchInfo.code'
+                  } ,
+                  'branchId.name': {
+                    '$first': '$branchInfo.name'
+                  },                  
+                  'client':1,                  
+                  'employeeId._id': {
+                    '$first': '$employeeInfo._id'
+                  },
+                  'employeeId.fullName': {
+                    '$first': '$employeeInfo.fullName'
+                  }, 
+                  'employeeId.phone': {
+                    '$first': '$employeeInfo.phone'
+                  }, 
+                  'employeeId.email': {
+                    '$first': '$employeeInfo.email'
+                  }, 
+                  'products':1,                 
+                  'createdAt':1,
+                  'updatedAt':1,                 
+                }
+              }, {
+                '$match': {
+                  '$or': [                    
+                    
+                    {
+                        'branchId.code': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'branchId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'products.modelName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'products.color': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'client.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'client.phone': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'client.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'userId.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },                    
+                    {
+                        'userId.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    }
+
+                  ]
+                }
+              }
+            )
+            let sortQuery={
+                '$sort':{}
+            };
+            if (req.query.column){
+                let sortColumn = req.query.column;
+                let order = req.query.order == "desc" ? -1: 1
+                sortQuery['$sort'][sortColumn]=order;
+            }
+            else{
+                sortQuery['$sort']['name']=1;
+            }
+            aggregateQuery.push(sortQuery)        
+        let BalancesSearch = await Balance.aggregate(aggregateQuery);
+        balancesPaginated.docs = BalancesSearch;
+        balancesPaginated.totalDocs = balancesPaginated.docs.length
+
+        balancesPaginated.page=req.query.page ? req.query.page : 1;
+        balancesPaginated.perPage=req.query.perPage ? req.query.perPage :balancesPaginated.totalDocs;
+        let limit = req.query.perPage ? req.query.perPage : balancesPaginated.totalDocs;
+        let page = req.query.page ? req.query.page : 1;
+        balancesPaginated.docs=paginateArray(BalancesSearch,limit,page);
+        
+        balancesPaginated.docs.forEach(doc=>{
+            if (!doc.branchId || !doc.branchId._id){
+                doc.branchId ={
+                    _id:null,
+                    code:"",
+                    name:""
+                }
+            }
+        })
+        balancesPaginated.totalPages = Math.ceil(balancesPaginated.totalDocs / balancesPaginated.perPage);
+
+    }
+    balancesPaginated.docs.forEach(doc=>{
+        if(doc.isStarted== true && doc.expireDate){
+            let currentDate = new Date ()
+            let remainingTime = minutesDiff (currentDate,doc.expireDate);
+            doc.remainingTime=remainingTime
+
+        }
+        
+
+    })
+    let docs = JSON.stringify(balancesPaginated.docs);    
+    var sales = JSON.parse(docs);
+    
+
+    return reply.code(200).send({
+        status: 'success',
+        data: sales,
+        page: balancesPaginated.page,
+        perPage:balancesPaginated.perPage,
+        totalDocs: balancesPaginated.totalDocs,
+        totalPages: balancesPaginated.totalPages,
+
+    })
+
+
+
 }
 
 const balanceDelete = async function (req,reply){
@@ -247,7 +748,7 @@ const balanceDelete = async function (req,reply){
         })       
     }
 
-    balance.isDeleted=false;
+    balance.isDeleted=true;    
     await balance.save();
     return reply.code(201).send({
         status: 'success',

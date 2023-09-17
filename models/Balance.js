@@ -5,6 +5,9 @@ const balanceSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    folio:{
+        type: String
+    },
     balanceType:{
         type: String,
         enum:['rentals', 'payments']

@@ -1,4 +1,4 @@
-const { rentalsReport, salesReport, reservesReport } = require('../controllers/report.controller');
+const { rentalsReport, salesReport, reservesReport, balancesReport } = require('../controllers/report.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -80,7 +80,7 @@ const getRentalsReportOpts={
 
 const getSalesReportOpts={
     schema: {
-         description:"Retrieves a MS Excel file with the information of the sales for the carrs, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
+         description:"Retrieves a MS Excel file with the information of the sales for the cars, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
          tags:['Reports'], 
         //  headers:{
         //     authorization:{type:'string'}
@@ -110,14 +110,14 @@ const getSalesReportOpts={
 
 const getReservesReportOpts={
     schema: {
-         description:"Retrieves a MS Excel file with the information of the reserves for the carrs, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
+         description:"Retrieves a MS Excel file with the information of the reserves for the cars, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
          tags:['Reports'], 
         //  headers:{
         //     authorization:{type:'string'}
         // },
         querystring:{            
             branchId:{type:'string'},
-            userId:{type:'string'},
+            employeeId:{type:'string'},
             initialDate:{type:'string'},
             lastDate:{type:'string'}
         }, 
@@ -137,10 +137,41 @@ const getReservesReportOpts={
     
 }
 
+const getBalancesReportOpts={
+    schema: {
+         description:"Retrieves a MS Excel file with the information of the balances, if branchId, employeeId, initialData and lastDate are provided on query params, the rentals will be filtered according to them.",
+         tags:['Reports'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+        querystring:{            
+            branchId:{type:'string'},
+            userId:{type:'string'},
+            balanceType:{type:'string'},
+            initialDate:{type:'string'},
+            lastDate:{type:'string'}
+        }, 
+        response: {
+            200: {
+            //     description:'An XLS file',            
+                 type:'string',
+                 format:'binary',
+                 //content: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',                    
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: balancesReport
+    
+}
+
 function crmReportsRoutes(fastify, options, done) {
     fastify.get('/crm/reports/rentals', getRentalsReportOpts)
     fastify.get('/crm/reports/sales', getSalesReportOpts)
     fastify.get('/crm/reports/reserves', getReservesReportOpts)
+    fastify.get('/crm/reports/balances', getBalancesReportOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     // fastify.post('/crm/branches', postBranchUpOpts)
     // fastify.put('/crm/branches/:id', putSingleBranchOpts)
