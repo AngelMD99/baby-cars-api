@@ -1614,14 +1614,15 @@ const balancesReport = async function (req, reply){
           {
             '$lookup': {
               'from': 'users', 
-              'localField': 'employeeId', 
+              'localField': 'userId', 
               'foreignField': '_id', 
-              'as': 'employeeInfo'
+              'as': 'userInfo'
             }
           },
          {
             '$project': {
                 'Folio':'$folio',
+                'Tipo':'$balanceType',                
                 'Sucursal código':{
                     '$first': '$branchInfo.code'
                 },
@@ -1630,15 +1631,15 @@ const balancesReport = async function (req, reply){
                 
                 },
                 'Empleado nombre':{
-                    '$first': '$employeeInfo.fullName'
+                    '$first': '$userInfo.fullName'
                 },
                 'Empleado correo': {
-                    '$first': '$employeeInfo.email'
-                
-                },
-                'Modelos diferentes':{'$size': "$products"},
-                'Carritos totales':{'$sum': "$products.quantity"},
-                "Total venta":"$totalSale",                
+                    '$first': '$userInfo.email'                
+                },                
+                'Cantidad':'$quantity',
+                'Monto':'$amount',
+                'loginDate':1,
+                'balanceDate':1,
                 "createdAt":'$createdAt'                               
                 
             }
@@ -1653,35 +1654,40 @@ const balancesReport = async function (req, reply){
         //   }
     )
 
-    let sales = await Sale.aggregate(aggregateQuery);
-    let allPayments = await Payment.find({isDeleted:false, isDiscarded:false});    
-    console.log("sales: ", sales[0]);    
-    sales.forEach(sale=>{        
-        let salePayment = allPayments.find(payment=>{
-            return String(payment.saleId) == sale._id
-        })
+    let balances = await Balance.aggregate(aggregateQuery);        
+    balances.forEach(sale=>{               
 
-        if(sale.createdAt){            
-            sale.createdAt = adjustTimeStamp (sale.createdAt,offset);
-            sale.Fecha=dateDDMMAAAA(sale.createdAt);            
-            sale.Hora=dateTimeHHSS(sale.createdAt);  
-            
+        if(sale.loginDate){            
+            sale.loginDate = adjustTimeStamp (sale.loginDate,offset);
+            sale['Fecha de sesión']=dateDDMMAAAA(sale.loginDate);            
+            sale['Hora de sesión']=dateTimeHHSS(sale.loginDate);              
         }
-        sale['Tipo de pago']=salePayment && salePayment.paymentType ? salePayment.paymentType :"";
+
+        if(sale.balanceDate){            
+            sale.balanceDate = adjustTimeStamp (sale.balanceDate,offset);
+            sale['Fecha de corte']=dateDDMMAAAA(sale.createdAt);            
+            sale['Hora de corte']=dateTimeHHSS(sale.createdAt);              
+        } 
+        if(sale.Tipo){
+            if(sale.Tipo.toLowerCase()=='payments'){
+                sale.Tipo = 'Pagos'
+            }
+            if(sale.Tipo.toLowerCase()=='rentals'){
+                sale.Tipo = 'Rentas'
+            }
+        }
         
-    })
+    }) 
 
-    console.log("sales DATE ADJUSTED: ", sales[0]);
-    
-   
-
-    // if (sales.length==0){
+    console.log("BALANCES ADJUSTED: ", balances[0]);
+  
+    // if (balances.length==0){
     //     let emptyPurchaseObj = {
     //         'Nombre': '', 
     //         'Habilitado general':'',
     //         'Cantidad de ventas':''            
     //     }
-    //     sales.push(emptyPurchaseObj)
+    //     balances.push(emptyPurchaseObj)
     // }
    	
     let headers=[]; //created array for column names
@@ -1690,34 +1696,34 @@ const balancesReport = async function (req, reply){
     //
     let wb = xlsx.utils.book_new();
     wb.Props = {
-        Title: "Ventas",                
+        Title: "Cortes",                
     };
-    //let wbRows = sales.length+4;   
-    wb.SheetNames.push("Ventas");
+    //let wbRows = balances.length+4;   
+    wb.SheetNames.push("Cortes");
     //addig the titles rows
     var ws_data = [['Sucursal','','','','','','','','','','','','','']]
     var ws = xlsx.utils.aoa_to_sheet(ws_data);       
-    wb.Sheets["Ventas"] = ws;
-    wb.Sheets["Ventas"]["A1"].s={        
+    wb.Sheets["Cortes"] = ws;
+    wb.Sheets["Cortes"]["A1"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
             },       
     }
-    xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['Etiqueta', '', '', '','','','','','','','','','','']
           ],{origin: -1});
-    wb.Sheets["Ventas"]["A2"].s={        
+    wb.Sheets["Cortes"]["A2"].s={        
         font: {				  		
                 sz: 12, // tamaño de fuente
                 bold: true // negrita
         },       
     }
 
-    xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
         ['Empleado', '', '', '','','','','','','','','','','']
       ],{origin: -1});
-    wb.Sheets["Ventas"]["A3"].s={        
+    wb.Sheets["Cortes"]["A3"].s={        
         font: {				  		
             sz: 12, // tamaño de fuente
             bold: true // negrita
@@ -1725,23 +1731,23 @@ const balancesReport = async function (req, reply){
     }
     
     if(req.query.initialDate != null && req.query.lastDate !=null ){        
-        xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['Fecha inicial', '', '', '','','','','','','','','','','']
           ], {origin: -1});
-        xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['Fecha final', '', '', '','','','','','','','','','','']
           ], {origin: -1});
-        xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['', '', '', '','','','','','','','','','','']
           ], {origin: -1});
 
-        wb.Sheets["Ventas"]["A4"].s={        
+        wb.Sheets["Cortes"]["A4"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
             }               
         }
-        wb.Sheets["Ventas"]["A5"].s={        
+        wb.Sheets["Cortes"]["A5"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
@@ -1749,16 +1755,16 @@ const balancesReport = async function (req, reply){
         }
     }
     else{
-        xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['Sin rango de fechas', '', '', '','','','','','','','','','','']
           ], {origin: -1});
-        xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['', '', '', '','','','','','','','','','','']
           ], {origin: -1});
-        xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
             ['', '', '', '','','','','','','','','','','']
           ], {origin: -1});
-        wb.Sheets["Ventas"]["A4"].s={        
+        wb.Sheets["Cortes"]["A4"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
@@ -1766,90 +1772,90 @@ const balancesReport = async function (req, reply){
         }
     }
 
-    xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
-        ['Folio','Fecha','Hora','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total venta','Tipo de pago']
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
+        ['Folio','Tipo','Fecha de sesión','Hora de sesión','Fecha de corte','Hora de corte','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Cantidad','Monto']
       ], {origin: -1});
     
-    wb.Sheets["Ventas"]["A7"].s={        
+    wb.Sheets["Cortes"]["A7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["B7"].s={        
+    wb.Sheets["Cortes"]["B7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["C7"].s={        
+    wb.Sheets["Cortes"]["C7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["D7"].s={        
+    wb.Sheets["Cortes"]["D7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["E7"].s={        
+    wb.Sheets["Cortes"]["E7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["F7"].s={        
+    wb.Sheets["Cortes"]["F7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["G7"].s={        
+    wb.Sheets["Cortes"]["G7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["H7"].s={        
+    wb.Sheets["Cortes"]["H7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["I7"].s={        
+    wb.Sheets["Cortes"]["I7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["J7"].s={        
+    wb.Sheets["Cortes"]["J7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Ventas"]["K7"].s={        
+    wb.Sheets["Cortes"]["K7"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    // wb.Sheets["Ventas"]["L7"].s={        
-    //     font: {				  		
-    //           sz: 12, // tamaño de fuente
-    //           bold: true // negrita
-    //     }               
-    // }
-    // wb.Sheets["Ventas"]["M7"].s={        
+    wb.Sheets["Cortes"]["L7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    // wb.Sheets["Cortes"]["M7"].s={        
     //     font: {				  		
     //           sz: 12, // tamaño de fuente
     //           bold: true // negrita
     //     }               
     // }
 
-    // wb.Sheets["Ventas"]["N7"].s={        
+    // wb.Sheets["Cortes"]["N7"].s={        
     //     font: {				  		
     //           sz: 12, // tamaño de fuente
     //           bold: true // negrita
@@ -1857,10 +1863,10 @@ const balancesReport = async function (req, reply){
     // }
 
 //     wb.Sheets={
-//         Ventas:{
+//         Cortes:{
 //         }
 //     }
-//     wb.Sheets["Ventas"]["A1"]={
+//     wb.Sheets["Cortes"]["A1"]={
 //         v:'Sucursal',
 //         s: 
 //         {				
@@ -1871,22 +1877,22 @@ const balancesReport = async function (req, reply){
 //         }
 //     }
     
-//     wb.Sheets["Ventas"]["B1"]={};
+//     wb.Sheets["Cortes"]["B1"]={};
 
 
     if(req.query.branchId != null){
         let branchInformation = await Branch.findOne({_id:req.query.branchId}) 
-        wb.Sheets["Ventas"]["B1"].v= branchInformation!=null ? branchInformation.code+"-"+branchInformation.name : "";
-        wb.Sheets["Ventas"]["B1"].s ={
+        wb.Sheets["Cortes"]["B1"].v= branchInformation!=null ? branchInformation.code+"-"+branchInformation.name : "";
+        wb.Sheets["Cortes"]["B1"].s ={
             font:{
                 bold:false
             }
         }
-        //console.log(wb.Sheets["Ventas"]["B1"].v)        
+        //console.log(wb.Sheets["Cortes"]["B1"].v)        
     }
     else{
-        wb.Sheets["Ventas"]["B1"].v="Todas"
-        wb.Sheets["Ventas"]["B1"].s ={
+        wb.Sheets["Cortes"]["B1"].v="Todas"
+        wb.Sheets["Cortes"]["B1"].s ={
             font:{
                 bold:false
             }
@@ -1895,17 +1901,17 @@ const balancesReport = async function (req, reply){
 
     // if(req.query.carId != null){
     //     let carInformation = await Car.findOne({_id:req.query.carId}) 
-    //     wb.Sheets["Ventas"]["B2"].v= carInformation!=null ? carInformation.name+"-"+carInformation.color : "";
-    //     wb.Sheets["Ventas"]["B2"].s ={
+    //     wb.Sheets["Cortes"]["B2"].v= carInformation!=null ? carInformation.name+"-"+carInformation.color : "";
+    //     wb.Sheets["Cortes"]["B2"].s ={
     //         font:{
     //             bold:false
     //         }
     //     }
-    //     //console.log(wb.Sheets["Ventas"]["B1"].v)        
+    //     //console.log(wb.Sheets["Cortes"]["B1"].v)        
     // }
     //else{
-        wb.Sheets["Ventas"]["B2"].v="Todos"
-        wb.Sheets["Ventas"]["B2"].s ={
+        wb.Sheets["Cortes"]["B2"].v="Todos"
+        wb.Sheets["Cortes"]["B2"].s ={
             font:{
                 bold:false
             }
@@ -1914,23 +1920,23 @@ const balancesReport = async function (req, reply){
 
     if(req.query.userId != null){
         let userInformation = await User.findOne({_id:req.query.userId}) 
-        wb.Sheets["Ventas"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
-        wb.Sheets["Ventas"]["B3"].s ={
+        wb.Sheets["Cortes"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
+        wb.Sheets["Cortes"]["B3"].s ={
             font:{
                 bold:false
             }
         }
-        //console.log(wb.Sheets["Ventas"]["B1"].v)        
+        //console.log(wb.Sheets["Cortes"]["B1"].v)        
     }
     else{
-        wb.Sheets["Ventas"]["B3"].v="Todos"
-        wb.Sheets["Ventas"]["B3"].s ={
+        wb.Sheets["Cortes"]["B3"].v="Todos"
+        wb.Sheets["Cortes"]["B3"].s ={
             font:{
                 bold:false
             }
         }
     }
-//     wb.Sheets["Ventas"]["A2"]={};
+//     wb.Sheets["Cortes"]["A2"]={};
     if(req.query.initialDate != null && req.query.lastDate !=null ){ 
         let initialDate = parseDate(req.query.initialDate);
         let offset = req.headers.offset ? Number(req.headers.offset) : 6        
@@ -1945,31 +1951,32 @@ const balancesReport = async function (req, reply){
             lastDate.setHours(0, 0, 0, 0);
     
         }      
-        wb.Sheets["Ventas"]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
-        wb.Sheets["Ventas"]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
+        wb.Sheets["Cortes"]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
+        wb.Sheets["Cortes"]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
     }
-    if (sales.length>0){
-        for (let index = 0; index < sales.length; index++) {
-            xlsx.utils.sheet_add_aoa(wb.Sheets["Ventas"], [
-                ['A', 'B','C','D','E','F','G',0,0,0,'K']
+    if (balances.length>0){
+        for (let index = 0; index < balances.length; index++) {
+            xlsx.utils.sheet_add_aoa(wb.Sheets["Cortes"], [
+                ['A','B','C','D','E','F','G','H','I','J',0,0]
               ], {origin: -1});                     
         }
         let currentRow=8;
-        sales.forEach(purchase=>{
-            wb.Sheets["Ventas"]["A"+String(currentRow)].v=purchase['Folio'];
-            wb.Sheets["Ventas"]["B"+String(currentRow)].v=purchase['Fecha'];
-            wb.Sheets["Ventas"]["C"+String(currentRow)].v=purchase['Hora'];
-            wb.Sheets["Ventas"]["D"+String(currentRow)].v=purchase['Sucursal código'];
-            wb.Sheets["Ventas"]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
-            wb.Sheets["Ventas"]["F"+String(currentRow)].v=purchase['Empleado nombre'];
-            wb.Sheets["Ventas"]["G"+String(currentRow)].v=purchase['Empleado correo'];
-            wb.Sheets["Ventas"]["H"+String(currentRow)].v=purchase['Modelos diferentes'];
-            wb.Sheets["Ventas"]["I"+String(currentRow)].v=purchase['Carritos totales'];
-            wb.Sheets["Ventas"]["J"+String(currentRow)].v=purchase['Total venta'];
-            wb.Sheets["Ventas"]["K"+String(currentRow)].v=purchase['Tipo de pago'];
-            // wb.Sheets["Ventas"]["L"+String(currentRow)].v=purchase['Pagos descartados'];            
-            // wb.Sheets["Ventas"]["M"+String(currentRow)].v=purchase['Total pagado'];            
-            // wb.Sheets["Ventas"]["N"+String(currentRow)].v=purchase['Saldo restante'];            
+        balances.forEach(purchase=>{
+            wb.Sheets["Cortes"]["A"+String(currentRow)].v=purchase['Folio'];
+            wb.Sheets["Cortes"]["B"+String(currentRow)].v=purchase['Tipo'];
+            wb.Sheets["Cortes"]["C"+String(currentRow)].v=purchase['Fecha de sesión'];
+            wb.Sheets["Cortes"]["D"+String(currentRow)].v=purchase['Hora de sesión'];
+            wb.Sheets["Cortes"]["E"+String(currentRow)].v=purchase['Fecha de corte'];
+            wb.Sheets["Cortes"]["F"+String(currentRow)].v=purchase['Hora de corte'];
+            wb.Sheets["Cortes"]["G"+String(currentRow)].v=purchase['Sucursal código'];
+            wb.Sheets["Cortes"]["H"+String(currentRow)].v=purchase['Sucursal nombre'];
+            wb.Sheets["Cortes"]["I"+String(currentRow)].v=purchase['Empleado nombre'];
+            wb.Sheets["Cortes"]["J"+String(currentRow)].v=purchase['Empleado correo'];
+            wb.Sheets["Cortes"]["K"+String(currentRow)].v=purchase['Cantidad'];
+            wb.Sheets["Cortes"]["L"+String(currentRow)].v=purchase['Monto'];            
+            // wb.Sheets["Cortes"]["L"+String(currentRow)].v=purchase['Pagos descartados'];            
+            // wb.Sheets["Cortes"]["M"+String(currentRow)].v=purchase['Total pagado'];            
+            // wb.Sheets["Cortes"]["N"+String(currentRow)].v=purchase['Saldo restante'];            
             currentRow ++;
            // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
 
@@ -1977,20 +1984,19 @@ const balancesReport = async function (req, reply){
         })
     }
 
-     headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelos diferentes","Carritos totales","Total venta","Pagos sin descartar","Pagos descartados","Total pagado","Saldo restante"]
+     headers=['Folio','Tipo','Fecha de sesión','Hora de sesión','Fecha de corte','Hora de corte','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Cantidad','Monto']
      //console.log(headers)
 
     // adjusting columns length added
      for (let i = 0; i < headers.length; i++) {  
          let columnWidth=headers[i].length;
-         columnWidth=headers[i]=='Folio' ? columnWidth+20 : columnWidth;
-         columnWidth=headers[i]=='Fecha' ? columnWidth+15 : columnWidth;
-         columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
+         columnWidth=headers[i]=='Folio' ? columnWidth+25 : columnWidth;         
+         columnWidth=headers[i]=='Tipo' ? columnWidth+5 : columnWidth;         
          columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
          columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
          columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
-         columnWidth=headers[i]=='Empleado correo' ? columnWidth+15: columnWidth;
-         columnWidth=headers[i]=='Total venta' ? columnWidth+15: columnWidth;
+         columnWidth=headers[i]=='Empleado correo' ? columnWidth+15: columnWidth;         
+         columnWidth=headers[i]=='Monto' ? columnWidth+15 : columnWidth;         
         //  columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
         //  columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
         //  columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
@@ -2000,15 +2006,15 @@ const balancesReport = async function (req, reply){
         
          wscols.push({ wch: columnWidth })
      } 
-    wb.Sheets['Ventas']['!cols']=wscols;
+    wb.Sheets['Cortes']['!cols']=wscols;
     //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
     let row = 8;
-    while (wb.Sheets['Ventas']["G"+String(row)] != null) { 
-        wb.Sheets['Ventas']["J"+String(row)].z="$0.00";
-        // wb.Sheets['Ventas']["K"+String(row)].z="0.00";
-        // wb.Sheets['Ventas']["L"+String(row)].z="0.00";
-        // wb.Sheets['Ventas']["M"+String(row)].z="$0.00";
-        // wb.Sheets['Ventas']["N"+String(row)].z="$0.00";
+    while (wb.Sheets['Cortes']["K"+String(row)] != null) { 
+        wb.Sheets['Cortes']["K"+String(row)].z="0";
+        wb.Sheets['Cortes']["L"+String(row)].z="$0.00";
+        // wb.Sheets['Cortes']["L"+String(row)].z="0.00";
+        // wb.Sheets['Cortes']["M"+String(row)].z="$0.00";
+        // wb.Sheets['Cortes']["N"+String(row)].z="$0.00";
         row+=1;
         
     }
@@ -2016,7 +2022,7 @@ const balancesReport = async function (req, reply){
     let buf = XLSXStyle.write(wb, { type: "buffer" });
 
     reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    reply.header("Content-Disposition", 'attachment; filename="Ventas.xlsx"');
+    reply.header("Content-Disposition", 'attachment; filename="Cortes.xlsx"');
     return reply.send(buf); 
 
 }
