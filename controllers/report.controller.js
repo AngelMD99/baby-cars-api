@@ -1549,7 +1549,7 @@ const balancesReport = async function (req, reply){
 
         }
         let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
-        aggregateQuery.push({ "$match": {"userId": operationType }});        
+        aggregateQuery.push({ "$match": {"operationType": operationType }});        
     }
 
     let dateMatchStage={};

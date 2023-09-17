@@ -156,6 +156,7 @@ const balanceDef={
         folio:{type:'string'} ,
         balanceType:{type:'string'}                              ,
         amount:{type:'number'},
+        quantity:{type:'number'},
         loginDate:{type:'number'},
         balanceDate:{type:'number'},
         userId:{

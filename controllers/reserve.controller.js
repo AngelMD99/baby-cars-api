@@ -1319,13 +1319,13 @@ const reserveList = async function (req,reply){
                         }
                     },
                     {
-                        'userId.fullName': {
+                        'employeeId.fullName': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }
                     },                    
                     {
-                        'userId.email': {
+                        'employeeId.email': {
                           '$regex': searchString, 
                           '$options': 'i'
                         }

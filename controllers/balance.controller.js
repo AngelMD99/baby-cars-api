@@ -321,7 +321,7 @@ const balanceList = async function (req, reply){
 
         }
         let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
-        aggregateQuery.push({ "$match": {"userId": operationType }});        
+        aggregateQuery.push({ "$match": {"operationType": operationType }});        
     }
     
 
@@ -380,62 +380,41 @@ const balanceList = async function (req, reply){
         if(options.page!=null && options.limit!=null){
             balancesPaginated.docs=[];
             let balancesQuery = await Balance.paginate(searchQuery, options);
-            balancesQuery.docs.forEach(sale => {
+            balancesQuery.docs.forEach(balance => {
+                console.log("BALANCE: ", balance)
                 let newObj={
-                    _id:sale._id,
-                    folio:sale.folio,
-                    client:sale.client,
-                    products:sale.products,
-                    totalSale:sale.totalSale,
-                    createdAt:sale.createdAt,
-                    updateAt:sale.updatedAt,                   
+                    _id:balance._id,
+                    folio:balance.folio,
+                    balanceType:balance.balanceType,
+                    quantity:balance.quantity,
+                    amount:balance.amount,
+                    loginDate:balance.loginDate,
+                    balanceDate:balance.balanceDate,                   
+                    createdAt:balance.createdAt,
+                    updateAt:balance.updatedAt,                   
 
                 }
                 let branchInfo = allBranches.find(branch=>{
-                    return String(branch._id) == String(sale.branchId)
+                    return String(branch._id) == String(balance.branchId)
                 })
                 newObj.branchId={
-                    _id:sale.branchId ? sale.branchId :null,
+                    _id:balance.branchId ? balance.branchId :null,
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
                 }
-                // let modelInfo = allModels.find(modelo=>{
-                //     return String(modelo._id) == String(sale.modelId)
-                // })
-                // newObj.modelId={
-                //     _id:sale.modelId ? sale.modelId :null,
-                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",
-                //     code : modelInfo && modelInfo.code ? modelInfo.code : "",
-
-                // }
-
-                // let clientInfo = allClients.find(client=>{
-                //     return String(client._id) == String(sale.clientId)
-                // })
-                // newObj.clientId={
-                //     _id:sale.clientId ? sale.clientId :null,
-                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
-                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
-                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
-
-                // }
-
                 let userInfo = allUsers.find(user=>{
-                    return String(user._id) == String(sale.employeeId)
+                    return String(user._id) == String(balance.userId)
                 })
-                newObj.employeeId={
-                    _id:sale.employeeId ? sale.employeeId :null,
+                newObj.userId={
+                    _id:balance.employeeId ? balance.employeeId :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
                     email : userInfo && userInfo.email ? userInfo.email : "",
 
-                }                
-                
-                delete sale.branchId;
-                delete sale.modelId;                
-                delete sale.clientId;                
-                delete sale.employeeId;                
+                }                                
+                delete balance.branchId;                
+                delete balance.userId;                
                 balancesPaginated.docs.push(newObj)                               
             });
             balancesPaginated.page=balancesQuery.page;
@@ -456,73 +435,36 @@ const balanceList = async function (req, reply){
             }
             balancesPaginated.docs=[]
             let balancesQuery = await Balance.find(searchQuery).sort(sortOrder).lean();
-            balancesQuery.forEach(sale => {
+            balancesQuery.forEach(balance => {
                 let branchInfo = allBranches.find(branch=>{
-                    return String(branch._id) == String(sale.branchId)
+                    return String(branch._id) == String(balance.branchId)
                 }) 
                 let branchId={
-                    _id:sale.branchId ? sale.branchId :null,
+                    _id:balance.branchId ? balance.branchId :null,
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
                 } 
-                // let modelInfo = allModels.find(modelo=>{
-                //     return String(modelo._id) == String(sale.modelId)
-                // }) 
-                // let modelId={
-                //     _id:sale.modelId ? sale.modelId :null,
-                //     name : modelInfo && modelInfo.name ? modelInfo.name : "",                    
-                // }
-                
-                // let clientInfo = allClients.find(client=>{
-                //     return String(client._id) == String(sale.clientId)
-                // })
-
-                // let clientId={
-                //     _id:sale.clientId ? sale.clientId :null,
-                //     fullName : clientInfo && clientInfo.fullName ? clientInfo.fullName : "",
-                //     phone : clientInfo && clientInfo.phone ? clientInfo.phone : "",
-                //     email : clientInfo && clientInfo.email ? clientInfo.email : "",
-
-                // }
-
                 let userInfo = allUsers.find(user=>{
-                    return String(user._id) == String(sale.employeeId)
+                    return String(user._id) == String(balance.userId)
                 })
                 let userId={
-                    _id:sale.employeeId ? sale.employeeId :null,
+                    _id:balance.userId ? balance.userId :null,
                     fullName : userInfo && userInfo.fullName ? userInfo.fullName : "",
                     phone : userInfo && userInfo.phone ? userInfo.phone : "",
                     email : userInfo && userInfo.email ? userInfo.email : "",
 
-                }
-                
-                sale.branchId=branchId;         
-                // sale.modelId=modelId;         
-                // sale.clientId=clientId;         
-                sale.employeeId=userId;                              
-                // sale.branchName = branchInfo && branchInfo.name ? branchInfo.name : "",
-                // sale.branchCode = branchInfo && branchInfo.code ? branchInfo.code : "",
-                // delete sale.branchId;                
-                balancesPaginated.docs.push(sale)
-                
-
-                
+                }                
+                balance.branchId=branchId;                                 
+                balance.userId=userId;                
+                balancesPaginated.docs.push(balance)                            
             });
-        }
-        
-        
-        
-        
-
-        
+        }                         
     }
     else{
-        // branchSearch = await sale.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
+        // branchSearch = await balance.search(req.query.search, { isDeleted: false }).collation({locale: "es", strength: 3}).select(options.select);
         // balancesPaginated.totalDocs = branchSearch.length;
         let diacriticSearch = diacriticSensitiveRegex(req.query.search);
         let searchString = '.*'+diacriticSearch+'.*';
-
-  //    let searchString = '.*'+req.query.search+'.*';
           delete options.select;
           let aggregateQuery=[];
           if(req.params.id && !req.query.branchId){
@@ -535,10 +477,9 @@ const balanceList = async function (req, reply){
           if(!req.params.id && req.query.branchId){
             aggregateQuery.push({
                 '$match':{
-                    branchId:new ObjectId(req.query.branchId),
-                    isStarted:true
+                    branchId:new ObjectId(req.query.branchId),                    
                 }
-                })
+            })
           }          
           if(req.query.userId){
             aggregateQuery.push({
@@ -612,7 +553,7 @@ const balanceList = async function (req, reply){
                     'from': 'users', 
                     'localField': 'userId', 
                     'foreignField': '_id', 
-                    'as': 'employeeInfo'
+                    'as': 'userInfo'
                   }
              },
               
@@ -620,7 +561,8 @@ const balanceList = async function (req, reply){
                 '$project': {
                   'isDeleted':1,
                   //'branchId': 1,                   
-                  'folio': 1,                   
+                  'folio': 1, 
+                  'operationType':1,                  
                   'branchId._id': {
                     '$first': '$branchInfo._id'
                   },
@@ -629,27 +571,35 @@ const balanceList = async function (req, reply){
                   } ,
                   'branchId.name': {
                     '$first': '$branchInfo.name'
-                  },                  
-                  'client':1,                  
-                  'employeeId._id': {
-                    '$first': '$employeeInfo._id'
+                  },                                    
+                  'userId._id': {
+                    '$first': '$userInfo._id'
                   },
-                  'employeeId.fullName': {
-                    '$first': '$employeeInfo.fullName'
+                  'userId.fullName': {
+                    '$first': '$userInfo.fullName'
                   }, 
-                  'employeeId.phone': {
-                    '$first': '$employeeInfo.phone'
+                  'userId.phone': {
+                    '$first': '$userInfo.phone'
                   }, 
-                  'employeeId.email': {
-                    '$first': '$employeeInfo.email'
+                  'userId.email': {
+                    '$first': '$userInfo.email'
                   }, 
-                  'products':1,                 
+                  'quantity':1,                 
+                  'amount':1,                 
+                  'loginDate':1,                 
+                  'balanceDate':1,                 
                   'createdAt':1,
                   'updatedAt':1,                 
                 }
               }, {
                 '$match': {
                   '$or': [                    
+                    {
+                        'folio': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
                     
                     {
                         'branchId.code': {
@@ -662,37 +612,7 @@ const balanceList = async function (req, reply){
                           '$regex': searchString, 
                           '$options': 'i'
                         }
-                    },
-                    {
-                        'products.modelName': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'products.color': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                      },
-                    {
-                        'client.fullName': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'client.phone': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
-                    {
-                        'client.email': {
-                          '$regex': searchString, 
-                          '$options': 'i'
-                        }
-                    },
+                    },                    
                     {
                         'userId.fullName': {
                           '$regex': searchString, 
@@ -755,12 +675,12 @@ const balanceList = async function (req, reply){
 
     })
     let docs = JSON.stringify(balancesPaginated.docs);    
-    var sales = JSON.parse(docs);
+    var balances = JSON.parse(docs);
     
 
     return reply.code(200).send({
         status: 'success',
-        data: sales,
+        data: balances,
         page: balancesPaginated.page,
         perPage:balancesPaginated.perPage,
         totalDocs: balancesPaginated.totalDocs,
