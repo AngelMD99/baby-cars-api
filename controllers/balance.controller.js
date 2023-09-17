@@ -37,6 +37,7 @@ const balanceRentalsCreate = async function (req,reply){
     let today = new Date ();    
     let searchQuery = {
         isDeleted: false,
+        isDiscarded:false,
         branchId:ObjectId(req.params.id),
         updatedAt:{"$gte": loggedUser.lastLogin,"$lte":today},        
         paymentType:{ $regex:"efectivo",$options:'i'}
@@ -94,7 +95,39 @@ const balanceRentalsCreate = async function (req,reply){
     
         const balance = new Balance(balanceObj);
         balance._id = new mongoose.Types.ObjectId();
-        balance.balanceDate = new Date()
+        balance.balanceDate = new Date();
+        let offset = await getOffsetSetting();              
+        let date = new Date ();    
+        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+             date.setHours(date.getHours() - offset);
+             date.setHours(offset,0,0,0);    
+             // date.setHours(offset, 0, 0, 0);
+        }
+        else{
+             date.setHours(0,0,0,0);
+             date.setHours(0, 0, 0, 0);
+        }
+        let nextDay = addDays(date,1);
+        let branchBalances = await Balance.find({
+            isDeleted:false, 
+            branchId:req.params.id,
+            balanceDate:{"$gte": date,"$lte":nextDay},
+            balanceType:'rentals'
+        })
+        
+        let day = date.getDate();
+        let month = date.getMonth() + 1
+        let year = date.getFullYear();
+        let dayString = day > 9 ? day : "0"+day;
+        let monthString = month > 9 ? month : "0"+month;  
+        let nextFolio = branchBalances.length+1
+        nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
+        nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
+        let branchCode = branchInfo.code;
+        balance.folio="REN-"+branchCode+"-"+year+monthString+dayString+"-"+String(nextFolio) 
+
+
         await balance.save();
         await balance.populate([
             { path:'branchId',select:'name code'},
@@ -206,7 +239,7 @@ const balancePaymentsCreate = async function (req,reply){
              date.setHours(0, 0, 0, 0);
         }
         let nextDay = addDays(date,1);
-        let branchBalances = await Reserve.find({
+        let branchBalances = await Balance.find({
             isDeleted:false, 
             branchId:req.params.id,
             balanceDate:{"$gte": date,"$lte":nextDay},
@@ -218,7 +251,7 @@ const balancePaymentsCreate = async function (req,reply){
         let year = date.getFullYear();
         let dayString = day > 9 ? day : "0"+day;
         let monthString = month > 9 ? month : "0"+month;  
-        let nextFolio = branchReserves.length+1
+        let nextFolio = branchBalances.length+1
         nextFolio = nextFolio<10 ? "0000"+String(nextFolio) : nextFolio;
         nextFolio = nextFolio>=10 && nextFolio < 100? "000"+String(nextFolio) : nextFolio;
         nextFolio = nextFolio>=100 && nextFolio < 1000? "00"+String(nextFolio) : nextFolio;
