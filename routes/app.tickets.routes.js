@@ -2,6 +2,7 @@ const uuid = require("uuid");
 const puppeteer = require('puppeteer');
 const path = require("path");
 const Rental = require('../models/Rental');
+const Balance = require('../models/Rental');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const { getOffsetSetting } = require('../controllers/base.controller')
@@ -57,7 +58,7 @@ module.exports = function (fastify, opts, done) {
                 message: 'es_necesario_enviar_un_objeto'
             })
         }
-        let validTypes=['rental','balance']
+        let validTypes=['rental','balance']        
         if(!req.body.type || !validTypes.includes(req.body.type)){
             return reply.code(401).send({
                 status: 'fail',
@@ -75,6 +76,19 @@ module.exports = function (fastify, opts, done) {
             return reply.code(401).send({
                 status: 'fail',
                 message: 'Id de renta no valido'
+            })
+        }
+
+        if(!req.body.type=='balance' && !req.body.balanceId){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'No se recibió el id del corte'
+            })
+        }
+        if(req.body.balanceId && !isValidObjectId(req.body.balanceId)){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Id de corte no valido'
             })
         }
 
@@ -184,6 +198,7 @@ module.exports = function (fastify, opts, done) {
         }
 
         else{
+
             let balanceObj ={};             
             balanceObj.branchCode=req.body.branchCode ? req.body.branchCode :"";
             balanceObj.branchName=req.body.branchName ? req.body.branchName :"";                       
