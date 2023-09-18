@@ -154,7 +154,7 @@ const rentalsReport = async function (req, reply){
     )
 
     let rentals = await Rental.aggregate(aggregateQuery); 
-    console.log("RENTALS: ", rentals[0]);
+    //console.log("RENTALS: ", rentals[0]);
     let allModels = await Modelo.find({});
     rentals.forEach(rental=>{
         if(rental['Tipo de pago']){
@@ -189,7 +189,7 @@ const rentalsReport = async function (req, reply){
         }
     })
 
-    console.log("RENTALS DATE ADJUSTED: ", rentals[0]);
+    //console.log("RENTALS DATE ADJUSTED: ", rentals[0]);
     
    
 
@@ -553,16 +553,16 @@ const salesReport = async function (req, reply){
         }
 
         let finalDay= addDays(finalDayToDate,1)              
-        dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        dateMatchStage['$match']={'balanceDate': {"$gte": initialDay,"$lte":finalDay}} }
         
     if (req.query.initialDate!=null && req.query.finalDate==null){        
         let initialDay=new Date(req.query.initialDate);
-        dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+        dateMatchStage['$match']={'balanceDate': {"$gte": initialDay}} 
     }
     
     if (req.query.finalDate!=null && req.query.initialDate==null){
         let finalDay= addDays(req.query.finalDate,1)
-        dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+        dateMatchStage['$match']={'balanceDate': {"$gte": finalDay}} 
         }
 
     if(dateMatchStage['$match']!=null){
@@ -644,7 +644,7 @@ const salesReport = async function (req, reply){
 
     let sales = await Sale.aggregate(aggregateQuery);
     let allPayments = await Payment.find({isDeleted:false, isDiscarded:false});    
-    console.log("sales: ", sales[0]);    
+    //("sales: ", sales[0]);    
     sales.forEach(sale=>{        
         let salePayment = allPayments.find(payment=>{
             return String(payment.saleId) == sale._id
@@ -660,7 +660,7 @@ const salesReport = async function (req, reply){
         
     })
 
-    console.log("sales DATE ADJUSTED: ", sales[0]);
+    //console.log("sales DATE ADJUSTED: ", sales[0]);
     
    
 
@@ -1023,7 +1023,7 @@ const reservesReport = async function (req, reply){
         aggregateQuery.push({ "$match": {"userId": employeeId }});        
     }
 
-    if (req.isCancelled!=null && req.query.initialDate!=""){
+    if (req.isCancelled!=null && req.query.isCancelled!=""){
         let cancelationFilter = req.isCancelled.toLowerCase() == "true" ? true : false
         aggregateQuery.push({ "$match": {"isCancelled": cancelationFilter }});        
     }
@@ -1167,7 +1167,7 @@ const reservesReport = async function (req, reply){
         
     })
 
-    console.log("reserves DATE ADJUSTED: ", reserves[0]);
+    //console.log("reserves DATE ADJUSTED: ", reserves[0]);
     
    
 
@@ -1679,7 +1679,7 @@ const balancesReport = async function (req, reply){
         
     }) 
 
-    console.log("BALANCES ADJUSTED: ", balances[0]);
+    //console.log("BALANCES ADJUSTED: ", balances[0]);
   
     // if (balances.length==0){
     //     let emptyPurchaseObj = {
@@ -2027,6 +2027,537 @@ const balancesReport = async function (req, reply){
 
 }
 
+const paymentsReport = async function (req, reply){    
+    let aggregateQuery=[];
+    let offset = await getOffsetSetting()
+
+    if(req.query.branchId != null){
+        let branchId = mongoose.Types.ObjectId(req.query.branchId)
+        aggregateQuery.push({ "$match": {"branchId": branchId }});        
+    }
+
+    if(req.query.saleId != null){
+        let saleId = mongoose.Types.ObjectId(req.query.saleId)
+        aggregateQuery.push({ "$match": {"saleId": saleId }});        
+    }
+    
+    if(req.query.reserveId != null){
+        let reserveId = mongoose.Types.ObjectId(req.query.reserveId)
+        aggregateQuery.push({ "$match": {"reseveId": reserveId }});        
+    }
+
+    if(req.query.userId != null){
+        let userId = mongoose.Types.ObjectId(req.query.userId)
+        aggregateQuery.push({ "$match": {"collectedBy": userId }});        
+    }
+
+    if(req.query.balanceType != null && req.query.balanceType != ""){
+        if(req.query.balanceType.toLowerCase() !='single' ||req.query.balanceType.toLowerCase() !='reserve'){
+            return reply.code(400).send({
+                status:'fail',
+                message:'El tipo de operación recibido no es válido'
+            })
+
+        }
+        let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
+        aggregateQuery.push({ "$match": {"operationType": operationType }});        
+    }
+
+    if (req.isDiscarded!=null && req.query.isDiscarded!=""){
+        let cancelationFilter = req.isDiscarded.toLowerCase() == "true" ? true : false
+        aggregateQuery.push({ "$match": {"isDiscarded": cancelationFilter }});        
+    }
+
+    let dateMatchStage={};
+    if (req.query.initialDate!=null && req.query.finalDate!=null){        
+        let initialDay=new Date(req.query.initialDate);
+        let finalDayToDate =new Date(req.query.finalDate)
+        if(initialDay.getTime() > finalDayToDate.getTime()){
+            return reply.code(400).send({
+                status:'fail',
+                message:'La fecha inicial no puede ser mayor que la fecha final'
+            })
+        }
+
+        let finalDay= addDays(finalDayToDate,1)              
+        dateMatchStage['$match']={'paidOn': {"$gte": initialDay,"$lte":finalDay}} }
+        
+    if (req.query.initialDate!=null && req.query.finalDate==null){        
+        let initialDay=new Date(req.query.initialDate);
+        dateMatchStage['$match']={'paidOn': {"$gte": initialDay}} 
+    }
+    
+    if (req.query.finalDate!=null && req.query.initialDate==null){
+        let finalDay= addDays(req.query.finalDate,1)
+        dateMatchStage['$match']={'paidOn': {"$gte": finalDay}} 
+        }
+
+    if(dateMatchStage['$match']!=null){
+        aggregateQuery.push(dateMatchStage)
+    }         
+      
+    aggregateQuery.push(
+        {
+            '$lookup': {
+              'from': 'branches', 
+              'localField': 'branchId', 
+              'foreignField': '_id', 
+              'as': 'branchInfo'
+            }
+          },          
+          {
+            '$lookup': {
+              'from': 'users', 
+              'localField': 'collectedBy', 
+              'foreignField': '_id', 
+              'as': 'userInfo'
+            }
+          },
+          {
+            '$lookup': {
+              'from': 'sales', 
+              'localField': 'saleId', 
+              'foreignField': '_id', 
+              'as': 'saleInfo'
+            }
+          },
+          {
+            '$lookup': {
+              'from': 'reserves', 
+              'localField': 'reserveId', 
+              'foreignField': '_id', 
+              'as': 'reserveInfo'
+            }
+          },
+
+
+         {
+            '$project': {
+                'Tipo folio':'$operationType',                
+                'Tipo pago':'$paymentType',
+                'Descartado':'$isDiscarded',
+                'Sucursal código':{
+                    '$first': '$branchInfo.code'
+                },
+                'Sucursal nombre': {
+                    '$first': '$branchInfo.name'
+                
+                },
+                'Empleado nombre':{
+                    '$first': '$userInfo.fullName'
+                },
+                'Empleado correo': {
+                    '$first': '$userInfo.email'                
+                },
+                'saleId.folio':{
+                    '$first': '$saleInfo.folio'
+                },
+                'saleId.total':{
+                    '$first': '$saleInfo.totalSale'
+                },
+                'reserveId.folio':{
+                    '$first': '$reserveInfo.folio'
+                },
+                'reserveId.total':{
+                    '$first': '$reserveInfo.totalSale'
+                },
+                'Monto pago':'$amount',                                
+                'paidOn':1,               
+                
+            }
+          } 
+        //   {
+        //     '$group': {
+        //       '_id': '$_id', 
+        //       'count': {
+        //         '$sum': 1
+        //       }
+        //     }
+        //   }
+    )
+
+    let payments = await Payment.aggregate(aggregateQuery);        
+    payments.forEach(payment=>{               
+
+        if(payment.paidOn){            
+            payment.paidOn = adjustTimeStamp (payment.paidOn,offset);
+            payment['Fecha pago']=dateDDMMAAAA(payment.paidOn);            
+            payment['Hora pago']=dateTimeHHSS(payment.paidOn);              
+        }
+
+        if(payment['Tipo folio']){
+            if(payment['Tipo folio'].toLowerCase()=='single'){
+                payment['Tipo folio'] = 'Venta'
+            }
+            if(payment['Tipo folio'].toLowerCase()=='reserve'){
+                payment['Tipo folio'] = 'Apartado'
+            }
+        }
+
+        if(payment.saleId && Object.keys(payment.saleId).length > 0 ){
+            payment['Folio venta/apartado']=payment.saleId.folio
+            payment['Monto total']=payment.saleId.total
+
+        }
+        if(payment.reserveId && Object.keys(payment.reserveId).length > 0){
+            payment['Folio venta/apartado']=payment.reserveId.folio
+            payment['Monto total']=payment.reserveId.total
+        }
+
+        payment.Descartado = payment.Descartado == true ? "Si" :"No"
+        
+    }) 
+
+    //console.log("payments ADJUSTED: ", payments[0]);
+  
+    // if (payments.length==0){
+    //     let emptyPurchaseObj = {
+    //         'Nombre': '', 
+    //         'Habilitado general':'',
+    //         'Cantidad de ventas':''            
+    //     }
+    //     payments.push(emptyPurchaseObj)
+    // }
+   	
+    let headers=[]; //created array for column names
+    let wscols=[]; //array to store the width of the columns
+    // create the export file
+    //
+    let wb = xlsx.utils.book_new();
+    wb.Props = {
+        Title: "Pagos",                
+    };
+    //let wbRows = payments.length+4;   
+    wb.SheetNames.push("Pagos");
+    //addig the titles rows
+    var ws_data = [['Sucursal','','','','','','','','','','','','','']]
+    var ws = xlsx.utils.aoa_to_sheet(ws_data);       
+    wb.Sheets["Pagos"] = ws;
+    wb.Sheets["Pagos"]["A1"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            },       
+    }
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['Etiqueta', '', '', '','','','','','','','','','','']
+          ],{origin: -1});
+    wb.Sheets["Pagos"]["A2"].s={        
+        font: {				  		
+                sz: 12, // tamaño de fuente
+                bold: true // negrita
+        },       
+    }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+        ['Empleado', '', '', '','','','','','','','','','','']
+      ],{origin: -1});
+    wb.Sheets["Pagos"]["A3"].s={        
+        font: {				  		
+            sz: 12, // tamaño de fuente
+            bold: true // negrita
+        },       
+    }
+    
+    if(req.query.initialDate != null && req.query.lastDate !=null ){        
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['Fecha inicial', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['Fecha final', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+
+        wb.Sheets["Pagos"]["A4"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        wb.Sheets["Pagos"]["A5"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+    }
+    else{
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['Sin rango de fechas', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+            ['', '', '', '','','','','','','','','','','']
+          ], {origin: -1});
+        wb.Sheets["Pagos"]["A4"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+    }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+        ['Descartado','Fecha pago','Hora pago','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Folio venta/apartado','Tipo folio','Monto total','Monto pago','Tipo pago']
+      ], {origin: -1});
+    
+    wb.Sheets["Pagos"]["A7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["B7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["C7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["D7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["E7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["F7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["G7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["H7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["I7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["J7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["K7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Pagos"]["L7"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    // wb.Sheets["Pagos"]["M7"].s={        
+    //     font: {				  		
+    //           sz: 12, // tamaño de fuente
+    //           bold: true // negrita
+    //     }               
+    // }
+
+    // wb.Sheets["Pagos"]["N7"].s={        
+    //     font: {				  		
+    //           sz: 12, // tamaño de fuente
+    //           bold: true // negrita
+    //     }               
+    // }
+
+//     wb.Sheets={
+//         Pagos:{
+//         }
+//     }
+//     wb.Sheets["Pagos"]["A1"]={
+//         v:'Sucursal',
+//         s: 
+//         {				
+//             font: {				  		
+//                   sz: 12, // tamaño de fuente
+//                   bold: true // negrita
+//             },
+//         }
+//     }
+    
+//     wb.Sheets["Pagos"]["B1"]={};
+
+
+    if(req.query.branchId != null){
+        let branchInformation = await Branch.findOne({_id:req.query.branchId}) 
+        wb.Sheets["Pagos"]["B1"].v= branchInformation!=null ? branchInformation.code+"-"+branchInformation.name : "";
+        wb.Sheets["Pagos"]["B1"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Pagos"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Pagos"]["B1"].v="Todas"
+        wb.Sheets["Pagos"]["B1"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+
+    // if(req.query.carId != null){
+    //     let carInformation = await Car.findOne({_id:req.query.carId}) 
+    //     wb.Sheets["Pagos"]["B2"].v= carInformation!=null ? carInformation.name+"-"+carInformation.color : "";
+    //     wb.Sheets["Pagos"]["B2"].s ={
+    //         font:{
+    //             bold:false
+    //         }
+    //     }
+    //     //console.log(wb.Sheets["Pagos"]["B1"].v)        
+    // }
+    //else{
+        wb.Sheets["Pagos"]["B2"].v="Todos"
+        wb.Sheets["Pagos"]["B2"].s ={
+            font:{
+                bold:false
+            }
+        }
+    //}
+
+    if(req.query.userId != null){
+        let userInformation = await User.findOne({_id:req.query.userId}) 
+        wb.Sheets["Pagos"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
+        wb.Sheets["Pagos"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Pagos"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Pagos"]["B3"].v="Todos"
+        wb.Sheets["Pagos"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+//     wb.Sheets["Pagos"]["A2"]={};
+    if(req.query.initialDate != null && req.query.lastDate !=null ){ 
+        let initialDate = parseDate(req.query.initialDate);
+        let offset = req.headers.offset ? Number(req.headers.offset) : 6        
+        let lastDate = parseDate(req.query.lastDate);
+
+        if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+            initialDate.setHours(offset,0,0,0);    
+            lastDate.setHours(offset, 0, 0, 0);
+        }
+        else{
+            initialDate.setHours(0,0,0,0);
+            lastDate.setHours(0, 0, 0, 0);
+    
+        }      
+        wb.Sheets["Pagos"]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
+        wb.Sheets["Pagos"]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
+    }
+    if (payments.length>0){
+        for (let index = 0; index < payments.length; index++) {
+            xlsx.utils.sheet_add_aoa(wb.Sheets["Pagos"], [
+                ['A','B','C','D','E','F','G','H','I',0,0,'L']
+              ], {origin: -1});                     
+        }
+        let currentRow=8;        
+        payments.forEach(purchase=>{
+            wb.Sheets["Pagos"]["A"+String(currentRow)].v=purchase['Descartado'];
+            wb.Sheets["Pagos"]["B"+String(currentRow)].v=purchase['Fecha pago'];
+            wb.Sheets["Pagos"]["C"+String(currentRow)].v=purchase['Hora pago'];
+            wb.Sheets["Pagos"]["D"+String(currentRow)].v=purchase['Sucursal código'];
+            wb.Sheets["Pagos"]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
+            wb.Sheets["Pagos"]["F"+String(currentRow)].v=purchase['Empleado nombre'];
+            wb.Sheets["Pagos"]["G"+String(currentRow)].v=purchase['Empleado correo'];
+            wb.Sheets["Pagos"]["H"+String(currentRow)].v=purchase['Folio venta/apartado'];
+            wb.Sheets["Pagos"]["I"+String(currentRow)].v=purchase['Tipo folio'];
+            wb.Sheets["Pagos"]["J"+String(currentRow)].v=purchase['Monto total'];
+            wb.Sheets["Pagos"]["K"+String(currentRow)].v=purchase['Monto pago'];
+            wb.Sheets["Pagos"]["L"+String(currentRow)].v=purchase['Tipo pago'];            
+            // wb.Sheets["Pagos"]["L"+String(currentRow)].v=purchase['Pagos descartados'];            
+            // wb.Sheets["Pagos"]["M"+String(currentRow)].v=purchase['Total pagado'];            
+            // wb.Sheets["Pagos"]["N"+String(currentRow)].v=purchase['Saldo restante'];            
+            currentRow ++;
+           // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
+
+
+        })
+    }
+
+     headers=['Descartado','Fecha pago','Hora pago','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Folio venta/apartado','Tipo folio','Monto total','Monto pago','Tipo pago']
+     //console.log(headers)
+
+    // adjusting columns length added
+     for (let i = 0; i < headers.length; i++) {  
+         let columnWidth=headers[i].length;
+         columnWidth=headers[i]=='Descartado' ? columnWidth+10 : columnWidth;         
+         columnWidth=headers[i]=='Tipo' ? columnWidth+5 : columnWidth;         
+         columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
+         columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
+         columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
+         columnWidth=headers[i]=='Empleado correo' ? columnWidth+15: columnWidth;
+         columnWidth=headers[i]=='Monto total' ? columnWidth+8 : columnWidth;                  
+         columnWidth=headers[i]=='Monto pago' ? columnWidth+8 : columnWidth;                  
+         columnWidth=headers[i]=='Folio venta/apartado' ? columnWidth+7 : columnWidth;         
+        //  columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
+        //  columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
+        //  columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
+        //  columnWidth=headers[i]=='Tiempo' ? columnWidth+5: columnWidth;        
+        //  columnWidth=headers[i]=='Costo' ? columnWidth+5: columnWidth;
+        //  columnWidth=headers[i]=='Tipo de pago' ? columnWidth+20: columnWidth;        
+        
+         wscols.push({ wch: columnWidth })
+     } 
+    wb.Sheets['Pagos']['!cols']=wscols;
+    //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
+    let row = 8;
+    while (wb.Sheets['Pagos']["J"+String(row)] != null) { 
+        wb.Sheets['Pagos']["J"+String(row)].z="$0.00";
+        wb.Sheets['Pagos']["K"+String(row)].z="$0.00";
+        // wb.Sheets['Pagos']["L"+String(row)].z="0.00";
+        // wb.Sheets['Pagos']["M"+String(row)].z="$0.00";
+        // wb.Sheets['Pagos']["N"+String(row)].z="$0.00";
+        row+=1;
+        
+    }
+
+    let buf = XLSXStyle.write(wb, { type: "buffer" });
+
+    reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    reply.header("Content-Disposition", 'attachment; filename="Pagos.xlsx"');
+    return reply.send(buf); 
+
+}
+
 function parseDate(input) {
     let parts = input.split('-');      
     // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
@@ -2094,4 +2625,4 @@ function dateTimeHHSS(timestamp){
 
 
 
-module.exports = { rentalsReport, salesReport, reservesReport, balancesReport }
+module.exports = { rentalsReport, salesReport, reservesReport, balancesReport, paymentsReport }
