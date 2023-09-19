@@ -51,6 +51,36 @@ const authorizeFunc = async function (req, reply) {
     }
 }
 
+const authorizeUserFunc = async function (req, reply) {
+    try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+        const decoded = await req.jwtVerify()      
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});        
+        if(user == null){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Usuario autentificado no existe'
+            })             
+        }
+        if(user.isEnabled == false){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario deshabilitado'
+            })
+        }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
+
 const paymentDef = { 
     type: 'object',    
     properties: {
