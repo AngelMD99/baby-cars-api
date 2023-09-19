@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const {  statusCreate,statusDelete,statusUpdate,statusList  } = require('../controllers/status.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');

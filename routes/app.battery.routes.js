@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const {  batteryCreate, batteryDelete, batteryList, batteryUpdate  } = require('../controllers/battery.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');

@@ -1,5 +1,6 @@
 const { modelShow } = require('../controllers/modelo.controller');
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
 const authorizeFunc = async function (req, reply) {

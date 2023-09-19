@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const { carList, carStart, carStop, carsAvailable,carBranchAutoOff, carsTurnedOff  } = require('../controllers/car.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');

@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const { reserveCreate, reserveAddPayment, reserveShow, reserveList, reserveAppUpdate  } = require('../controllers/reserve.controller');
 const bcrypt = require('bcrypt');
 const errResponse = {

@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const { inventoryCreate, inventoryList, inventoryUpdate, inventoryDelete   } = require('../controllers/inventory.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');

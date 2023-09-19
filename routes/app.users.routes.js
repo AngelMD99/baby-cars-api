@@ -1,4 +1,5 @@
 const users = require("../controllers/user.controller.js");
+const User = require('../models/User');
 const errResponse = {
     type: 'object',
     properties: {

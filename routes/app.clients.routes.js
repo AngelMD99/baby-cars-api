@@ -1,4 +1,5 @@
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const { clientCreate, clientSearch, clientDelete, clientUpdate, clientShow, clientList   } = require('../controllers/client.controller');
 const { plansAvailable } = require('../controllers/branch.controller')
 const bcrypt = require('bcrypt');

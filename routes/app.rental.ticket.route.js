@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer');
 const path = require("path");
 const Rental = require('../models/Rental');
 const Branch = require('../models/Branch');
+const User = require('../models/User');
 const Car = require('../models/Car');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;

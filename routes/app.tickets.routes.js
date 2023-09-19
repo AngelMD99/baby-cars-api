@@ -2,6 +2,7 @@ const uuid = require("uuid");
 const puppeteer = require('puppeteer');
 const path = require("path");
 const Rental = require('../models/Rental');
+const User = require('../models/User');
 const Balance = require('../models/Rental');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;

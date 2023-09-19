@@ -1,5 +1,6 @@
 const Branch = require('../models/Branch');
 const bcrypt = require('bcrypt');
+const User = require('../models/User');
 const { saleCreate, saleDelete, saleShow, saleList, addPayment } = require('../controllers/sale.controller');
 
 const errResponse = {

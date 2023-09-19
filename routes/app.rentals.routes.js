@@ -12,6 +12,36 @@ const errResponse = {
     }
 }
 
+const authorizeUserFunc = async function (req, reply) {
+    try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+        const decoded = await req.jwtVerify()      
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});        
+        if(user == null){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Usuario autentificado no existe'
+            })             
+        }
+        if(user.isEnabled == false){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario deshabilitado'
+            })
+        }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
+
 const authorizeFunc = async function (req, reply) {
     try {
 
@@ -29,27 +59,27 @@ const authorizeFunc = async function (req, reply) {
         //         message: 'invalid_crm_token'
         //     })
         // }    
-        // const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});       
-        // if(branch == null){
-        //     return reply.code(401).send({
-        //         status: 'fail',
-        //         message: 'Sucursal autentificada no existe'
-        //     })             
-        // }
-
-        const user = await User.findOne({_id: decoded._id, isDeleted:false});        
-        if(user == null){
+        const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});       
+        if(branch == null){
             return reply.code(401).send({
                 status: 'fail',
-                message: 'Usuario autentificado no existe'
+                message: 'Sucursal autentificada no existe'
             })             
         }
-        if(user.isEnabled == false){
-            return reply.code(404).send({
-                status: 'fail',
-                message: 'Usuario deshabilitado'
-            })
-        }
+
+        // const user = await User.findOne({_id: decoded._id, isDeleted:false});        
+        // if(user == null){
+        //     return reply.code(401).send({
+        //         status: 'fail',
+        //         message: 'Usuario autentificado no existe'
+        //     })             
+        // }
+        // if(user.isEnabled == false){
+        //     return reply.code(404).send({
+        //         status: 'fail',
+        //         message: 'Usuario deshabilitado'
+        //     })
+        // }
     
         return decoded
     } catch (err) {
@@ -136,7 +166,7 @@ const postRentalUpOpts = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: rentalCreate,
 }
 
