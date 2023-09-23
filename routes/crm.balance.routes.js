@@ -3,10 +3,6 @@ const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate, balanceDelete } = require('../controllers/balance.controller');
 
-
-
-
-
 const errResponse = {
     type: 'object',
     properties: {

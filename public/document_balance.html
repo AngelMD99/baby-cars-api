@@ -11,8 +11,12 @@
     <body>
         <div class="ticket">
             <img src="./icons/logo.png" alt="Logo">
-            <p class="centered">SUCURSAL:                
+            <p class="centered">SUCURSAL: 
+                <br>{{branchCode}}                
                 <br>{{branchName}}
+                <br>
+                <br>EMPLEADO:
+                <br>{{employee}}
                 <br>
                 <br>BANCO PARA DEPOSITO:
                 <br>{{bankName}}
@@ -23,10 +27,10 @@
                 <br>REFERENCIA:
                 <br>{{reference}}
                 <br>                                
-                <br>FECHA:
-                <br>{{date}}                
-                <br>HORA:
-                <br>{{time}}
+                <br>FECHA Y HORA INICIAL:
+                <br>{{loginDate}}-{{loginTime}}
+                <br>FECHA Y HORA FINAL:
+                <br>{{balanceDate}}-{{balanceTime}}
             <table>
                 <thead>
                     <tr>

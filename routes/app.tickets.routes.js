@@ -3,7 +3,8 @@ const puppeteer = require('puppeteer');
 const path = require("path");
 const Rental = require('../models/Rental');
 const User = require('../models/User');
-const Balance = require('../models/Rental');
+const Banking = require('../models/Banking');
+const Balance = require('../models/Balance');
 const mongoose = require('mongoose');
 const ObjectId = require('mongoose').Types.ObjectId;
 const { getOffsetSetting } = require('../controllers/base.controller')
@@ -229,45 +230,77 @@ module.exports = function (fastify, opts, done) {
         }
 
         else{
-
+            const balance = await Balance.findOne({_id:req.body.balanceId}).select('-updatedAt -__v').populate([
+                { path:'branchId',select:'name code'},
+                { path:'userId',select:'fullName email phone'}
+            ]);
+            if(!balance){
+                return reply.code(400).send({
+                    status: 'fail',
+                    message: 'No se encontró el corte'
+                })   
+            }
+            const bankingInfo = await Banking.findOne({branchId:balance.branchId._id})
             let balanceObj ={};             
-            balanceObj.branchCode=req.body.branchCode ? req.body.branchCode :"";
-            balanceObj.branchName=req.body.branchName ? req.body.branchName :"";                       
+            balanceObj.branchCode=balance.branchId && balance.branchId.code ? balance.branchId.code :"";
+            balanceObj.branchName=balance.branchId && balance.branchId.name ? balance.branchId.name  :"";                       
+            balanceObj.employee=balance.userId && balance.userId.fullName ? balance.userId.fullName :"";            
             balanceObj.quantity=1;
             //balanceObj.bankName=process.env.BANK
             //balanceObj.accountNumber=process.env.BANK_ACCOUNT;
-            balanceObj.bankName=req.body.bank ? req.body.bank :"";
-            balanceObj.accountNumber=req.body.account ? req.body.account :""
-            balanceObj.reference=req.body.reference ? req.body.reference :""
-            balanceObj.concept="Rentas diarias en efectivo";        
-            balanceObj.total=req.body.total
-            
+            balanceObj.bankName=bankingInfo && bankingInfo.bank ? bankingInfo.bank :"";
+            balanceObj.accountNumber=bankingInfo && bankingInfo.account ? bankingInfo.account :""
+            balanceObj.reference=bankingInfo && bankingInfo.reference ? bankingInfo.reference :""
+            if(balance.balanceType=='rentals'){
+                balanceObj.concept="Corte de rentas cobradas en efectivo";        
+            }
+            if(balance.balanceType=='payments'){
+                balanceObj.concept="Corte de pagos cobrados en efectivo";        
+            }            
+            balanceObj.total=balance.amount            
             let offset=req.headers.offset ? req.headers.offset:6
-            let date = new Date()
-            let stringDate = "";
-            let stringTime = "";            
-            let ticketDate="";
-            let pdfDate="";
+            // let date = new Date()
+            let stringLoginDate = "";
+            let stringLoginTime = "";            
+            let ticketLoginDate="";
+            let pdfLoginDate="";
+            let stringBalanceDate = "";
+            let stringBalanceTime = "";            
+            let ticketBalanceDate="";
+            let pdfBalanceDate="";            
             var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }            
             console.log("ENVIRONMENT:",process.env.ENVIRONMENT)
             if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
-                date.setHours(date.getHours() - offset);                
-                stringDate = dateDDMMAAAA(date,'date')
-                stringTime = dateDDMMAAAA(date,'time')
-                let day = date.getDate();
-                let month = date.getMonth() + 1   
-                let year = date.getFullYear();
-                let dayString = day > 9 ? day : "0"+day;
-                let monthString = month > 9 ? month : "0"+month;  
-                pdfDate = dayString + "-" + monthString + "-" + year          
+                balance.loginDate.setHours(balance.loginDate.getHours() - offset);
+                balance.balanceDate.setHours(balance.balanceDate.getHours() - offset);
+                //date.setHours(date.getHours() - offset);                
+                stringLoginDate = dateDDMMAAAA(balance.loginDate,'date')
+                stringLoginTime = dateDDMMAAAA(balance.loginDate,'time')
+                stringBalanceDate = dateDDMMAAAA(balance.balanceDate,'date')
+                stringBalanceTime = dateDDMMAAAA(balance.balanceDate,'time')                
+                let loginDay = balance.loginDate.getDate();
+                let loginMonth = balance.loginDate.getMonth() + 1   
+                let loginYear = balance.loginDate.getFullYear();
+                let balanceDay = balance.balanceDate.getDate();
+                let balanceMonth = balance.balanceDate.getMonth() + 1   
+                let balanceYear = balance.balanceDate.getFullYear();
+                let loginDayString = loginDay > 9 ? loginDay : "0"+loginDay;                
+                let loginMonthString = loginMonth > 9 ? loginMonth : "0"+loginMonth;  
+                pdfLoginDate = loginDayString + "-" + loginMonthString + "-" + loginYear          
+                let balanceDayString = balanceDay > 9 ? balanceDay : "0"+balanceDay;                
+                let balanceMonthString = balanceMonth > 9 ? balanceMonth : "0"+balanceMonth;  
+                pdfBalanceDate = balanceDayString + "-" + balanceMonthString + "-" + balanceYear          
 
             }
-
             else{
-                stringDate = date.toLocaleDateString('es-ES', options);
-                stringTime = date.toLocaleTimeString('en-ES')
-                ticketDate = date.toLocaleDateString('es-ES')            
-                pdfDate = ticketDate.replaceAll('/', '-')                                       
+                stringLoginDate = balance.loginDate.toLocaleDateString('es-ES', options);
+                stringLoginTime = balance.loginDate.toLocaleTimeString('en-ES')
+                ticketLoginDate = balance.loginDate.toLocaleDateString('es-ES')            
+                pdfLoginDate = ticketLoginDate.replaceAll('/', '-')                                       
+                stringBalanceDate = balance.balanceDate.toLocaleDateString('es-ES', options);
+                stringBalanceTime = balance.balanceDate.toLocaleTimeString('en-ES')
+                ticketBalanceDate = balance.balanceDate.toLocaleDateString('es-ES')            
+                pdfBalanceDate = ticketBalanceDate.replaceAll('/', '-')                                       
             }
 
 
@@ -278,13 +311,16 @@ module.exports = function (fastify, opts, done) {
         // else{
         //     date.setHours(0,0,0,0);
         //     date.setHours(0, 0, 0, 0);
-        // }  
-            balanceObj.date = stringDate 
-            balanceObj.time = stringTime 
+        // }
+
+            balanceObj.loginDate = stringLoginDate;
+            balanceObj.loginTime = stringLoginTime;
+            balanceObj.balanceDate = stringBalanceDate;
+            balanceObj.balanceTime = stringBalanceTime;
 
             let documentId = "balance" 
             documentId = balanceObj.branchCode && balanceObj.branchCode!="" ? documentId + "-" + balanceObj.branchCode:documentId;
-            documentId = documentId + "-" + pdfDate + "-"+ uuid.v1()+ ".pdf"
+            documentId = documentId + "-" + pdfBalanceDate + "-"+ uuid.v1()+ ".pdf"
             return generate("balance", balanceObj,documentId );           
 
         }
