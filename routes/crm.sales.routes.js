@@ -9,6 +9,39 @@ const errResponse = {
         message: {type: 'string'}
     }
 }
+
+const authorizeToken = async function (req, reply) {
+    try {
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+
+        const decoded = await req.jwtVerify()
+        if (!decoded._id || (decoded.role.toLowerCase() !='admin' &&  decoded.role.toLowerCase() !='supervisor')  ) {
+        //if (!decoded._id || (decoded.role!='admin') ) {
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Token de usuario no válido'
+            })
+        }
+    
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(user == null){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario autentificado no encontrado'
+            })
+        }        
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
 const authorizeFunc = async function (req, reply) {
     try {
         if(!req.headers.authorization){
