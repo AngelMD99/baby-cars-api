@@ -147,7 +147,7 @@ const postPaymentUpOpts = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: createPayment,
 }
 

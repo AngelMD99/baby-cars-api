@@ -246,7 +246,7 @@ const getRentalsOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: branchRentalsList,
     
 }
@@ -277,7 +277,7 @@ const getBalanceOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: branchRentalCashBalance,
     
 }
@@ -316,7 +316,7 @@ const putBranchStatusOpt = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: statusCreate
 
 }
@@ -355,7 +355,7 @@ const putBatteryStatusOpt = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: batteryCreate
 
 }

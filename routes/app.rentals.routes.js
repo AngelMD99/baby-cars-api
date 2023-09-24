@@ -166,7 +166,7 @@ const postRentalUpOpts = {
             400: errResponse
         }
     },
-    preHandler: authorizeUserFunc,
+    preHandler:authorizeUserFunc,
     handler: rentalCreate,
 }
 

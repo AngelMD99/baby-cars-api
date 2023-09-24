@@ -128,7 +128,7 @@ const getInventoriesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: inventoryList,
     
 }

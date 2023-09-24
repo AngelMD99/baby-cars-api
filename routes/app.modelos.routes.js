@@ -120,7 +120,7 @@ const getSingleModelOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: modelShow,
     
 }

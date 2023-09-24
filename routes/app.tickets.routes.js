@@ -83,7 +83,7 @@ const authorizeUserFunc = async function (req, reply) {
 
 
 module.exports = function (fastify, opts, done) {
-    fastify.post("/rentals/ticket", {preHandler:[authorizeFunc]}, async (req, reply) => {
+    fastify.post("/rentals/ticket", {preHandler:[authorizeUserFunc]}, async (req, reply) => {
         if(!req.body){
             return reply.code(401).send({
                 status: 'fail',

@@ -253,7 +253,7 @@ const postReserveUpOpts = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: reserveCreate,
 }
 
@@ -280,7 +280,7 @@ const getSingleReserveOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: reserveShow,
     
 }
@@ -315,7 +315,7 @@ const getBranchReservesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: reserveList,
     
 }
@@ -350,7 +350,7 @@ const putSinglePaymentReserve={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: reserveAddPayment,
     
 }
@@ -392,7 +392,7 @@ const putReserveOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: reserveAppUpdate,
     
 }

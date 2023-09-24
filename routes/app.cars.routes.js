@@ -200,7 +200,7 @@ const getAvailablePlansOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: plansAvailable,
     
 }
@@ -246,7 +246,7 @@ const getAvailableCarsOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: carsAvailable,
     
 }
@@ -277,7 +277,7 @@ const getInactiveCarsOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: carsTurnedOff,
     
 }
@@ -312,7 +312,7 @@ const getCarsOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: carList,
     
 }
@@ -339,7 +339,7 @@ const startSingleCarOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: carStart,
     
 }
@@ -366,7 +366,7 @@ const stopSingleCarOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: carStop,
     
 }
@@ -401,7 +401,7 @@ const autoStopCars={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeUserFunc,
     handler: carBranchAutoOff
     
 }

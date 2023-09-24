@@ -120,7 +120,7 @@ const postClientUpOpts = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: clientCreate,
 }
 
@@ -146,7 +146,7 @@ const getSingleClientOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: clientShow,
     
 }
@@ -173,7 +173,7 @@ const deleteSingleClientOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: clientDelete,
     
 }
@@ -209,7 +209,7 @@ const putSingleClientOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: clientUpdate,
     
 }
@@ -244,7 +244,7 @@ const getClientsOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: clientList,
     
 }

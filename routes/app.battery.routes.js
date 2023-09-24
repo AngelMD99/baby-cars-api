@@ -141,7 +141,7 @@ const getBatteriesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: batteryList,
     
 }

@@ -202,7 +202,7 @@ const postSaleUpOpts = {
             400: errResponse
         }
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: saleCreate,
 }
 
@@ -229,7 +229,7 @@ const getSingleSaleOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: saleShow,
     
 }
@@ -264,7 +264,7 @@ const getBranchSalesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler:authorizeUserFunc,
     handler: saleList,
     
 }
