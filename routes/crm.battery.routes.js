@@ -140,7 +140,7 @@ const getBatteriesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeToken,
     handler: batteryList,
     
 }

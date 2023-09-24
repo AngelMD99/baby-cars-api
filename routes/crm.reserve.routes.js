@@ -280,7 +280,7 @@ const getReservesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeToken,
     handler: reserveList,
     
 }

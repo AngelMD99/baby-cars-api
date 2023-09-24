@@ -45,29 +45,28 @@ const authorizeToken = async function (req, reply) {
 
 const authorizeFunc = async function (req, reply) {
     try {
-
         if(!req.headers.authorization){
             return reply.code(401).send({
                 status: 'fail',
                 message: 'Sesión expirada'
-            })
-            
+            })            
         }
 
         const decoded = await req.jwtVerify()
-        // if (!decoded._id || (decoded.role!='admin') ) {
-        //     return reply.code(401).send({
-        //         status: 'fail',
-        //         message: 'invalid_crm_token'
-        //     })
-        // }
-    
-        const branch = await Branch.findOne({_id: decoded._id, isDeleted:false});
-    
-        if(branch == null){
+        if (!decoded._id || decoded.role.toLowerCase() !='admin'   ) {
+        //if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
-                message: 'Sucursal autentificada no existe'
+                message: 'Token de usuario no válido'
+            })
+        }
+    
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});
+    
+        if(user == null){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario autentificado no encontrado'
             })
         }
         // if(user.isEnabled == false){

@@ -278,7 +278,7 @@ const getModelsOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeToken,
     handler: modelList,
     
 }
@@ -309,7 +309,7 @@ const getModelsAvailableOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeToken,
     handler: modelsAvailable
     
 }

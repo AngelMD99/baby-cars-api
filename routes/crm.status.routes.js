@@ -138,7 +138,7 @@ const getStatusOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeToken,
     handler: statusList,
     
 }
