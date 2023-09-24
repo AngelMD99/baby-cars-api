@@ -19,7 +19,8 @@ const authorizeFunc = async function (req, reply) {
         }
 
         const decoded = await req.jwtVerify()
-        if (!decoded._id || (decoded.role!='admin') ) {
+        if (!decoded._id ||  ( decoded.role.toLowerCase() !='admin'  && decoded.role.toLowerCase() !='supervisor') ) {
+        //if (!decoded._id || (decoded.role!='admin') ) {
             return reply.code(401).send({
                 status: 'fail',
                 message: 'Token de usuario no válido'
