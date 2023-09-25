@@ -600,6 +600,40 @@ const userList = async function (req, reply){
 
 }
 
+const usersAvailable = async function (req, reply){
+    let aggregateQuery=[
+        {
+            '$match':{
+                isDeleted:false
+            }
+        }
+    ];
+
+    aggregateQuery.push(
+        {
+            '$project': {
+              '_id': 0,              
+              'userId._id': '$_id', 
+              'userId.fullName': '$fullName',                 
+              'userId.email': '$email'
+            }
+          },{
+              '$sort' :{
+               'userId.fullName':1
+              }
+           }
+    )
+
+    let availableUsers = await User.aggregate(aggregateQuery);    
+    return reply.code(200).send({
+        status:'sucess',
+        data:availableUsers
+    })
+
+
+
+
+}
 
 
 const userUpdate = async function (req, reply){
@@ -827,4 +861,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin }
+module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin, usersAvailable }

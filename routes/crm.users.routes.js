@@ -37,6 +37,22 @@ const userDef={
       }
 
 }
+
+const userAvailableDef = { 
+    type: 'object', 
+    properties: {
+        userId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'},
+                
+            }
+        }                        
+    }
+}
+
 const authorizeToken = async function (req, reply) {
     try {
         if(!req.headers.authorization){
@@ -309,6 +325,38 @@ const getUsersOpts={
     
 }
 
+const UsersAvailableOpts={
+    schema: {
+         description:"Retrieves the information of all the models options to use them in the form controls.",
+         tags:['Models'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:userAvailableDef,
+                  }
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeToken,
+    handler: users.usersAvailable
+    
+}
+
+
 const putSingleUserOpts={
     schema: {
          description:"Allows to update the information of a single car with the id provided.",
@@ -350,9 +398,10 @@ const putSingleUserOpts={
 function crmUsersRoutes(fastify, options, done) {    
     fastify.post('/users/in', postUserSignInOpts);
     fastify.post('/users', postUserSaveOpts);
-    fastify.get('/users', getUsersOpts);
+    fastify.get('/users', getUsersOpts);    
     fastify.get('/users/:id', getSingleUserOpts);
     fastify.delete('/users/:id', deleteSingleUserOpts);
+    fastify.get('/users/available', UsersAvailableOpts);
     fastify.put('/users/:id', putSingleUserOpts);
 
 done()
