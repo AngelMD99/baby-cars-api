@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { saleList,saleCreate, saleShow, saleUpdate,addPayment  } = require('../controllers/sale.controller');
+const { saleList, saleCreate, saleShow, saleUpdate,addPayment, saleShowCRM  } = require('../controllers/sale.controller');
 const User = require('../models/User');
 
 const errResponse = {
@@ -130,7 +130,9 @@ const saleDef = {
                 price:{type:'number'},
               }
             }
-          },
+        },
+        totalProducts:{type:'number'},
+        differentProducts:{type:'number'},
         // modelId:{
         //     type:'object',
         //     properties:{
@@ -142,10 +144,10 @@ const saleDef = {
         // price:{type:'number'},
         totalSale:{type:'number'},
         payments:{
-            type:'array',
-            items:{
+            type:'object',
+            properties:{
                 amount:{type:'number'},
-                paid:{type:'string'},
+                paidOn:{type:'string'},
                 paymentType:{type:'string'}
             }
         },              
@@ -184,13 +186,42 @@ const getSalesOpts={
         }
          
     },
-    preHandler: authorizeFunc,
+    preHandler: authorizeToken,
     handler: saleList,
+    
+}
+
+const getSingleSaleOpts={
+    schema: {
+         description:"Retrieves the information of a single sale with the saleId provided for the id of the branch ",
+         tags:['Sales'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'},
+            saleId:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: saleDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler:authorizeToken,
+    handler: saleShowCRM,
     
 }
 
 function crmSalesRoutes(fastify, options, done) {
     fastify.get('/crm/sales', getSalesOpts)
+    fastify.get('/crm/sales/:saleId', getSingleSaleOpts)
     //fastify.get('/crm/rentals/:id', getSingleRentalOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     

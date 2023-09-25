@@ -444,7 +444,7 @@ const saleShow = async function (req, reply){
         })        
     } 
     let paymentObj = await payment.toObject()
-    saleObj.payments=[paymentObj]
+    saleObj.payments=paymentObj;
 
 
     
@@ -469,6 +469,67 @@ const saleShow = async function (req, reply){
         }
     }
     delete saleObj.__v
+    return reply.code(200).send({
+        status: 'success',
+        data: saleObj
+    })    
+
+}
+
+const saleShowCRM = async function (req, reply){
+    const sale = await Sale.findOne({_id:req.params.saleId}).select('-createdAt -updatedAt -__v');
+    if (!sale){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Venta no registrada'
+        })        
+    } 
+    
+    await sale.populate([
+        {path:'branchId', select:'_id name code'},
+        //{path:'modelId', select:'_id name'},
+        {path:'employeeId', select:'_id fullName email'},
+        //{path:'clientId', select:'_id fullName email phone'}
+    ]);  
+    let saleObj = await sale.toObject();
+    let payment = await Payment.findOne({saleId:sale._id,isDeleted:false})            
+    if (!payment){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'La venta no tiene pago asociado'
+        })        
+    } 
+    let paymentObj = await payment.toObject()
+    saleObj.payments=paymentObj;
+
+
+    
+    // if (saleObj.branchId){
+    //     saleObj.branchCode=saleObj.branchId.code ? saleObj.branchId.code :"";
+    //     saleObj.branchName=saleObj.branchId.name ? saleObj.branchId.name :"";
+    //     delete saleObj.branchId;
+    // }
+    if(!saleObj.branchId || !saleObj.branchId._id){
+        saleObj.branchId={
+            _id:null,
+            name:"",
+            code:"",
+        }
+    }
+    
+    if(!saleObj.employeeId || !saleObj.employeeId._id){
+        saleObj.modelId={
+            _id:null,
+            fullName:"",                        
+            email:""
+        }
+    }
+    delete saleObj.__v
+    saleObj.differentProducts=saleObj.products.length;
+    saleObj.totalProducts=0;
+    saleObj.products.forEach(product=>{
+        saleObj.totalProducts+=product.quantity
+    })
     return reply.code(200).send({
         status: 'success',
         data: saleObj
@@ -605,7 +666,7 @@ const saleList = async function (req, reply){
 
                 }
 
-                newObj.payments = allPayments.filter(payment=>{
+                newObj.payments = allPayments.find(payment=>{
                     return String(payment.saleId) == String(sale._id)
                 })
                 
@@ -673,7 +734,7 @@ const saleList = async function (req, reply){
 
                 }
 
-                let payments = allPayments.filter(payment=>{
+                let payments = allPayments.find(payment=>{
                     return String(payment.saleId) == String(sale._id)
                 })
                 sale.branchId=branchId;         
@@ -850,7 +911,9 @@ const saleList = async function (req, reply){
                     '$first': '$employeeInfo.email'
                   }, 
                   'products':1,
-                  'payments':'$paymentsInfo',
+                  'payments': {
+                    '$first': '$paymentsInfo'
+                    } ,
 
 
                   'createdAt':1,
@@ -960,6 +1023,13 @@ const saleList = async function (req, reply){
             doc.remainingTime=remainingTime
 
         }
+        let totalProducts=0;
+        doc.differentProducts = doc.products.length;        
+        doc.products.forEach(product=>{
+            totalProducts+=product.quantity
+
+        })
+        doc.totalProducts=totalProducts;
         
 
     })
@@ -1029,6 +1099,6 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { saleCreate, saleDelete, saleList, saleShow, saleUpdate, addPayment}
+module.exports = { saleCreate, saleDelete, saleList, saleShow, saleUpdate, addPayment, saleShowCRM}
 
 
