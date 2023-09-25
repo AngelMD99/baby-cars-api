@@ -397,12 +397,12 @@ const putSingleUserOpts={
 
 function crmUsersRoutes(fastify, options, done) {    
     fastify.post('/users/in', postUserSignInOpts);
-    fastify.post('/users', postUserSaveOpts);
-    fastify.get('/users', getUsersOpts);    
-    fastify.get('/users/:id', getSingleUserOpts);
-    fastify.delete('/users/:id', deleteSingleUserOpts);
-    fastify.get('/users/available', UsersAvailableOpts);
-    fastify.put('/users/:id', putSingleUserOpts);
+    fastify.post('/crm/users', postUserSaveOpts);
+    fastify.get('/crm/users', getUsersOpts);    
+    fastify.get('/crm/users/:id', getSingleUserOpts);
+    fastify.delete('/crm/users/:id', deleteSingleUserOpts);
+    fastify.get('/crm/users/available', UsersAvailableOpts);
+    fastify.put('/crm/users/:id', putSingleUserOpts);
 
 done()
 }
