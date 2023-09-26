@@ -128,6 +128,7 @@ const saleDef = {
                 color:{type:'string'},
                 quantity:{type:'number'},
                 price:{type:'number'},
+                totalAmount:{type:'number'}
               }
             }
         },

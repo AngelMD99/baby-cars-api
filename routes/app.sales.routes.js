@@ -129,6 +129,7 @@ const saleDef = {
                 color:{type:'string'},
                 quantity:{type:'number'},
                 price:{type:'number'},
+                totalAmount:{type:'number'}
               }
             }
           },
@@ -141,6 +142,8 @@ const saleDef = {
         // },
         // quantity:{type:'number'},
         // price:{type:'number'},
+        totalProducts:{type:'number'},
+        differentProducts:{type:'number'},
         totalSale:{type:'number'},
         payments:{
             type:'array',

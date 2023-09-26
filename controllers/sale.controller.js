@@ -529,6 +529,7 @@ const saleShowCRM = async function (req, reply){
     saleObj.totalProducts=0;
     saleObj.products.forEach(product=>{
         saleObj.totalProducts+=product.quantity
+        product.totalAmount = product.quantity * product.price;
     })
     return reply.code(200).send({
         status: 'success',
