@@ -142,7 +142,9 @@ const reserveDef = {
                 price:{type:'number'},
               }
             }
-        },         
+        }, 
+        totalProducts:{type:'number'},
+        differentProducts:{type:'number'},                
         totalSale:{type:'number'},
         payments:{
             type:'array',
@@ -162,9 +164,8 @@ const reserveDef = {
                 },  
 
             }
-
-
         }, 
+        paymentsCount:{type:'number'},
         totalPaid:{type:'number'},
         pendingBalance:{type:'number'},
         cancelledPayments:{
@@ -186,9 +187,8 @@ const reserveDef = {
                 }, 
 
             }
-
-
-        },                                             
+        },   
+        cancelledPaymentsCount:{type:'number'},                                          
         createdAt:{type:'string'},
         expirationDate:{type:'string'},
         updatedAt:{type:'string'}        

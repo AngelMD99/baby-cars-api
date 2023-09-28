@@ -988,7 +988,8 @@ const reserveList = async function (req,reply){
                 }
 
                 newObj.payments = allPayments.filter(payment=>{
-                    return String ( (payment.reserveId) == String(reserve._id) && payment.isDiscarded==false)
+                    return ( String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==false);
+                    
                 })
 
                 newObj.totalPaid = _.sumBy(newObj.payments, (payment) => {
@@ -998,7 +999,7 @@ const reserveList = async function (req,reply){
                 newObj.pendingBalance = newObj.totalSale - newObj.totalPaid;
 
                 newObj.cancelledPayments = allPayments.filter(payment=>{
-                    return String ( (payment.reserveId) == String(reserve._id) && payment.isDiscarded==true)
+                    return ( String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==true);
                 })
                 
                 delete reserve.branchId;
@@ -1365,25 +1366,33 @@ const reserveList = async function (req,reply){
                     name:""
                 }
             }
-            doc.totalPaid= _.sumBy(doc.payments, (payment) => {
-                return Number(payment.amount.toFixed(2))
-            });
             
-            doc.pendingBalance=doc.totalSale-doc.totalPaid;
+            
         })
         reservesPaginated.totalPages = Math.ceil(reservesPaginated.totalDocs / reservesPaginated.perPage);
 
     }
     reservesPaginated.docs.forEach(doc=>{
-        if(doc.isStarted== true && doc.expireDate){
-            let currentDate = new Date ()
-            let remainingTime = minutesDiff (currentDate,doc.expireDate);
-            doc.remainingTime=remainingTime
-
-        }
+        doc.totalPaid= _.sumBy(doc.payments, (payment) => {
+            return Number(payment.amount.toFixed(2))
+        });
         
+        doc.pendingBalance=doc.totalSale-doc.totalPaid;
+        doc.paymentsCount=doc.payments.length;
+        doc.cancelledPaymentsCount=doc.cancelledPayments.length;
+        doc.differentProducts=doc.products.length
+        doc.totalProducts=0;
+        doc.products.forEach(product=>{
+            doc.totalProducts+=product.quantity
+        })
+        
+    //     if(doc.isStarted== true && doc.expireDate){
+    //         let currentDate = new Date ()
+    //         let remainingTime = minutesDiff (currentDate,doc.expireDate);
+    //         doc.remainingTime=remainingTime
+    //     }      
 
-    })
+    })    
     let docs = JSON.stringify(reservesPaginated.docs);    
     var reserves = JSON.parse(docs);
     
