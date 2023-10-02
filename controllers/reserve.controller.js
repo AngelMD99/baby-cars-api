@@ -483,6 +483,14 @@ const reserveShow = async function (req,reply){
     let reserveObj = await reserve.toObject();
     let payments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:false})                
     let cancelledPayments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:true})                
+    let totalProducts=0;
+    reserveObj.differentProducts=reserveObj.products.length;
+    reserveObj.products.forEach(product=>{
+        totalProducts+=product.quantity
+        product.totalAmount=product.quantity*product.price
+    })
+    reserveObj.totalProducts=totalProducts;
+
     
     // letpayments = await Payment.aggregate([
     //     {
@@ -649,6 +657,7 @@ const reserveShow = async function (req,reply){
     payments.forEach(payment=>{
         totalPaid+=payment.amount;
     })
+
     reserveObj.payments=payments;
     reserveObj.totalPaid=totalPaid; 
     reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
@@ -724,6 +733,13 @@ const reserveShowCrm = async function (req,reply){
     let reserveObj = await reserve.toObject();
     let payments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:false})                
     let cancelledPayments = await Payment.find({reserveId:reserve._id,isDeleted:false, isDiscarded:true})                
+    let totalProducts=0;
+    reserveObj.differentProducts=reserveObj.products.length;
+    reserveObj.products.forEach(product=>{
+        totalProducts+=product.quantity
+        product.totalAmount=product.quantity*product.price
+    })
+    reserveObj.totalProducts=totalProducts;
     
     let totalPaid = 0;
     payments.forEach(payment=>{
@@ -764,6 +780,7 @@ const reserveShowCrm = async function (req,reply){
             email:""
         }
     }
+
     delete reserveObj.__v
     return reply.code(200).send({
         status: 'success',
