@@ -86,7 +86,7 @@ const reserveDef = {
         isPaid:{type:'boolean'},
         isCancelled:{type:'boolean'},        
         cancellationReason:{type:'boolean'},
-        isDelivered:{type:'boolean'},
+        isDelivered:{type:'string'},
         branchId:{
             type:'object',
             properties:{

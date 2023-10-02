@@ -661,7 +661,9 @@ const reserveShow = async function (req,reply){
     reserveObj.payments=payments;
     reserveObj.totalPaid=totalPaid; 
     reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
-    reserveObj.cancelledPayments=cancelledPayments;  
+    reserveObj.cancelledPayments=cancelledPayments; 
+    reserveObj.isDelivered = reserveObj.isDelivered == true ? "Si":"No";
+     
 
     
     // if (reserveObj.branchId){
@@ -749,6 +751,7 @@ const reserveShowCrm = async function (req,reply){
     reserveObj.totalPaid=totalPaid; 
     reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
     reserveObj.cancelledPayments=cancelledPayments;  
+    reserveObj.isDelivered = reserveObj.isDelivered == true ? "Si":"No";
 
     if(!reserveObj.branchId || !reserveObj.branchId._id){
         reserveObj.branchId={
@@ -879,6 +882,7 @@ const reserveList = async function (req,reply){
     let searchQuery = {
         isDeleted: false,			
     };
+    
     if(req.params.id && !req.query.branchId){
         searchQuery['branchId']=req.params.id
     }
@@ -892,6 +896,17 @@ const reserveList = async function (req,reply){
     if(req.query.modelId){
         searchQuery['products.modelId']=req.query.modelId
     }
+
+    if(req.query.isDelivered!=null && req.query.isDelivered!=""){        
+        if(req.query.isDelivered.toLowerCase()="true"){
+            searchQuery['isDelivered']=true
+        }
+        if(req.query.isDelivered.toLowerCase()="false"){
+            searchQuery['isDelivered']=false
+        }
+        
+    }
+
 
     if (req.query.initialDate!=null && req.query.finalDate!=null){      
         
@@ -955,6 +970,8 @@ const reserveList = async function (req,reply){
             reservesQuery.docs.forEach(reserve => {
                 let newObj={
                     _id:reserve._id,
+                    isCancelled:reserve.isCancelled,
+                    isDelivered:reserve.isDelivered,
                     folio:reserve.folio,
                     client:reserve.client,
                     products:reserve.products,                    
@@ -1096,7 +1113,6 @@ const reserveList = async function (req,reply){
                 let cancelledPayments = allPayments.filter(payment=>{
                     return ( String(payment.reserveId) == String(reserve._id) && payment.isDiscarded==true);
                 })
-
                 reserve.branchId=branchId;                         
                 reserve.employeeId=userId;         
                 reserve.payments=payments; 
@@ -1383,6 +1399,7 @@ const reserveList = async function (req,reply){
                     name:""
                 }
             }
+
             
             
         })
@@ -1402,6 +1419,8 @@ const reserveList = async function (req,reply){
         doc.products.forEach(product=>{
             doc.totalProducts+=product.quantity
         })
+        doc.isDelivered = doc.isDelivered == true ? 'Si' :'No';
+
         
     //     if(doc.isStarted== true && doc.expireDate){
     //         let currentDate = new Date ()
