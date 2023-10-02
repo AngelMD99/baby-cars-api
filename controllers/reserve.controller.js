@@ -663,6 +663,8 @@ const reserveShow = async function (req,reply){
     reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
     reserveObj.cancelledPayments=cancelledPayments; 
     reserveObj.isDelivered = reserveObj.isDelivered == true ? "Si":"No";
+    reserveObj.isCancelled = reserveObj.isCancelled == true ? "Si":"No";
+    reserveObj.isPaid = reserveObj.isPaid == true ? "Si":"No";
      
 
     
@@ -750,8 +752,11 @@ const reserveShowCrm = async function (req,reply){
     reserveObj.payments=payments;
     reserveObj.totalPaid=totalPaid; 
     reserveObj.pendingBalance=reserveObj.totalSale - totalPaid;
-    reserveObj.cancelledPayments=cancelledPayments;  
+    reserveObj.cancelledPayments=cancelledPayments;    
     reserveObj.isDelivered = reserveObj.isDelivered == true ? "Si":"No";
+    reserveObj.isCancelled = reserveObj.isCancelled == true ? "Si":"No";
+    reserveObj.isPaid = reserveObj.isPaid == true ? "Si":"No";
+
 
     if(!reserveObj.branchId || !reserveObj.branchId._id){
         reserveObj.branchId={
@@ -907,6 +912,24 @@ const reserveList = async function (req,reply){
         
     }
 
+    if(req.query.isCancelled!=null && req.query.isCancelled!=""){        
+        if(req.query.isCancelled.toLowerCase()="true"){
+            searchQuery['isCancelled']=true
+        }
+        if(req.query.isCancelled.toLowerCase()="false"){
+            searchQuery['isCancelled']=false
+        }        
+    }
+
+    if(req.query.isPaid!=null && req.query.isPaid!=""){        
+        if(req.query.isPaid.toLowerCase()="true"){
+            searchQuery['isPaid']=true
+        }
+        if(req.query.isPaid.toLowerCase()="false"){
+            searchQuery['isPaid']=false
+        }        
+    }
+
 
     if (req.query.initialDate!=null && req.query.finalDate!=null){      
         
@@ -972,6 +995,8 @@ const reserveList = async function (req,reply){
                     _id:reserve._id,
                     isCancelled:reserve.isCancelled,
                     isDelivered:reserve.isDelivered,
+                    isPaid:reserve.isPaid,
+                    cancellationReason:reserve.cancellationReason,
                     folio:reserve.folio,
                     client:reserve.client,
                     products:reserve.products,                    
@@ -1261,6 +1286,11 @@ const reserveList = async function (req,reply){
               {
                 '$project': {
                   'isDeleted':1,
+                  'isCancelled':1,
+                  'isDelivered':1,
+                  'isPaid':1,
+                  'cancellationReason':1,
+
                   //'branchId': 1,                   
                   'folio': 1,                   
                   'branchId._id': {
@@ -1420,6 +1450,8 @@ const reserveList = async function (req,reply){
             doc.totalProducts+=product.quantity
         })
         doc.isDelivered = doc.isDelivered == true ? 'Si' :'No';
+        doc.isCancelled = doc.isCancelled == true ? 'Si' :'No';
+        doc.isPaid = doc.isPaid == true ? 'Si' :'No';
 
         
     //     if(doc.isStarted== true && doc.expireDate){

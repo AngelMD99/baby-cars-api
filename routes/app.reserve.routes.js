@@ -85,9 +85,9 @@ const reserveDef = {
     properties: {
         _id: { type: 'string' },
         folio:{type:'string'},
-        isPaid:{type:'boolean'},
-        isCancelled:{type:'boolean'},        
-        cancellationReason:{type:'boolean'},
+        isPaid:{type:'string'},
+        isCancelled:{type:'string'},        
+        cancellationReason:{type:'string'},
         isDelivered:{type:'string'},
         branchId:{
             type:'object',
