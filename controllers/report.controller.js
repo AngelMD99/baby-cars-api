@@ -1024,9 +1024,32 @@ const reservesReport = async function (req, reply){
         aggregateQuery.push({ "$match": {"userId": employeeId }});        
     }
 
-    if (req.isCancelled!=null && req.query.isCancelled!=""){
-        let cancelationFilter = req.isCancelled.toLowerCase() == "true" ? true : false
-        aggregateQuery.push({ "$match": {"isCancelled": cancelationFilter }});        
+    if(req.query.isDelivered!=null && req.query.isDelivered!=""){        
+        if(req.query.isDelivered.toLowerCase()=="true"){
+            aggregateQuery.push({ "$match": {"isDelivered": true }});
+        }
+        if(req.query.isDelivered.toLowerCase()=="false"){
+            aggregateQuery.push({ "$match": {"isDelivered": false }});
+        }
+        
+    }
+
+    if(req.query.isCancelled!=null && req.query.isCancelled!=""){        
+        if(req.query.isCancelled.toLowerCase()=="true"){
+            aggregateQuery.push({ "$match": {"isCancelled": true }});
+        }
+        if(req.query.isCancelled.toLowerCase()=="false"){
+            aggregateQuery.push({ "$match": {"isDelivered": false }});
+        }        
+    }
+
+    if(req.query.isPaid!=null && req.query.isPaid!=""){        
+        if(req.query.isPaid.toLowerCase()=="true"){
+            aggregateQuery.push({ "$match": {"isPaid": true }});
+        }
+        if(req.query.isPaid.toLowerCase()=="false"){
+            aggregateQuery.push({ "$match": {"isPaid": true }});
+        }        
     }
 
     let dateMatchStage={};
@@ -1104,6 +1127,8 @@ const reservesReport = async function (req, reply){
             '$project': {                
                 'Folio':'$folio',
                 'Cancelado':'$isCancelled',
+                'Entregado':'$isDelivered',
+                'Liquidado':'$isPaid',
                 'Sucursal código':{
                     '$first': '$branchInfo.code'
                 },
@@ -1120,7 +1145,8 @@ const reservesReport = async function (req, reply){
                 },
                 'Modelos diferentes':{'$size': "$products"},
                 'Carritos totales':{'$sum': "$products.quantity"},
-                "Total apartado":"$totalSale",                
+                "Total apartado":"$totalSale", 
+                "Cancellation":'$cancellationReason',
                 "createdAt":'$createdAt'                               
                 
             }
@@ -1157,6 +1183,8 @@ const reservesReport = async function (req, reply){
 
         reserve['Saldo restante']=reserve['Total apartado']-reserve['Total pagado'];
         reserve.Cancelado  = reserve.Cancelado == true ? 'Si' :'No'
+        reserve.Liquidado  = reserve.Liquidado == true ? 'Si' :'No'
+        reserve.Entregado  = reserve.Entregado == true ? 'Si' :'No'
 
         if(reserve.createdAt){            
             reserve.createdAt = adjustTimeStamp (reserve.createdAt,offset);
@@ -1192,7 +1220,7 @@ const reservesReport = async function (req, reply){
     //let wbRows = reserves.length+4;   
     wb.SheetNames.push("Apartados");
     //addig the titles rows
-    var ws_data = [['Sucursal','','','','','','','','','','','','','','']]
+    var ws_data = [['Sucursal','','','','','','','','','','','','','','','','','']]
     var ws = xlsx.utils.aoa_to_sheet(ws_data);       
     wb.Sheets["Apartados"] = ws;
     wb.Sheets["Apartados"]["A1"].s={        
@@ -1202,7 +1230,7 @@ const reservesReport = async function (req, reply){
             },       
     }
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Etiqueta', '', '', '','','','','','','','','','','','']
+            ['Etiqueta', '', '', '','','','','','','','','','','','','','','']
           ],{origin: -1});
     wb.Sheets["Apartados"]["A2"].s={        
         font: {				  		
@@ -1212,7 +1240,7 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Empleado', '', '', '','','','','','','','','','','','']
+        ['Empleado', '', '', '','','','','','','','','','','','','','','']
       ],{origin: -1});
     wb.Sheets["Apartados"]["A3"].s={        
         font: {				  		
@@ -1220,25 +1248,55 @@ const reservesReport = async function (req, reply){
             bold: true // negrita
         },       
     }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['Liquidados', '', '', '','','','','','','','','','','','','','','']
+      ],{origin: -1});
+    wb.Sheets["Apartados"]["A4"].s={        
+        font: {				  		
+            sz: 12, // tamaño de fuente
+            bold: true // negrita
+        },       
+    }
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['Entregados', '', '', '','','','','','','','','','','','','','','']
+      ],{origin: -1});
+    wb.Sheets["Apartados"]["A5"].s={        
+        font: {				  		
+            sz: 12, // tamaño de fuente
+            bold: true // negrita
+        },       
+    }
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['Cancelados', '', '', '','','','','','','','','','','','','','','']
+      ],{origin: -1});
+    wb.Sheets["Apartados"]["A5"].s={        
+        font: {				  		
+            sz: 12, // tamaño de fuente
+            bold: true // negrita
+        },       
+    }
+
     
     if(req.query.initialDate != null && req.query.lastDate !=null ){        
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Fecha inicial', '', '', '','','','','','','','','','','','']
+            ['Fecha inicial', '', '', '','','','','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Fecha final', '', '', '','','','','','','','','','','','']
+            ['Fecha final', '', '', '','','','','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['', '', '', '','','','','','','','','','','','']
+            ['', '', '', '','','','','','','','','','','','','','','']
           ], {origin: -1});
 
-        wb.Sheets["Apartados"]["A4"].s={        
+        wb.Sheets["Apartados"]["A6"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
             }               
         }
-        wb.Sheets["Apartados"]["A5"].s={        
+        wb.Sheets["Apartados"]["A6"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
@@ -1247,15 +1305,15 @@ const reservesReport = async function (req, reply){
     }
     else{
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Sin rango de fechas', '', '', '','','','','','','','','','','','']
+            ['Sin rango de fechas', '', '', '','','','','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['', '', '', '','','','','','','','','','','','']
+            ['', '', '', '','','','','','','','','','','','','','','']
           ], {origin: -1});
         xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['', '', '', '','','','','','','','','','','','']
+            ['', '', '', '','','','','','','','','','','','','','','']
           ], {origin: -1});
-        wb.Sheets["Apartados"]["A4"].s={        
+        wb.Sheets["Apartados"]["A6"].s={        
             font: {				  		
                   sz: 12, // tamaño de fuente
                   bold: true // negrita
@@ -1264,95 +1322,122 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Folio','Cancelado','Fecha','Hora','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total apartado','Pagos actuales','Pagos cancelados','Total pagado','Saldo restante']
+        ['','', '', '','','','','','','','','','','','','','','']
+      ],{origin: -1});
+    
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['','', '', '','','','','','','','','','','','','','','']
+    ],{origin: -1});
+    
+
+    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+        ['Folio','Fecha','Hora','Entregado','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total apartado','Pagos actuales','Pagos cancelados','Total pagado','Saldo restante','Liquidado','Cancelado','Motivo de cancelación']
       ], {origin: -1});
     
-    wb.Sheets["Apartados"]["A7"].s={        
+    wb.Sheets["Apartados"]["A9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["B7"].s={        
+    wb.Sheets["Apartados"]["B9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["C7"].s={        
+    wb.Sheets["Apartados"]["C9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["D7"].s={        
+    wb.Sheets["Apartados"]["D9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["E7"].s={        
+    wb.Sheets["Apartados"]["E9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["F7"].s={        
+    wb.Sheets["Apartados"]["F9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["G7"].s={        
+    wb.Sheets["Apartados"]["G9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["H7"].s={        
+    wb.Sheets["Apartados"]["H9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["I7"].s={        
+    wb.Sheets["Apartados"]["I9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["J7"].s={        
+    wb.Sheets["Apartados"]["J9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["K7"].s={        
+    wb.Sheets["Apartados"]["K9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["L7"].s={        
+    wb.Sheets["Apartados"]["L9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["M7"].s={        
+    wb.Sheets["Apartados"]["M9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
 
-    wb.Sheets["Apartados"]["N7"].s={        
+    wb.Sheets["Apartados"]["N9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
         }               
     }
-    wb.Sheets["Apartados"]["O7"].s={        
+    wb.Sheets["Apartados"]["O9"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["P9"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["Q9"].s={        
+        font: {				  		
+              sz: 12, // tamaño de fuente
+              bold: true // negrita
+        }               
+    }
+    wb.Sheets["Apartados"]["R9"].s={        
         font: {				  		
               sz: 12, // tamaño de fuente
               bold: true // negrita
@@ -1407,12 +1492,12 @@ const reservesReport = async function (req, reply){
     //     //console.log(wb.Sheets["Apartados"]["B1"].v)        
     // }
     //else{
-        wb.Sheets["Apartados"]["B2"].v="Todos"
-        wb.Sheets["Apartados"]["B2"].s ={
-            font:{
-                bold:false
-            }
-        }
+        // wb.Sheets["Apartados"]["B2"].v="Todos"
+        // wb.Sheets["Apartados"]["B2"].s ={
+        //     font:{
+        //         bold:false
+        //     }
+        // }
     //}
 
     if(req.query.userId != null){
@@ -1448,9 +1533,30 @@ const reservesReport = async function (req, reply){
             lastDate.setHours(0, 0, 0, 0);
     
         }      
-        wb.Sheets["Apartados"]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
-        wb.Sheets["Apartados"]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
+        wb.Sheets["Apartados"]["B4"].v=dateDDMMAAAA(initialDate).substring(0,11);
+        wb.Sheets["Apartados"]["B4"].v=dateDDMMAAAA(lastDate).substring(0,11);
     }
+
+    if(req.query.isDelivered!= null && req.query.isDelivered!= ""){
+        let userInformation = await User.findOne({_id:req.query.userId}) 
+        wb.Sheets["Apartados"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
+        wb.Sheets["Apartados"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Apartados"]["B3"].v="Todos"
+        wb.Sheets["Apartados"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+
+
     if (reserves.length>0){
         for (let index = 0; index < reserves.length; index++) {
             xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [

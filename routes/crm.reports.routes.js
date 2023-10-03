@@ -150,7 +150,10 @@ const getReservesReportOpts={
             branchId:{type:'string'},
             employeeId:{type:'string'},
             initialDate:{type:'string'},
-            lastDate:{type:'string'}
+            lastDate:{type:'string'},
+            isPaid:{type:'string'},
+            isCancelled:{type:'string'},
+            isDelivered:{type:'string'}
         }, 
         response: {
             200: {
