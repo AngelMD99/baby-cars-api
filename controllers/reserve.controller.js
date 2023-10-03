@@ -903,29 +903,29 @@ const reserveList = async function (req,reply){
     }
 
     if(req.query.isDelivered!=null && req.query.isDelivered!=""){        
-        if(req.query.isDelivered.toLowerCase()="true"){
+        if(req.query.isDelivered.toLowerCase()=="true"){
             searchQuery['isDelivered']=true
         }
-        if(req.query.isDelivered.toLowerCase()="false"){
+        if(req.query.isDelivered.toLowerCase()=="false"){
             searchQuery['isDelivered']=false
         }
         
     }
 
     if(req.query.isCancelled!=null && req.query.isCancelled!=""){        
-        if(req.query.isCancelled.toLowerCase()="true"){
+        if(req.query.isCancelled.toLowerCase()=="true"){
             searchQuery['isCancelled']=true
         }
-        if(req.query.isCancelled.toLowerCase()="false"){
+        if(req.query.isCancelled.toLowerCase()=="false"){
             searchQuery['isCancelled']=false
         }        
     }
 
     if(req.query.isPaid!=null && req.query.isPaid!=""){        
-        if(req.query.isPaid.toLowerCase()="true"){
+        if(req.query.isPaid.toLowerCase()=="true"){
             searchQuery['isPaid']=true
         }
-        if(req.query.isPaid.toLowerCase()="false"){
+        if(req.query.isPaid.toLowerCase()=="false"){
             searchQuery['isPaid']=false
         }        
     }
