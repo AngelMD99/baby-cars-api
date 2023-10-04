@@ -20,7 +20,7 @@ const batteryCreate = async function (req,reply){
             })
         }
         else{
-            let activeCar = await Car.findOne({_id:car.carId, isDeleted:false})
+            var activeCar = await Car.findOne({_id:car.carId, isDeleted:false})
             if (!activeCar){
                 return reply.code(400).send({
                     status: 'fail',
@@ -42,6 +42,7 @@ const batteryCreate = async function (req,reply){
                 isDeleted:false,
                 carId:car.carId,
                 branchId:req.params.id,
+                modelId:activeCar.modelId,
                 records:[
                     {
                         value:car.value,
@@ -66,6 +67,9 @@ const batteryList = async function (req,reply){
     };    
     if (req.query.branchId){
         searchQuery['branchId']=ObjectId(req.query.branchId)
+    }    
+    if (req.query.modelIdId){
+        searchQuery['modelId']=ObjectId(req.query.modelId)
     }    
     if(req.params.id){
         
@@ -95,6 +99,7 @@ const batteryList = async function (req,reply){
     if(!req.query.search){     
         let allBranches = await Branch.find({});
         let allCars = await Car.find({});
+        let allModels = await Modelo.find({});
         if(options.page!=null && options.limit!=null){
             batteriesPaginated.docs=[]
             let batteryQuery = await Battery.paginate(searchQuery, options);             
@@ -121,20 +126,21 @@ const batteryList = async function (req,reply){
                 newObj.carId={
                     _id: battery.carId ? battery.carId :"",
                     name : carInfo && carInfo.name ? carInfo.name : "",  
-                    color: carInfo && carInfo.color ? carInfo.color : "",  
-                    modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
+                    color: carInfo && carInfo.color ? carInfo.color : "",                                     
                 }
-                delete battery.carId;
-               
+                let modelInfo =allModels.find(modelo=>{
+                    return String(modelo._id) == String(battery.modelId)
+                })
+
+                newObj.modelId={
+                    _id: battery.modelId ? battery.modelId :"",
+                    name : modelInfo && modelInfo.name ? modelInfo.name : "",  
+                    
+                }
+                delete battery.carId;               
                 batteriesPaginated.docs.push(newObj)                
             });
-            if(req.query.modelId){
-                let filteredDocs = batteriesPaginated.docs.filter(doc=>{
-                    return String(doc.carId.modelo) == String(req.query.modelId)
-                })
-                batteriesPaginated.docs=filteredDocs
-
-            }
+            
             if(req.query.color){
                 let filteredDocs = batteriesPaginated.docs.filter(doc=>{
                     return String(doc.carId.color).toLowerCase() == String(req.query.color).toLowerCase()
@@ -177,13 +183,21 @@ const batteryList = async function (req,reply){
                 let carInfo = allCars.find(branch=>{
                     return String(branch._id) == String(battery.carId)
                 })
+                let modelInfo =allModels.find(modelo=>{
+                    return String(modelo._id) == String(battery.modelId)
+                })
                 let carId = battery.carId;
                 let branchId = battery.branchId;
+                let modelId = battery.modelId;
                 battery.carId={
                     _id:carId? carId:"",
                     name:carInfo && carInfo.name ? carInfo.name : "",
                     color: carInfo && carInfo.color ? carInfo.color : "",  
-                    modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
+                }
+
+                battery.modelId={
+                    _id:modelId? modelId:"",
+                    name:modelInfo && modelInfo.name ? modelInfo.name : "",                                        
                 }
                 
                 //batteriesPaginated.docs.push(battery)            
@@ -286,11 +300,11 @@ const batteryList = async function (req,reply){
           }
         }
 
-        if (req.query.params.id){
+        //if (req.query.params.id){
             projectQuery['$project']['records']={
                 '$first': 'records'
               }
-        }
+        //}
         
         aggregateQuery.push(
            {
@@ -307,7 +321,15 @@ const batteryList = async function (req,reply){
                   'localField': 'carId', 
                   'foreignField': '_id', 
                   'as': 'carInfo'
-            }
+                }
+            },
+            {
+                '$lookup': {
+                  'from': 'modelos', 
+                  'localField': 'modelId', 
+                  'foreignField': '_id', 
+                  'as': 'modelInfo'
+                }
             },
             projectQuery,
             
@@ -336,6 +358,12 @@ const batteryList = async function (req,reply){
                     }
                   }, {
                     'branchId.name': {
+                      '$regex': searchString, 
+                      '$options': 'i'
+                    }
+                  },
+                  {
+                    'modelId.name': {
                       '$regex': searchString, 
                       '$options': 'i'
                     }

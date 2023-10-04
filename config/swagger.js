@@ -158,6 +158,8 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},
             carId:{type:'string'}, 
+            branchId:{type:'string'}, 
+            modelId:{type:'string'}, 
             records:{
               type:'array',
               items:{
@@ -181,6 +183,8 @@ exports.options = {
             _id:{type:'string'},
             isDeleted:{type:'boolean'},
             carId:{type:'string'}, 
+            branchId:{type:'string'}, 
+            modelId:{type:'string'}, 
             records:{
               type:'array',
               items:{

@@ -29,6 +29,10 @@ const statusSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,              
       ref: "Branch", 
     },
+    modelId: {
+      type: mongoose.Schema.Types.ObjectId,              
+      ref: "Modelo", 
+    },
     records:[singleStatusSchema]
     
 },{
