@@ -1230,7 +1230,7 @@ const reservesReport = async function (req, reply){
             },       
     }
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-            ['Etiqueta', '', '', '','','','','','','','','','','','','','','']
+            ['Empleado', '', '', '','','','','','','','','','','','','','','']
           ],{origin: -1});
     wb.Sheets["Apartados"]["A2"].s={        
         font: {				  		
@@ -1240,7 +1240,7 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Empleado', '', '', '','','','','','','','','','','','','','','']
+        ['¿Entregados?', '', '', '','','','','','','','','','','','','','','']
       ],{origin: -1});
     wb.Sheets["Apartados"]["A3"].s={        
         font: {				  		
@@ -1250,7 +1250,7 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Liquidados', '', '', '','','','','','','','','','','','','','','']
+        ['¿Liquidados?', '', '', '','','','','','','','','','','','','','','']
       ],{origin: -1});
     wb.Sheets["Apartados"]["A4"].s={        
         font: {				  		
@@ -1260,7 +1260,7 @@ const reservesReport = async function (req, reply){
     }
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Entregados', '', '', '','','','','','','','','','','','','','','']
+        ['¿Cancelados?', '', '', '','','','','','','','','','','','','','','']
       ],{origin: -1});
     wb.Sheets["Apartados"]["A5"].s={        
         font: {				  		
@@ -1268,15 +1268,15 @@ const reservesReport = async function (req, reply){
             bold: true // negrita
         },       
     }
-    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['Cancelados', '', '', '','','','','','','','','','','','','','','']
-      ],{origin: -1});
-    wb.Sheets["Apartados"]["A5"].s={        
-        font: {				  		
-            sz: 12, // tamaño de fuente
-            bold: true // negrita
-        },       
-    }
+    // xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
+    //     ['Cancelados', '', '', '','','','','','','','','','','','','','','']
+    //   ],{origin: -1});
+    // wb.Sheets["Apartados"]["A5"].s={        
+    //     font: {				  		
+    //         sz: 12, // tamaño de fuente
+    //         bold: true // negrita
+    //     },       
+    // }
 
     
     if(req.query.initialDate != null && req.query.lastDate !=null ){        
@@ -1321,13 +1321,7 @@ const reservesReport = async function (req, reply){
         }
     }
 
-    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['','', '', '','','','','','','','','','','','','','','']
-      ],{origin: -1});
-    
-    xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-        ['','', '', '','','','','','','','','','','','','','','']
-    ],{origin: -1});
+
     
 
     xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
@@ -1443,6 +1437,12 @@ const reservesReport = async function (req, reply){
               bold: true // negrita
         }               
     }
+    // wb.Sheets["Apartados"]["S8"].s={        
+    //     font: {				  		
+    //           sz: 12, // tamaño de fuente
+    //           bold: true // negrita
+    //     }               
+    // }
 
 //     wb.Sheets={
 //         Apartados:{
@@ -1481,28 +1481,34 @@ const reservesReport = async function (req, reply){
         }
     }
 
-    // if(req.query.carId != null){
-    //     let carInformation = await Car.findOne({_id:req.query.carId}) 
-    //     wb.Sheets["Apartados"]["B2"].v= carInformation!=null ? carInformation.name+"-"+carInformation.color : "";
-    //     wb.Sheets["Apartados"]["B2"].s ={
-    //         font:{
-    //             bold:false
-    //         }
-    //     }
-    //     //console.log(wb.Sheets["Apartados"]["B1"].v)        
-    // }
-    //else{
-        // wb.Sheets["Apartados"]["B2"].v="Todos"
-        // wb.Sheets["Apartados"]["B2"].s ={
-        //     font:{
-        //         bold:false
-        //     }
-        // }
-    //}
+    if(req.query.employeeId != null){
+        let employeeInformation = await User.findOne({_id:req.query.employeeId}) 
+        wb.Sheets["Apartados"]["B2"].v= employeeInformation!=null ? employeeInformation.fullName : "";
+        wb.Sheets["Apartados"]["B2"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Apartados"]["B2"].v="Todos"
+        wb.Sheets["Apartados"]["B2"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+    
 
-    if(req.query.userId != null){
-        let userInformation = await User.findOne({_id:req.query.userId}) 
-        wb.Sheets["Apartados"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
+    if(req.query.isDelivered != null && req.query.isDelivered != ""){
+        if(req.query.isDelivered.toLowerCase()=="true"){
+            wb.Sheets["Apartados"]["B3"].v= "Si"
+        }        
+        if(req.query.isDelivered.toLowerCase()=="false"){
+            wb.Sheets["Apartados"]["B3"].v= "No"
+        }        
+        
         wb.Sheets["Apartados"]["B3"].s ={
             font:{
                 bold:false
@@ -1513,6 +1519,54 @@ const reservesReport = async function (req, reply){
     else{
         wb.Sheets["Apartados"]["B3"].v="Todos"
         wb.Sheets["Apartados"]["B3"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+
+    if(req.query.isPaid != null && req.query.isPaid != ""){
+        if(req.query.isPaid.toLowerCase()=="true"){
+            wb.Sheets["Apartados"]["B4"].v= "Si"
+        }        
+        if(req.query.isPaid.toLowerCase()=="false"){
+            wb.Sheets["Apartados"]["B4"].v= "No"
+        }       
+        
+        wb.Sheets["Apartados"]["B4"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Apartados"]["B4"].v="Todos"
+        wb.Sheets["Apartados"]["B4"].s ={
+            font:{
+                bold:false
+            }
+        }
+    }
+
+    if(req.query.isCancelled != null && req.query.isCancelled != ""){
+        if(req.query.isCancelled.toLowerCase()=="true"){
+            wb.Sheets["Apartados"]["B5"].v= "Si"
+        }        
+        if(req.query.isCancelled.toLowerCase()=="false"){
+            wb.Sheets["Apartados"]["B5"].v= "No"
+        }       
+        
+        wb.Sheets["Apartados"]["B5"].s ={
+            font:{
+                bold:false
+            }
+        }
+        //console.log(wb.Sheets["Apartados"]["B1"].v)        
+    }
+    else{
+        wb.Sheets["Apartados"]["B5"].v="Todos"
+        wb.Sheets["Apartados"]["B5"].s ={
             font:{
                 bold:false
             }
@@ -1533,53 +1587,37 @@ const reservesReport = async function (req, reply){
             lastDate.setHours(0, 0, 0, 0);
     
         }      
-        wb.Sheets["Apartados"]["B4"].v=dateDDMMAAAA(initialDate).substring(0,11);
-        wb.Sheets["Apartados"]["B4"].v=dateDDMMAAAA(lastDate).substring(0,11);
-    }
-
-    if(req.query.isDelivered!= null && req.query.isDelivered!= ""){
-        let userInformation = await User.findOne({_id:req.query.userId}) 
-        wb.Sheets["Apartados"]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
-        wb.Sheets["Apartados"]["B3"].s ={
-            font:{
-                bold:false
-            }
-        }
-        //console.log(wb.Sheets["Apartados"]["B1"].v)        
-    }
-    else{
-        wb.Sheets["Apartados"]["B3"].v="Todos"
-        wb.Sheets["Apartados"]["B3"].s ={
-            font:{
-                bold:false
-            }
-        }
-    }
-
-
+        wb.Sheets["Apartados"]["B6"].v=dateDDMMAAAA(initialDate).substring(0,11);
+        wb.Sheets["Apartados"]["B6"].v=dateDDMMAAAA(lastDate).substring(0,11);
+    }  
+    
     if (reserves.length>0){
         for (let index = 0; index < reserves.length; index++) {
             xlsx.utils.sheet_add_aoa(wb.Sheets["Apartados"], [
-                ['A', 'B','C','D','E','F','G','H',0,0,0,0,0,0,0]
+                ['A','B','C','D','E','F','G','H',0,0,0,0,0,0,0,'P','Q','R']
               ], {origin: -1});                     
         }
-        let currentRow=8;
+        
+        let currentRow=10;
         reserves.forEach(purchase=>{
             wb.Sheets["Apartados"]["A"+String(currentRow)].v=purchase['Folio'];
-            wb.Sheets["Apartados"]["B"+String(currentRow)].v=purchase['Cancelado'];
-            wb.Sheets["Apartados"]["C"+String(currentRow)].v=purchase['Fecha'];
-            wb.Sheets["Apartados"]["D"+String(currentRow)].v=purchase['Hora'];
+            wb.Sheets["Apartados"]["B"+String(currentRow)].v=purchase['Fecha'];
+            wb.Sheets["Apartados"]["C"+String(currentRow)].v=purchase['Hora'];
+            wb.Sheets["Apartados"]["D"+String(currentRow)].v=purchase['Entregado'];
             wb.Sheets["Apartados"]["E"+String(currentRow)].v=purchase['Sucursal código'];
             wb.Sheets["Apartados"]["F"+String(currentRow)].v=purchase['Sucursal nombre'];
             wb.Sheets["Apartados"]["G"+String(currentRow)].v=purchase['Empleado nombre'];
             wb.Sheets["Apartados"]["H"+String(currentRow)].v=purchase['Empleado correo'];
             wb.Sheets["Apartados"]["I"+String(currentRow)].v=purchase['Modelos diferentes'];
             wb.Sheets["Apartados"]["J"+String(currentRow)].v=purchase['Carritos totales'];
-            wb.Sheets["Apartados"]["L"+String(currentRow)].v=purchase['Total apartado'];
+            wb.Sheets["Apartados"]["K"+String(currentRow)].v=purchase['Total apartado'];
             wb.Sheets["Apartados"]["L"+String(currentRow)].v=purchase['Pagos actuales'];
             wb.Sheets["Apartados"]["M"+String(currentRow)].v=purchase['Pagos cancelados'];            
             wb.Sheets["Apartados"]["N"+String(currentRow)].v=purchase['Total pagado'];            
             wb.Sheets["Apartados"]["O"+String(currentRow)].v=purchase['Saldo restante'];            
+            wb.Sheets["Apartados"]["P"+String(currentRow)].v=purchase['Liquidado'];            
+            wb.Sheets["Apartados"]["Q"+String(currentRow)].v=purchase['Cancelado'];            
+            wb.Sheets["Apartados"]["R"+String(currentRow)].v=purchase['Cancellation'];            
             currentRow ++;
            // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de Apartados','Importe total']
 
@@ -1587,7 +1625,7 @@ const reservesReport = async function (req, reply){
         })
     }
 
-     headers=["Folio","Cancelado","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelos diferentes","Carritos totales","Total apartado","Pagos actuales","Pagos cancelados","Total pagado","Saldo restante"]
+     headers=['Folio','Fecha','Hora','Entregado','Sucursal código','Sucursal nombre','Empleado nombre','Empleado correo','Modelos diferentes','Carritos totales','Total apartado','Pagos actuales','Pagos cancelados','Total pagado','Saldo restante','Liquidado','Cancelado','Motivo de cancelación']
      //console.log(headers)
 
     // adjusting columns length added
@@ -1612,7 +1650,7 @@ const reservesReport = async function (req, reply){
      } 
     wb.Sheets['Apartados']['!cols']=wscols;
     //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
-    let row = 8;
+    let row = 10;
     while (wb.Sheets['Apartados']["I"+String(row)] != null) { 
         wb.Sheets['Apartados']["I"+String(row)].z="0";
         wb.Sheets['Apartados']["J"+String(row)].z="0";
