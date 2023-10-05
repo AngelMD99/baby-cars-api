@@ -68,8 +68,12 @@ const batteryList = async function (req,reply){
     if (req.query.branchId){
         searchQuery['branchId']=ObjectId(req.query.branchId)
     }    
-    if (req.query.modelIdId){
+    
+    if (req.query.modelId){
         searchQuery['modelId']=ObjectId(req.query.modelId)
+    } 
+    if (req.query.modelIdId){
+        searchQuery['carId']=ObjectId(req.query.carId)
     }    
     if(req.params.id){
         
@@ -268,6 +272,14 @@ const batteryList = async function (req,reply){
                 }
             })            
         } 
+
+        if(req.query.modelId){
+            aggregateQuery.push({
+                '$match': {
+                  'modelId': ObjectId(req.query.modelId)
+                }
+            })            
+        } 
         
         
         let projectQuery={
@@ -292,8 +304,11 @@ const batteryList = async function (req,reply){
               'carId.color': {
                 '$first': '$carInfo.color'
               },
-              'carId.modelo': {
-                '$first': '$carInfo.modelId'
+              'modelId._id': {
+                '$first': '$carInfo.modelId._id'
+              },
+              'modelId.name': {
+                '$first': '$carInfo.modelId.name'
               },
               'createdAt'  :1
 
@@ -334,13 +349,13 @@ const batteryList = async function (req,reply){
             projectQuery,
             
         )
-        if(req.query.modelId){
-            aggregateQuery.push({
-                '$match':{
-                    'carId.modelo':req.query.modelId
-                }
-            })
-        }
+        // if(req.query.modelId){
+        //     aggregateQuery.push({
+        //         '$match':{
+        //             'carId.modelo':req.query.modelId
+        //         }
+        //     })
+        // }
         if(req.query.color){
             aggregateQuery.push({
                 '$match':{

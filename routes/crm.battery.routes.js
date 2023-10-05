@@ -104,7 +104,15 @@ const batteryDef = {
                 modelo:{type:'string'}
 
             }
-        },        
+        }, 
+        modelId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},             
+
+            }
+        },       
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }
@@ -119,7 +127,10 @@ const getBatteriesOpts={
         // }, 
         querystring:{
             page:{type:'string'},
-            perPage:{type:'string'}
+            perPage:{type:'string'},
+            branchId:{type:'string'},
+            carId:{type:'string'},
+            modelId:{type:'string'},
         },
          response: {
             200: {

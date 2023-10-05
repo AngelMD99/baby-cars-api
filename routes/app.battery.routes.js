@@ -128,7 +128,10 @@ const getBatteriesOpts={
         // }, 
         querystring:{
             page:{type:'string'},
-            perPage:{type:'string'}
+            perPage:{type:'string'},
+            branchId:{type:'string'},
+            carId:{type:'string'},
+            modelId:{type:'string'},
         },
          response: {
             200: {

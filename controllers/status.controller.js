@@ -20,7 +20,7 @@ const statusCreate = async function (req,reply){
             })
         }
         else{
-            let activeCar = await Car.findOne({_id:car.carId, isDeleted:false})
+            var activeCar = await Car.findOne({_id:car.carId, isDeleted:false})
             if (!activeCar){
                 return reply.code(400).send({
                     status: 'fail',
@@ -42,6 +42,7 @@ const statusCreate = async function (req,reply){
                 isDeleted:false,
                 carId:car.carId,
                 branchId:req.params.id,
+                modelId:activeCar.modelId,
                 records:[
                     {
                         value:car.value,
@@ -66,7 +67,16 @@ const statusList = async function (req,reply){
     };    
     if (req.query.branchId){
         searchQuery['branchId']=ObjectId(req.query.branchId)
-    }    
+    } 
+    
+    if (req.query.modelId){
+        searchQuery['modelId']=ObjectId(req.query.modelId)
+    } 
+
+    if (req.query.carId){
+        searchQuery['carId']=ObjectId(req.query.carId)
+    } 
+
     if(req.params.id){
         
         searchQuery['branchId']=ObjectId(req.params.id)
@@ -95,6 +105,7 @@ const statusList = async function (req,reply){
     if(!req.query.search){     
         let allBranches = await Branch.find({});
         let allCars = await Car.find({});
+        let allModels = await Modelo.find({});
         if(options.page!=null && options.limit!=null){
             statusPaginated.docs=[]
             let statusQuery = await Status.paginate(searchQuery, options);             
@@ -121,20 +132,21 @@ const statusList = async function (req,reply){
                 newObj.carId={
                     _id: status.carId ? status.carId :"",
                     name : carInfo && carInfo.name ? carInfo.name : "",  
-                    color: carInfo && carInfo.color ? carInfo.color : "",  
-                    modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
+                    color: carInfo && carInfo.color ? carInfo.color : "",                      
+                }
+                let modelInfo =allModels.find(modelo=>{
+                    return String(modelo._id) == String(status.modelId)
+                })
+                
+                newObj.modelId={
+                    _id: status.modelId ? status.modelId :"",
+                    name : modelInfo && modelInfo.name ? modelInfo.name : "",  
+                    
                 }
                 delete status.carId;
                
                 statusPaginated.docs.push(newObj)                
-            });
-            if(req.query.modelId){
-                let filteredDocs = statusPaginated.docs.filter(doc=>{
-                    return String(doc.carId.modelo) == String(req.query.modelId)
-                })
-                statusPaginated.docs=filteredDocs
-
-            }
+            });            
             if(req.query.color){
                 let filteredDocs = statusPaginated.docs.filter(doc=>{
                     return String(doc.carId.color).toLowerCase() == String(req.query.color).toLowerCase()
@@ -177,13 +189,18 @@ const statusList = async function (req,reply){
                 let carInfo = allCars.find(branch=>{
                     return String(branch._id) == String(status.carId)
                 })
+
+                let modelInfo =allModels.find(modelo=>{
+                    return String(modelo._id) == String(status.modelId)
+                })
                 let carId = status.carId;
                 let branchId = status.branchId;
+                let modelId = status.modelId;
+
                 status.carId={
                     _id:carId? carId:"",
                     name:carInfo && carInfo.name ? carInfo.name : "",
                     color: carInfo && carInfo.color ? carInfo.color : "",  
-                    modelo: carInfo && carInfo.modelId ? carInfo.modelId : "",               
                 }
                 
                 //statusPaginated.docs.push(status)            
@@ -192,7 +209,11 @@ const statusList = async function (req,reply){
                     name : branchInfo && branchInfo.name ? branchInfo.name : "",
                     code : branchInfo && branchInfo.code ? branchInfo.code : "",
 
-                }                
+                }  
+                status.modelId={
+                    _id:modelId? modelId:"",
+                    name:modelInfo && modelInfo.name ? modelInfo.name : "",                                        
+                }              
                 //delete status.branchId;                
                 statusPaginated.docs.push(status)                                
             });
@@ -254,6 +275,14 @@ const statusList = async function (req,reply){
                 }
             })            
         } 
+
+        if(req.query.modelId){
+            aggregateQuery.push({
+                '$match': {
+                  'modelId': ObjectId(req.query.modelId)
+                }
+            })            
+        } 
         
         
         let projectQuery={
@@ -278,8 +307,11 @@ const statusList = async function (req,reply){
               'carId.color': {
                 '$first': '$carInfo.color'
               },
-              'carId.modelo': {
-                '$first': '$carInfo.modelId'
+              'modelId._id': {
+                '$first': '$carInfo.modelId._id'
+              },
+              'modelId.name': {
+                '$first': '$carInfo.modelId.name'
               },
               'createdAt'  :1
 
@@ -307,18 +339,26 @@ const statusList = async function (req,reply){
                   'localField': 'carId', 
                   'foreignField': '_id', 
                   'as': 'carInfo'
-            }
+                }
+            },
+            {
+                '$lookup': {
+                  'from': 'modelos', 
+                  'localField': 'modelId', 
+                  'foreignField': '_id', 
+                  'as': 'modelInfo'
+                }
             },
             projectQuery,
             
         )
-        if(req.query.modelId){
-            aggregateQuery.push({
-                '$match':{
-                    'carId.modelo':req.query.modelId
-                }
-            })
-        }
+        // if(req.query.modelId){
+        //     aggregateQuery.push({
+        //         '$match':{
+        //             'carId.modelo':req.query.modelId
+        //         }
+        //     })
+        // }
         if(req.query.color){
             aggregateQuery.push({
                 '$match':{
@@ -336,6 +376,12 @@ const statusList = async function (req,reply){
                     }
                   }, {
                     'branchId.name': {
+                      '$regex': searchString, 
+                      '$options': 'i'
+                    }
+                  },
+                  {
+                    'modelId.name': {
                       '$regex': searchString, 
                       '$options': 'i'
                     }
