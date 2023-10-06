@@ -3161,6 +3161,7 @@ const inventoryReport = async function (req, reply){
 const batteriesReport = async function (req, reply){    
     let aggregateQuery=[];
     let offset = await getOffsetSetting()
+    //let offset = req.headers.offset ? Number(req.headers.offset) : 6  
 
     if(req.query.branchId != null){
         let branchId = mongoose.Types.ObjectId(req.query.branchId)
@@ -3196,7 +3197,7 @@ const batteriesReport = async function (req, reply){
           },
           {
             '$lookup': {
-              'from': 'model', 
+              'from': 'modelos', 
               'localField': 'modelId', 
               'foreignField': '_id', 
               'as': 'modelInfo'
@@ -3243,6 +3244,8 @@ const batteriesReport = async function (req, reply){
     wb.Props = {
         Title: "Baterias",                
     };
+
+    console.log("BATERIAS: ",batteries[0])
 
     for (let battery of batteries) {
         let i = 1;
@@ -3320,10 +3323,7 @@ const batteriesReport = async function (req, reply){
               ], {origin: -1});
             xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
                 ['', '', '', '','','','','','','','','','']
-              ], {origin: -1});
-            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
-                ['', '', '', '','','','','','','','','','']
-              ], {origin: -1});
+              ], {origin: -1});            
             wb.Sheets[newSheet]["A5"].s={        
                 font: {				  		
                       sz: 12, // tamaño de fuente
@@ -3359,66 +3359,66 @@ const batteriesReport = async function (req, reply){
                   bold: true // negrita
             }               
         }
-        wb.Sheets[newSheet]["D8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["E8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["F8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["G8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["H8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["I8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["J8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["K8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["L8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
-        wb.Sheets[newSheet]["M8"].s={        
-            font: {				  		
-                  sz: 12, // tamaño de fuente
-                  bold: true // negrita
-            }               
-        }
+        // wb.Sheets[newSheet]["D9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["E9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["F9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["G9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["H9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["I9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["J9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["K9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["L9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["M9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
 
         
           
@@ -3428,37 +3428,32 @@ const batteriesReport = async function (req, reply){
                 bold:false
             }
         }    
-        
-        wb.Sheets[newSheet]["B2"].v= newSheet;
+
+        wb.Sheets[newSheet]["B2"].v= battery['Modelo']!=null ? battery['Modelo'] :"";
         wb.Sheets[newSheet]["B2"].s ={
             font:{
                  bold:false
             }
-          }
-            //console.log(wb.Sheets[newSheet]["B1"].v)                       
+        }
+        
+        wb.Sheets[newSheet]["B3"].v= newSheet;
+        wb.Sheets[newSheet]["B3"].s ={
+            font:{
+                 bold:false
+            }
+        }
 
-        if(req.query.userId != null){
-            let userInformation = await User.findOne({_id:req.query.userId}) 
-            wb.Sheets[newSheet]["B3"].v= userInformation!=null ? userInformation.fullName+" - "+userInformation.email : "";
-            wb.Sheets[newSheet]["B3"].s ={
-                font:{
-                    bold:false
-                }
-            }
-            //console.log(wb.Sheets[newSheet]["B1"].v)        
-        }
-        else{
-            wb.Sheets[newSheet]["B3"].v="Todos"
-            wb.Sheets[newSheet]["B3"].s ={
-                font:{
-                    bold:false
-                }
+        wb.Sheets[newSheet]["B4"].v= battery['Color']!=null ? battery['Color']:"";
+        wb.Sheets[newSheet]["B4"].s ={
+            font:{
+                 bold:false
             }
         }
+    
+
     //     wb.Sheets[newSheet]["A2"]={};
         if(req.query.initialDate != null && req.query.lastDate !=null ){ 
-            let initialDate = parseDate(req.query.initialDate);
-            let offset = req.headers.offset ? Number(req.headers.offset) : 6        
+            let initialDate = parseDate(req.query.initialDate);                  
             let lastDate = parseDate(req.query.lastDate);
 
             if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
@@ -3470,100 +3465,112 @@ const batteriesReport = async function (req, reply){
                 lastDate.setHours(0, 0, 0, 0);
             
             }      
-            wb.Sheets[newSheet]["B2"].v=dateDDMMAAAA(initialDate).substring(0,11);
-            wb.Sheets[newSheet]["B3"].v=dateDDMMAAAA(lastDate).substring(0,11);
+            wb.Sheets[newSheet]["B5"].v=dateDDMMAAAA(initialDate).substring(0,11);
+            wb.Sheets[newSheet]["B6"].v=dateDDMMAAAA(lastDate).substring(0,11);
         }
-        if (batteries.length>0){
-            for (let index = 0; index < batteries.length; index++) {
+
+        
+    // if (req.query.initialDate!=null && req.query.finalDate!=null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     let finalDayToDate =new Date(req.query.finalDate)
+    //     if(initialDay.getTime() > finalDayToDate.getTime()){
+    //         return reply.code(400).send({
+    //             status:'fail',
+    //             message:'La fecha inicial no puede ser mayor que la fecha final'
+    //         })
+    //     }
+
+    //     let finalDay= addDays(finalDayToDate,1)              
+    //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+    // if (req.query.initialDate!=null && req.query.finalDate==null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+    // }
+    
+    // if (req.query.finalDate!=null && req.query.initialDate==null){
+    //     let finalDay= addDays(req.query.finalDate,1)
+    //     dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+    //     }
+
+    // if(dateMatchStage['$match']!=null){
+    //     aggregateQuery.push(dateMatchStage)
+    // }  
+
+
+        if (battery.records.length>0){
+            console.log("Here", wb.Sheets[newSheet])            
+            for (let index = 0; index < battery.records.length; index++) {
+                console.log("INDEX: ",index)            
+                console.log("RECORDS LENGTH: ",battery.records.length)            
                 xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
-                    ['A', 'B','C','D','E','F','G','H','I','J',0,0,'M']
+                    ['A', 'B','C']
                   ], {origin: -1});                     
             }
-            let currentRow=8;
-            batteries.forEach(purchase=>{
-                wb.Sheets[newSheet]["A"+String(currentRow)].v=purchase['Folio'];
-                wb.Sheets[newSheet]["B"+String(currentRow)].v=purchase['Fecha'];
-                wb.Sheets[newSheet]["C"+String(currentRow)].v=purchase['Hora'];
-                wb.Sheets[newSheet]["D"+String(currentRow)].v=purchase['Sucursal código'];
-                wb.Sheets[newSheet]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
-                wb.Sheets[newSheet]["F"+String(currentRow)].v=purchase['Empleado nombre'];
-                wb.Sheets[newSheet]["G"+String(currentRow)].v=purchase['Empleado correo'];
-                wb.Sheets[newSheet]["H"+String(currentRow)].v=purchase['Modelo'];
-                wb.Sheets[newSheet]["I"+String(currentRow)].v=purchase['Color'];
-                wb.Sheets[newSheet]["J"+String(currentRow)].v=purchase['Etiqueta'];
-                wb.Sheets[newSheet]["K"+String(currentRow)].v=purchase['Tiempo'];
-                wb.Sheets[newSheet]["L"+String(currentRow)].v=purchase['Costo'];            
-                wb.Sheets[newSheet]["M"+String(currentRow)].v=purchase['Tipo de pago'];            
+            let currentRow=9;
+            battery.records.forEach(record=>{
+                if(record.dateTime){            
+                    record.dateTime = adjustTimeStamp (record.dateTime,offset);
+                    record.Fecha=dateDDMMAAAA(record.dateTime);            
+                    record.Hora=dateTimeHHSS(record.dateTime);  
+                    
+                }
+
+
+                wb.Sheets[newSheet]["A"+String(currentRow)].v=record['value'];
+                wb.Sheets[newSheet]["B"+String(currentRow)].v=record['Fecha'];
+                wb.Sheets[newSheet]["C"+String(currentRow)].v=record['Hora'];
+                // wb.Sheets[newSheet]["D"+String(currentRow)].v=purchase['Sucursal código'];
+                // wb.Sheets[newSheet]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
+                // wb.Sheets[newSheet]["F"+String(currentRow)].v=purchase['Empleado nombre'];
+                // wb.Sheets[newSheet]["G"+String(currentRow)].v=purchase['Empleado correo'];
+                // wb.Sheets[newSheet]["H"+String(currentRow)].v=purchase['Modelo'];
+                // wb.Sheets[newSheet]["I"+String(currentRow)].v=purchase['Color'];
+                // wb.Sheets[newSheet]["J"+String(currentRow)].v=purchase['Etiqueta'];
+                // wb.Sheets[newSheet]["K"+String(currentRow)].v=purchase['Tiempo'];
+                // wb.Sheets[newSheet]["L"+String(currentRow)].v=purchase['Costo'];            
+                // wb.Sheets[newSheet]["M"+String(currentRow)].v=purchase['Tipo de pago'];            
                 currentRow ++;
                // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
-
-
-            })
-        }
-
-         headers=["Folio","Fecha","Hora","Sucursal código","Sucursal nombre","Empleado nombre","Empleado correo","Modelo","Color","Etiqueta","Tiempo","Costo","Tipo de pago"]
+               headers=["Valor","Fecha","Hora"]
          //console.log(headers)
 
         // adjusting columns length added
-         for (let i = 0; i < headers.length; i++) {  
-             let columnWidth=headers[i].length;
-             columnWidth=headers[i]=='Folio' ? columnWidth+20 : columnWidth;
-             columnWidth=headers[i]=='Fecha' ? columnWidth+15 : columnWidth;
-             columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
-             columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
-             columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
-             columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
-             columnWidth=headers[i]=='Empleado correo' ? columnWidth+45: columnWidth;
-             columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
-             columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
-             columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
-             columnWidth=headers[i]=='Tiempo' ? columnWidth+5: columnWidth;        
-             columnWidth=headers[i]=='Costo' ? columnWidth+5: columnWidth;
-             columnWidth=headers[i]=='Tipo de pago' ? columnWidth+20: columnWidth;        
-
-             wscols.push({ wch: columnWidth })
-         } 
-        wb.Sheets['Rentas']['!cols']=wscols;
-        //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
-        let row = 8;
-        while (wb.Sheets['Rentas']["G"+String(row)] != null) { 
-            wb.Sheets['Rentas']["K"+String(row)].z="0.00";
-            wb.Sheets['Rentas']["L"+String(row)].z="$0.00";
-            row+=1;
-
-        }
-    }
-    
-        
+                for (let i = 0; i < headers.length; i++) {  
+                    let columnWidth=headers[i].length;
+                    columnWidth=headers[i]=='Valor' ? columnWidth+15 : columnWidth;
+                    columnWidth=headers[i]=='Fecha' ? columnWidth+15 : columnWidth;
+                    columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
+                   //  columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
+                   //  columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
+                   //  columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
+                   //  columnWidth=headers[i]=='Empleado correo' ? columnWidth+45: columnWidth;
+                   //  columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
+                   //  columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
+                   //  columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
+                   //  columnWidth=headers[i]=='Tiempo' ? columnWidth+5: columnWidth;        
+                   //  columnWidth=headers[i]=='Costo' ? columnWidth+5: columnWidth;
+                   //  columnWidth=headers[i]=='Tipo de pago' ? columnWidth+20: columnWidth;        
+                                    wscols.push({ wch: columnWidth })
+                } 
+               wb.Sheets[newSheet]['!cols']=wscols;
 
 
-    
-    if (req.query.initialDate!=null && req.query.finalDate!=null){        
-        let initialDay=new Date(req.query.initialDate);
-        let finalDayToDate =new Date(req.query.finalDate)
-        if(initialDay.getTime() > finalDayToDate.getTime()){
-            return reply.code(400).send({
-                status:'fail',
-                message:'La fecha inicial no puede ser mayor que la fecha final'
             })
         }
 
-        let finalDay= addDays(finalDayToDate,1)              
-        dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
-        
-    if (req.query.initialDate!=null && req.query.finalDate==null){        
-        let initialDay=new Date(req.query.initialDate);
-        dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
-    }
-    
-    if (req.query.finalDate!=null && req.query.initialDate==null){
-        let finalDay= addDays(req.query.finalDate,1)
-        dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
-        }
+         
+        //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
+        // let row = 9;
+        // while (wb.Sheets[newSheet]["G"+String(row)] != null) { 
+        //     wb.Sheets[newSheet]["K"+String(row)].z="0.00";
+        //     wb.Sheets[newSheet]["L"+String(row)].z="$0.00";
+        //     row+=1;
 
-    if(dateMatchStage['$match']!=null){
-        aggregateQuery.push(dateMatchStage)
-    }          	
+        // }
+        i++;
+    }       
+           	
         
     
     
@@ -3571,7 +3578,7 @@ const batteriesReport = async function (req, reply){
     let buf = XLSXStyle.write(wb, { type: "buffer" });
 
     reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    reply.header("Content-Disposition", 'attachment; filename="Rentas.xlsx"');
+    reply.header("Content-Disposition", 'attachment; filename="Baterias.xlsx"');
     return reply.send(buf); 
 
 }
