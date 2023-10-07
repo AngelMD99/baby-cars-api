@@ -3453,6 +3453,15 @@ const batteriesReport = async function (req, reply){
 
     //     wb.Sheets[newSheet]["A2"]={};
         if(req.query.initialDate != null && req.query.lastDate !=null ){ 
+            let startDate = new Date (req.query.initialDate);
+            let finalDate = new Date (req.query.lastDate);            
+            let filteredRecords = battery.records.filter( record=>{
+                return record.dateTime >= startDate && record.dateTime<=finalDate
+            })
+
+            battery.records = filteredRecords;
+
+
             let initialDate = parseDate(req.query.initialDate);                  
             let lastDate = parseDate(req.query.lastDate);
 
@@ -3498,11 +3507,8 @@ const batteriesReport = async function (req, reply){
     // }  
 
 
-        if (battery.records.length>0){
-            console.log("Here", wb.Sheets[newSheet])            
-            for (let index = 0; index < battery.records.length; index++) {
-                console.log("INDEX: ",index)            
-                console.log("RECORDS LENGTH: ",battery.records.length)            
+        if (battery.records.length>0){            
+            for (let index = 0; index < battery.records.length; index++) {                              
                 xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
                     ['A', 'B','C']
                   ], {origin: -1});                     
