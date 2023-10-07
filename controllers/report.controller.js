@@ -3246,7 +3246,7 @@ const batteriesReport = async function (req, reply){
         Title: "Baterias",                
     };
 
-    console.log("BATERIAS: ",batteries[0])
+    // console.log("BATERIAS: ",batteries[0])
 
     for (let battery of batteries) {
         let i = 1;
@@ -3677,7 +3677,7 @@ const statusReport = async function (req, reply){
         Title: "Estados",                
     };
 
-    console.log("Estados: ",statuses[0])
+    // console.log("Estados: ",statuses[0])
 
     for (let element of statuses) {
         let i = 1;
