@@ -499,6 +499,10 @@ const statusList = async function (req,reply){
         
     } 
 
+    statusPaginated.docs.forEach(doc=>{
+        doc.totalRecords=doc.records.length
+    })
+
     return reply.code(200).send({
         status: 'success',
         data: statusPaginated.docs,

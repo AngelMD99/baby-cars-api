@@ -499,6 +499,10 @@ const batteryList = async function (req,reply){
         
     } 
 
+    batteriesPaginated.docs.forEach(doc=>{
+        doc.totalRecords=doc.records.length
+    })
+
     return reply.code(200).send({
         status: 'success',
         data: batteriesPaginated.docs,
