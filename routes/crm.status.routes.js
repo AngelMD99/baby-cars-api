@@ -84,7 +84,8 @@ const statusDef = {
         _id: { type: 'string' },
         records:{
 
-        },       
+        },
+        totalRecords:{type:'number'}       ,      
         branchId:{
             type:'object',
             properties:{

@@ -467,6 +467,7 @@ const statusList = async function (req,reply){
                 return record.dateTime>=initialTime && record.dateTime<=finalTime
             })            
             doc.records = filteredRecords
+            doc.totalRecords = doc.records.length;
         })
 
         //searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
@@ -479,6 +480,7 @@ const statusList = async function (req,reply){
                 return record.dateTime>=initialTime
             })            
             doc.records = filteredRecords
+            doc.totalRecords = doc.records.length;
         })
         //searchQuery['createdAt']={"$gte": initialDay}
 
@@ -492,6 +494,7 @@ const statusList = async function (req,reply){
                 return record.dateTime<=finalTime
             })            
             doc.records = filteredRecords
+            doc.totalRecords = doc.records.length;
         })
         
     } 
