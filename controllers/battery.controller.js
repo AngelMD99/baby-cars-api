@@ -434,10 +434,12 @@ const batteryList = async function (req,reply){
         batteriesPaginated.totalPages = Math.ceil(batteriesPaginated.totalDocs / batteriesPaginated.perPage);
 
     }
-    if (req.query.initialDate!=null && req.query.finalDate!=null){
+    if (req.query.initialDate!=null || req.query.finalDate!=null){
+        //console.log("DOCS: ", batteriesPaginated.docs[0])
         batteriesPaginated.docs.forEach(doc=>{
             doc.records.forEach(record=>{
-                doc.dateTime = doc.dateTime.getTime()
+                console.log("doc: ",doc)
+                record.dateTime = record.dateTime.getTime()
             })
         })
     }
@@ -570,6 +572,12 @@ const batteryDelete = async function (req,reply){
 
 const batteryUpdate = async function (req,reply){
 
+}
+
+function addDays(date, days) {
+    var newDate = new Date(date.valueOf());
+    newDate.setDate(newDate.getDate() + days);
+    return newDate;
 }
 
 function paginateArray(array, limit, page) {

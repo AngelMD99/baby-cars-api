@@ -440,7 +440,7 @@ const statusList = async function (req,reply){
     if (req.query.initialDate!=null && req.query.finalDate!=null){
         statusPaginated.docs.forEach(doc=>{
             doc.records.forEach(record=>{
-                doc.dateTime = doc.dateTime.getTime()
+                record.dateTime = record.dateTime.getTime()
             })
         })
     }
