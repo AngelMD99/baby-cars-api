@@ -103,7 +103,15 @@ const statusDef = {
                 modelo:{type:'string'}
 
             }
-        },        
+        },
+        modelId: { 
+            type: 'object',
+            properties:{
+                _id:{type:'string'},
+                name:{type:'string'},             
+
+            }
+        },          
         createdAt:{type:'string'},
         updatedAt:{type:'string'}        
     }

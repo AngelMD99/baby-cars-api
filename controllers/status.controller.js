@@ -503,6 +503,9 @@ const statusList = async function (req,reply){
         doc.totalRecords=doc.records.length
     })
 
+    console.log("RECORDS: ",statusPaginated.docs[0])
+
+
     return reply.code(200).send({
         status: 'success',
         data: statusPaginated.docs,
