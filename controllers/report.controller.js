@@ -9,6 +9,7 @@ const Car = require('../models/Car');
 const Branch = require('../models/Branch');
 const User = require('../models/User');
 const mongoose = require('mongoose');
+const ObjectId = require('mongoose').Types.ObjectId;
 const bcrypt = require('bcrypt');
 var Moment = require('moment-timezone');
 let environment=process.env.ENVIRONMENT
@@ -4021,6 +4022,840 @@ const statusReport = async function (req, reply){
 
 }
 
+const singleBatteryReport = async function (req, reply){    
+    let aggregateQuery=[];
+    let offset = await getOffsetSetting()
+    aggregateQuery.push({
+        '$match':{
+            _id:new ObjectId(req.params.id)
+        }
+    })
+
+    aggregateQuery.push(
+        {
+            '$lookup': {
+              'from': 'branches', 
+              'localField': 'branchId', 
+              'foreignField': '_id', 
+              'as': 'branchInfo'
+            }
+          },
+          {
+            '$lookup': {
+              'from': 'cars', 
+              'localField': 'carId', 
+              'foreignField': '_id', 
+              'as': 'carInfo'
+            }
+          },
+          {
+            '$lookup': {
+              'from': 'modelos', 
+              'localField': 'modelId', 
+              'foreignField': '_id', 
+              'as': 'modelInfo'
+            }
+          },
+         {
+            '$project': {                
+                'Sucursal código':{
+                    '$first': '$branchInfo.code'
+                },
+                'Sucursal nombre': {
+                    '$first': '$branchInfo.name'                
+                },
+                'Modelo':{
+                    '$first': '$modelInfo.name'
+                },                                
+                'Etiqueta'  :{
+                    '$first': '$carInfo.name'
+                },
+                'Color'  :{
+                    '$first': '$carInfo.color'
+                },
+                "records":'$records',                
+                
+            }
+          } 
+     
+    )
+    
+        
+    let batteries = await Battery.aggregate(aggregateQuery); 
+    let dateMatchStage={};
+    if (batteries.length==0){
+        return reply.code(400).send({
+            status:'fail',
+            message:'No se encontraron registros con los filtros seleccionados'
+        })
+    }
+
+    let wb = xlsx.utils.book_new();
+    wb.Props = {
+        Title: "Bateria_Individual",                
+    };
+
+    // console.log("BATERIAS: ",batteries[0])
+
+    for (let battery of batteries) {
+        let i = 1;
+        let headers=[]; //created array for column names
+        let wscols=[]; //array to store the width of the columns   
+        let newSheet = battery.Etiqueta ? battery.Etiqueta : "Carrito "+i
+        wb.SheetNames.push(newSheet);
+        //addig the titles rows
+        var ws_data = [['Sucursal','','','','','','','','','','','','']]
+        var ws = xlsx.utils.aoa_to_sheet(ws_data);       
+        wb.Sheets[newSheet] = ws;
+        wb.Sheets[newSheet]["A1"].s={        
+                font: {				  		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                },       
+        }
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['Modelo', '', '', '','','','','','','','','','']
+              ],{origin: -1});
+        wb.Sheets[newSheet]["A2"].s={        
+            font: {				  		
+                    sz: 12, // tamaño de fuente
+                    bold: true // negrita
+            },       
+        }
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['Etiqueta', '', '', '','','','','','','','','','']
+          ],{origin: -1});
+        wb.Sheets[newSheet]["A3"].s={        
+            font: {				  		
+                sz: 12, // tamaño de fuente
+                bold: true // negrita
+            },       
+        }
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['Color', '', '', '','','','','','','','','','']
+          ],{origin: -1});
+        wb.Sheets[newSheet]["A4"].s={        
+            font: {				  		
+                sz: 12, // tamaño de fuente
+                bold: true // negrita
+            },       
+        }
+
+        if(req.query.initialDate != null && req.query.lastDate !=null ){        
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['Fecha inicial', '', '', '','','','','','','','','','']
+              ], {origin: -1});
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['Fecha final', '', '', '','','','','','','','','','']
+              ], {origin: -1});
+            // xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            //     ['', '', '', '','','','','','','','','','']
+            //   ], {origin: -1});
+
+            wb.Sheets[newSheet]["A5"].s={        
+                font: {				  		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                }               
+            }
+            wb.Sheets[newSheet]["A6"].s={        
+                font: {				 		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                }               
+            }
+        }
+        else{
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['', '', '', '','','','','','','','','','']
+              ], {origin: -1});
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['', '', '', '','','','','','','','','','']
+              ], {origin: -1});            
+            wb.Sheets[newSheet]["A5"].s={        
+                font: {				  		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                }               
+            }
+        }
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['', '', '', '','','','','','','','','','']
+         ],{origin: -1});
+        
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['Valor','Fecha','Hora']
+          ], {origin: -1});
+      
+        wb.Sheets[newSheet]["A8"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        wb.Sheets[newSheet]["B8"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        wb.Sheets[newSheet]["C8"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        // wb.Sheets[newSheet]["D9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["E9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["F9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["G9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["H9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["I9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["J9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["K9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["L9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["M9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+
+        
+          
+        wb.Sheets[newSheet]["B1"].v= battery['Sucursal código']!=null ? battery['Sucursal código']+"-"+battery['Sucursal nombre'] : "No registrada";
+        wb.Sheets[newSheet]["B1"].s ={
+            font:{
+                bold:false
+            }
+        }    
+
+        wb.Sheets[newSheet]["B2"].v= battery['Modelo']!=null ? battery['Modelo'] :"";
+        wb.Sheets[newSheet]["B2"].s ={
+            font:{
+                 bold:false
+            }
+        }
+        
+        wb.Sheets[newSheet]["B3"].v= newSheet;
+        wb.Sheets[newSheet]["B3"].s ={
+            font:{
+                 bold:false
+            }
+        }
+
+        wb.Sheets[newSheet]["B4"].v= battery['Color']!=null ? battery['Color']:"";
+        wb.Sheets[newSheet]["B4"].s ={
+            font:{
+                 bold:false
+            }
+        }
+    
+
+    //     wb.Sheets[newSheet]["A2"]={};
+        if(req.query.initialDate != null && req.query.lastDate !=null ){ 
+            let startDate = new Date (req.query.initialDate);
+            let finalDate = new Date (req.query.lastDate);            
+            let filteredRecords = battery.records.filter( record=>{
+                return record.dateTime >= startDate && record.dateTime<=finalDate
+            })
+
+            battery.records = filteredRecords;
+
+
+            let initialDate = parseDate(req.query.initialDate);                  
+            let lastDate = parseDate(req.query.lastDate);
+
+            if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+                initialDate.setHours(offset,0,0,0);    
+                lastDate.setHours(offset, 0, 0, 0);
+            }
+            else{
+                initialDate.setHours(0,0,0,0);
+                lastDate.setHours(0, 0, 0, 0);
+            
+            }      
+            wb.Sheets[newSheet]["B5"].v=dateDDMMAAAA(initialDate).substring(0,11);
+            wb.Sheets[newSheet]["B6"].v=dateDDMMAAAA(lastDate).substring(0,11);
+        }
+
+        
+    // if (req.query.initialDate!=null && req.query.finalDate!=null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     let finalDayToDate =new Date(req.query.finalDate)
+    //     if(initialDay.getTime() > finalDayToDate.getTime()){
+    //         return reply.code(400).send({
+    //             status:'fail',
+    //             message:'La fecha inicial no puede ser mayor que la fecha final'
+    //         })
+    //     }
+
+    //     let finalDay= addDays(finalDayToDate,1)              
+    //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+    // if (req.query.initialDate!=null && req.query.finalDate==null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+    // }
+    
+    // if (req.query.finalDate!=null && req.query.initialDate==null){
+    //     let finalDay= addDays(req.query.finalDate,1)
+    //     dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+    //     }
+
+    // if(dateMatchStage['$match']!=null){
+    //     aggregateQuery.push(dateMatchStage)
+    // }  
+
+
+        //if (battery.records.length>0){            
+            for (let index = 0; index < battery.records.length; index++) {                              
+                xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                    ['A', 'B','C']
+                  ], {origin: -1});                     
+            }
+            let currentRow=9;
+            battery.records.forEach(record=>{
+                if(record.dateTime){            
+                    record.dateTime = adjustTimeStamp (record.dateTime,offset);
+                    record.Fecha=dateDDMMAAAA(record.dateTime);            
+                    record.Hora=dateTimeHHSS(record.dateTime);  
+                    
+                }
+
+
+                wb.Sheets[newSheet]["A"+String(currentRow)].v=record['value'];
+                wb.Sheets[newSheet]["B"+String(currentRow)].v=record['Fecha'];
+                wb.Sheets[newSheet]["C"+String(currentRow)].v=record['Hora'];
+                // wb.Sheets[newSheet]["D"+String(currentRow)].v=purchase['Sucursal código'];
+                // wb.Sheets[newSheet]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
+                // wb.Sheets[newSheet]["F"+String(currentRow)].v=purchase['Empleado nombre'];
+                // wb.Sheets[newSheet]["G"+String(currentRow)].v=purchase['Empleado correo'];
+                // wb.Sheets[newSheet]["H"+String(currentRow)].v=purchase['Modelo'];
+                // wb.Sheets[newSheet]["I"+String(currentRow)].v=purchase['Color'];
+                // wb.Sheets[newSheet]["J"+String(currentRow)].v=purchase['Etiqueta'];
+                // wb.Sheets[newSheet]["K"+String(currentRow)].v=purchase['Tiempo'];
+                // wb.Sheets[newSheet]["L"+String(currentRow)].v=purchase['Costo'];            
+                // wb.Sheets[newSheet]["M"+String(currentRow)].v=purchase['Tipo de pago'];            
+                currentRow ++;
+               // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
+               headers=["Valor","Fecha","Hora"]
+         //console.log(headers)
+
+        // adjusting columns length added
+                for (let i = 0; i < headers.length; i++) {  
+                    let columnWidth=headers[i].length;
+                    columnWidth=headers[i]=='Valor' ? columnWidth+15 : columnWidth;
+                    columnWidth=headers[i]=='Fecha' ? columnWidth+24 : columnWidth;
+                    columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
+                   //  columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
+                   //  columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
+                   //  columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
+                   //  columnWidth=headers[i]=='Empleado correo' ? columnWidth+45: columnWidth;
+                   //  columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
+                   //  columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
+                   //  columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
+                   //  columnWidth=headers[i]=='Tiempo' ? columnWidth+5: columnWidth;        
+                   //  columnWidth=headers[i]=='Costo' ? columnWidth+5: columnWidth;
+                   //  columnWidth=headers[i]=='Tipo de pago' ? columnWidth+20: columnWidth;        
+                                    wscols.push({ wch: columnWidth })
+                } 
+               wb.Sheets[newSheet]['!cols']=wscols;
+
+
+            })
+        //}
+
+         
+        //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
+        // let row = 9;
+        // while (wb.Sheets[newSheet]["G"+String(row)] != null) { 
+        //     wb.Sheets[newSheet]["K"+String(row)].z="0.00";
+        //     wb.Sheets[newSheet]["L"+String(row)].z="$0.00";
+        //     row+=1;
+
+        // }
+        i++;
+    }       
+           	
+        
+    
+    
+
+    let buf = XLSXStyle.write(wb, { type: "buffer" });
+
+    reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    reply.header("Content-Disposition", 'attachment; filename="Bateria_individual.xlsx"');
+    return reply.send(buf); 
+
+}
+
+const singleStatusReport = async function (req, reply){    
+    let aggregateQuery=[];
+    let offset = await getOffsetSetting()
+    aggregateQuery.push({
+        '$match':{
+            _id:new ObjectId(req.params.id)
+        }
+    })
+
+    aggregateQuery.push(
+        {
+            '$lookup': {
+              'from': 'branches', 
+              'localField': 'branchId', 
+              'foreignField': '_id', 
+              'as': 'branchInfo'
+            }
+          },
+          {
+            '$lookup': {
+              'from': 'cars', 
+              'localField': 'carId', 
+              'foreignField': '_id', 
+              'as': 'carInfo'
+            }
+          },
+          {
+            '$lookup': {
+              'from': 'modelos', 
+              'localField': 'modelId', 
+              'foreignField': '_id', 
+              'as': 'modelInfo'
+            }
+          },
+         {
+            '$project': {                
+                'Sucursal código':{
+                    '$first': '$branchInfo.code'
+                },
+                'Sucursal nombre': {
+                    '$first': '$branchInfo.name'                
+                },
+                'Modelo':{
+                    '$first': '$modelInfo.name'
+                },                                
+                'Etiqueta'  :{
+                    '$first': '$carInfo.name'
+                },
+                'Color'  :{
+                    '$first': '$carInfo.color'
+                },
+                "records":'$records',                
+                
+            }
+          } 
+     
+    )
+    
+        
+    let statuses = await Status.aggregate(aggregateQuery); 
+    let dateMatchStage={};
+    if (statuses.length==0){
+        return reply.code(400).send({
+            status:'fail',
+            message:'No se encontraron registros con los filtros seleccionados'
+        })
+    }
+
+    let wb = xlsx.utils.book_new();
+    wb.Props = {
+        Title: "Estado_Individual",                
+    };
+
+    // console.log("BATERIAS: ",statuses[0])
+
+    for (let status of statuses) {
+        let i = 1;
+        let headers=[]; //created array for column names
+        let wscols=[]; //array to store the width of the columns   
+        let newSheet = status.Etiqueta ? status.Etiqueta : "Carrito "+i
+        wb.SheetNames.push(newSheet);
+        //addig the titles rows
+        var ws_data = [['Sucursal','','','','','','','','','','','','']]
+        var ws = xlsx.utils.aoa_to_sheet(ws_data);       
+        wb.Sheets[newSheet] = ws;
+        wb.Sheets[newSheet]["A1"].s={        
+                font: {				  		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                },       
+        }
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['Modelo', '', '', '','','','','','','','','','']
+              ],{origin: -1});
+        wb.Sheets[newSheet]["A2"].s={        
+            font: {				  		
+                    sz: 12, // tamaño de fuente
+                    bold: true // negrita
+            },       
+        }
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['Etiqueta', '', '', '','','','','','','','','','']
+          ],{origin: -1});
+        wb.Sheets[newSheet]["A3"].s={        
+            font: {				  		
+                sz: 12, // tamaño de fuente
+                bold: true // negrita
+            },       
+        }
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['Color', '', '', '','','','','','','','','','']
+          ],{origin: -1});
+        wb.Sheets[newSheet]["A4"].s={        
+            font: {				  		
+                sz: 12, // tamaño de fuente
+                bold: true // negrita
+            },       
+        }
+
+        if(req.query.initialDate != null && req.query.lastDate !=null ){        
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['Fecha inicial', '', '', '','','','','','','','','','']
+              ], {origin: -1});
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['Fecha final', '', '', '','','','','','','','','','']
+              ], {origin: -1});
+            // xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            //     ['', '', '', '','','','','','','','','','']
+            //   ], {origin: -1});
+
+            wb.Sheets[newSheet]["A5"].s={        
+                font: {				  		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                }               
+            }
+            wb.Sheets[newSheet]["A6"].s={        
+                font: {				 		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                }               
+            }
+        }
+        else{
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['', '', '', '','','','','','','','','','']
+              ], {origin: -1});
+            xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                ['', '', '', '','','','','','','','','','']
+              ], {origin: -1});            
+            wb.Sheets[newSheet]["A5"].s={        
+                font: {				  		
+                      sz: 12, // tamaño de fuente
+                      bold: true // negrita
+                }               
+            }
+        }
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['', '', '', '','','','','','','','','','']
+         ],{origin: -1});
+        
+
+        xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+            ['Valor','Fecha','Hora']
+          ], {origin: -1});
+      
+        wb.Sheets[newSheet]["A8"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        wb.Sheets[newSheet]["B8"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        wb.Sheets[newSheet]["C8"].s={        
+            font: {				  		
+                  sz: 12, // tamaño de fuente
+                  bold: true // negrita
+            }               
+        }
+        // wb.Sheets[newSheet]["D9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["E9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["F9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["G9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["H9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["I9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["J9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["K9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["L9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+        // wb.Sheets[newSheet]["M9"].s={        
+        //     font: {				  		
+        //           sz: 12, // tamaño de fuente
+        //           bold: true // negrita
+        //     }               
+        // }
+
+        
+          
+        wb.Sheets[newSheet]["B1"].v= status['Sucursal código']!=null ? status['Sucursal código']+"-"+status['Sucursal nombre'] : "No registrada";
+        wb.Sheets[newSheet]["B1"].s ={
+            font:{
+                bold:false
+            }
+        }    
+
+        wb.Sheets[newSheet]["B2"].v= status['Modelo']!=null ? status['Modelo'] :"";
+        wb.Sheets[newSheet]["B2"].s ={
+            font:{
+                 bold:false
+            }
+        }
+        
+        wb.Sheets[newSheet]["B3"].v= newSheet;
+        wb.Sheets[newSheet]["B3"].s ={
+            font:{
+                 bold:false
+            }
+        }
+
+        wb.Sheets[newSheet]["B4"].v= status['Color']!=null ? status['Color']:"";
+        wb.Sheets[newSheet]["B4"].s ={
+            font:{
+                 bold:false
+            }
+        }
+    
+
+    //     wb.Sheets[newSheet]["A2"]={};
+        if(req.query.initialDate != null && req.query.lastDate !=null ){ 
+            let startDate = new Date (req.query.initialDate);
+            let finalDate = new Date (req.query.lastDate);            
+            let filteredRecords = status.records.filter( record=>{
+                return record.dateTime >= startDate && record.dateTime<=finalDate
+            })
+
+            status.records = filteredRecords;
+
+
+            let initialDate = parseDate(req.query.initialDate);                  
+            let lastDate = parseDate(req.query.lastDate);
+
+            if (process.env.ENVIRONMENT=='production'|| process.env.ENVIRONMENT=='development'){
+                initialDate.setHours(offset,0,0,0);    
+                lastDate.setHours(offset, 0, 0, 0);
+            }
+            else{
+                initialDate.setHours(0,0,0,0);
+                lastDate.setHours(0, 0, 0, 0);
+            
+            }      
+            wb.Sheets[newSheet]["B5"].v=dateDDMMAAAA(initialDate).substring(0,11);
+            wb.Sheets[newSheet]["B6"].v=dateDDMMAAAA(lastDate).substring(0,11);
+        }
+
+        
+    // if (req.query.initialDate!=null && req.query.finalDate!=null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     let finalDayToDate =new Date(req.query.finalDate)
+    //     if(initialDay.getTime() > finalDayToDate.getTime()){
+    //         return reply.code(400).send({
+    //             status:'fail',
+    //             message:'La fecha inicial no puede ser mayor que la fecha final'
+    //         })
+    //     }
+
+    //     let finalDay= addDays(finalDayToDate,1)              
+    //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay,"$lte":finalDay}} }
+        
+    // if (req.query.initialDate!=null && req.query.finalDate==null){        
+    //     let initialDay=new Date(req.query.initialDate);
+    //     dateMatchStage['$match']={'createdAt': {"$gte": initialDay}} 
+    // }
+    
+    // if (req.query.finalDate!=null && req.query.initialDate==null){
+    //     let finalDay= addDays(req.query.finalDate,1)
+    //     dateMatchStage['$match']={'createdAt': {"$gte": finalDay}} 
+    //     }
+
+    // if(dateMatchStage['$match']!=null){
+    //     aggregateQuery.push(dateMatchStage)
+    // }  
+
+
+        //if (status.records.length>0){            
+            for (let index = 0; index < status.records.length; index++) {                              
+                xlsx.utils.sheet_add_aoa(wb.Sheets[newSheet], [
+                    ['A', 'B','C']
+                  ], {origin: -1});                     
+            }
+            let currentRow=9;
+            status.records.forEach(record=>{
+                if(record.dateTime){            
+                    record.dateTime = adjustTimeStamp (record.dateTime,offset);
+                    record.Fecha=dateDDMMAAAA(record.dateTime);            
+                    record.Hora=dateTimeHHSS(record.dateTime);  
+                    
+                }
+
+
+                wb.Sheets[newSheet]["A"+String(currentRow)].v=record['value'];
+                wb.Sheets[newSheet]["B"+String(currentRow)].v=record['Fecha'];
+                wb.Sheets[newSheet]["C"+String(currentRow)].v=record['Hora'];
+                // wb.Sheets[newSheet]["D"+String(currentRow)].v=purchase['Sucursal código'];
+                // wb.Sheets[newSheet]["E"+String(currentRow)].v=purchase['Sucursal nombre'];
+                // wb.Sheets[newSheet]["F"+String(currentRow)].v=purchase['Empleado nombre'];
+                // wb.Sheets[newSheet]["G"+String(currentRow)].v=purchase['Empleado correo'];
+                // wb.Sheets[newSheet]["H"+String(currentRow)].v=purchase['Modelo'];
+                // wb.Sheets[newSheet]["I"+String(currentRow)].v=purchase['Color'];
+                // wb.Sheets[newSheet]["J"+String(currentRow)].v=purchase['Etiqueta'];
+                // wb.Sheets[newSheet]["K"+String(currentRow)].v=purchase['Tiempo'];
+                // wb.Sheets[newSheet]["L"+String(currentRow)].v=purchase['Costo'];            
+                // wb.Sheets[newSheet]["M"+String(currentRow)].v=purchase['Tipo de pago'];            
+                currentRow ++;
+               // ['Nombre','Habilitado general','Código','Descripción','Precio unitario','Cantidad de ventas','Importe total']
+               headers=["Valor","Fecha","Hora"]
+         //console.log(headers)
+
+        // adjusting columns length added
+                for (let i = 0; i < headers.length; i++) {  
+                    let columnWidth=headers[i].length;
+                    columnWidth=headers[i]=='Valor' ? columnWidth+15 : columnWidth;
+                    columnWidth=headers[i]=='Fecha' ? columnWidth+24 : columnWidth;
+                    columnWidth=headers[i]=='Hora' ? columnWidth+7 : columnWidth;
+                   //  columnWidth=headers[i]=='Sucursal código' ? columnWidth+5 : columnWidth;
+                   //  columnWidth=headers[i]=='Sucursal nombre' ? columnWidth+45: columnWidth;        
+                   //  columnWidth=headers[i]=='Empleado nombre' ? columnWidth+45: columnWidth;        
+                   //  columnWidth=headers[i]=='Empleado correo' ? columnWidth+45: columnWidth;
+                   //  columnWidth=headers[i]=='Modelo' ? columnWidth+10: columnWidth;        
+                   //  columnWidth=headers[i]=='Color' ? columnWidth+10: columnWidth;        
+                   //  columnWidth=headers[i]=='Etiqueta' ? columnWidth+20: columnWidth;        
+                   //  columnWidth=headers[i]=='Tiempo' ? columnWidth+5: columnWidth;        
+                   //  columnWidth=headers[i]=='Costo' ? columnWidth+5: columnWidth;
+                   //  columnWidth=headers[i]=='Tipo de pago' ? columnWidth+20: columnWidth;        
+                                    wscols.push({ wch: columnWidth })
+                } 
+               wb.Sheets[newSheet]['!cols']=wscols;
+
+
+            })
+        //}
+
+         
+        //console.log("Final Workbook: ",wb.Sheets["Products_vendidos"])
+        // let row = 9;
+        // while (wb.Sheets[newSheet]["G"+String(row)] != null) { 
+        //     wb.Sheets[newSheet]["K"+String(row)].z="0.00";
+        //     wb.Sheets[newSheet]["L"+String(row)].z="$0.00";
+        //     row+=1;
+
+        // }
+        i++;
+    }       
+           	
+        
+    
+    
+
+    let buf = XLSXStyle.write(wb, { type: "buffer" });
+
+    reply.type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    reply.header("Content-Disposition", 'attachment; filename="Estado_individual.xlsx"');
+    return reply.send(buf); 
+
+}
+
 function parseDate(input) {
     let parts = input.split('-');      
     // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
@@ -4088,4 +4923,4 @@ function dateTimeHHSS(timestamp){
 
 
 
-module.exports = { rentalsReport, salesReport, reservesReport, balancesReport, paymentsReport, inventoryReport, batteriesReport, statusReport }
+module.exports = { rentalsReport, salesReport, reservesReport, balancesReport, paymentsReport, inventoryReport, batteriesReport, statusReport, singleBatteryReport, singleStatusReport }

@@ -1,4 +1,4 @@
-const { rentalsReport, salesReport, reservesReport, balancesReport, paymentsReport, inventoryReport,batteriesReport, statusReport } = require('../controllers/report.controller');
+const { rentalsReport, salesReport, reservesReport, balancesReport, paymentsReport, inventoryReport,batteriesReport, statusReport, singleBatteryReport, singleStatusReport } = require('../controllers/report.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -323,6 +323,74 @@ const getStatusReportOpts={
     
 }
 
+const getSingleBatteryReportOpts={
+    schema: {
+         description:"Retrieves a MS Excel file with the information of the battery record with the _id provided in the URL",
+         tags:['Reports'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+        params:{
+            id:{type:'string'}
+         },  
+        // querystring:{            
+        //     branchId:{type:'string'},
+        //     carId:{type:'string'},
+        //     modelId:{type:'string'},
+        //     color:{type:'string'}, 
+        //     initialDate:{type:'string'},
+        //     lastDate:{type:'string'},           
+        // }, 
+        response: {
+            200: {
+            //     description:'An XLS file',            
+                 type:'string',
+                 format:'binary',
+                 //content: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',                    
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: singleBatteryReport
+    
+}
+
+const getSingleStatusReportOpts={
+    schema: {
+         description:"Retrieves a MS Excel file with the information of the single record with the _id provided in the URL",
+         tags:['Reports'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+        params:{
+            id:{type:'string'}
+         },  
+        // querystring:{            
+        //     branchId:{type:'string'},
+        //     carId:{type:'string'},
+        //     modelId:{type:'string'},
+        //     color:{type:'string'}, 
+        //     initialDate:{type:'string'},
+        //     lastDate:{type:'string'},           
+        // }, 
+        response: {
+            200: {
+            //     description:'An XLS file',            
+                 type:'string',
+                 format:'binary',
+                 //content: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',                    
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: singleStatusReport
+    
+}
+
 function crmReportsRoutes(fastify, options, done) {
     fastify.get('/crm/reports/rentals', getRentalsReportOpts)
     fastify.get('/crm/reports/sales', getSalesReportOpts)
@@ -332,6 +400,8 @@ function crmReportsRoutes(fastify, options, done) {
     fastify.get('/crm/reports/inventory', getInventoryReportOpts)
     fastify.get('/crm/reports/batteries', getBatteriesReportOpts)
     fastify.get('/crm/reports/status', getStatusReportOpts)
+    fastify.get('/crm/reports/batteries/:id', getSingleBatteryReportOpts)
+    fastify.get('/crm/reports/status/:id', getSingleStatusReportOpts)
     // fastify.get('/crm/branches/:id', getSingleBranchOpts)
     // fastify.post('/crm/branches', postBranchUpOpts)
     // fastify.put('/crm/branches/:id', putSingleBranchOpts)
