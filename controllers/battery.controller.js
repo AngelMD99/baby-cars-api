@@ -515,6 +515,55 @@ const batteryList = async function (req,reply){
 
 }
 
+const batteryShow = async function (req,reply){
+    let battery = await Battery.findOne({_id:new ObjectId(req.params.id), isDeleted:false})
+    if (!battery){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Registro de bateria no encontrado'
+        })   
+    }
+
+    await battery.populate([
+        {path:'branchId', select:'_id name code'},
+        {path:'modelId', select:'_id name'},
+        {path:'carId', select:'_id name color'}
+    ]);  
+    let batteryObj = await battery.toObject();
+    batteryObj.totalRecords = batteryObj.records.length;            
+    
+    // if (batteryObj.branchId){
+    //     batteryObj.branchCode=batteryObj.branchId.code ? batteryObj.branchId.code :"";
+    //     batteryObj.branchName=batteryObj.branchId.name ? batteryObj.branchId.name :"";
+    //     delete batteryObj.branchId;
+    // }
+    if(!batteryObj.branchId || !batteryObj.branchId._id){
+        batteryObj.branchId={
+            _id:null,
+            name:"", 
+            code:""           
+        }
+    }
+    if(!batteryObj.modelId || !batteryObj.modelId._id){
+        batteryObj.modelId={
+            _id:null,
+            name:""            
+        }
+    }
+
+    if(!batteryObj.carId || !batteryObj.carId._id){
+        batteryObj.modelId={
+            _id:null,
+            name:"",
+            color:""            
+        }
+    }
+    return reply.code(200).send({
+        status: 'success',
+        data: batteryObj
+    })
+
+}
 const batteryDelete = async function (req,reply){
 
 }
@@ -559,4 +608,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { batteryCreate, batteryDelete, batteryList, batteryUpdate }
+module.exports = { batteryCreate, batteryDelete, batteryList, batteryUpdate, batteryShow }

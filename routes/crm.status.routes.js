@@ -1,4 +1,4 @@
-const { statusCreate, statusList, statusDelete, statusUpdate } = require('../controllers/status.controller');
+const { statusCreate, statusList, statusDelete, statusUpdate, statusShow } = require('../controllers/status.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -144,9 +144,37 @@ const getStatusOpts={
     
 }
 
+const getSingleStatusOpts={
+    schema: {
+         description:"Retrieves the information of a single status with the id provided.",
+         tags:['Status'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: statusDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: statusShow,
+    
+}
+
 function crmStatusRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
     fastify.get('/crm/status', getStatusOpts)
+    fastify.get('/crm/status/:id', getSingleStatusOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)
     // fastify.get('/branches/:id/available/plans', getAvailablePlansOpts)

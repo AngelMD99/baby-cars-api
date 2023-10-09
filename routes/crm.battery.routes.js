@@ -1,4 +1,4 @@
-const { batteryCreate, batteryList, batteryDelete, batteryUpdate } = require('../controllers/battery.controller');
+const { batteryCreate, batteryList, batteryDelete, batteryUpdate, batteryShow } = require('../controllers/battery.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -122,7 +122,7 @@ const batteryDef = {
 const getBatteriesOpts={
     schema: {
          description:"Retrieves the information of all the status of the reles stored on the database.",
-         tags:['Bateries'], 
+         tags:['Batteries'], 
         //  headers:{
         //     authorization:{type:'string'}
         // }, 
@@ -157,8 +157,36 @@ const getBatteriesOpts={
     
 }
 
+const getSingleBatteryOpts={
+    schema: {
+         description:"Retrieves the information of a single car with the id provided.",
+         tags:['Batteries'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: batteryDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: batteryShow,
+    
+}
+
 function crmBatteryRoutes(fastify, options, done) {
     fastify.get('/crm/batteries', getBatteriesOpts)
+    fastify.get('/crm/batteries/:id', getSingleBatteryOpts)
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
     // fastify.get('/branches/:id/available/cars', getAvailableCarsOpts)

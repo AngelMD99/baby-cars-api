@@ -516,7 +516,55 @@ const statusList = async function (req,reply){
     
 
 }
+const statusShow = async function (req,reply){
+    let status = await Status.findOne({_id:new ObjectId(req.params.id), isDeleted:false})
+    if (!status){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Registro de bateria no encontrado'
+        })   
+    }
 
+    await status.populate([
+        {path:'branchId', select:'_id name code'},
+        {path:'modelId', select:'_id name'},
+        {path:'carId', select:'_id name color'}
+    ]);  
+    let statusObj = await status.toObject();
+    statusObj.totalRecords = statusObj.records.length;            
+    
+    // if (statusObj.branchId){
+    //     statusObj.branchCode=statusObj.branchId.code ? statusObj.branchId.code :"";
+    //     statusObj.branchName=statusObj.branchId.name ? statusObj.branchId.name :"";
+    //     delete statusObj.branchId;
+    // }
+    if(!statusObj.branchId || !statusObj.branchId._id){
+        statusObj.branchId={
+            _id:null,
+            name:"", 
+            code:""           
+        }
+    }
+    if(!statusObj.modelId || !statusObj.modelId._id){
+        statusObj.modelId={
+            _id:null,
+            name:""            
+        }
+    }
+
+    if(!statusObj.carId || !statusObj.carId._id){
+        statusObj.modelId={
+            _id:null,
+            name:"",
+            color:""            
+        }
+    }
+    return reply.code(200).send({
+        status: 'success',
+        data: statusObj
+    })
+
+}
 const statusDelete = async function (req,reply){
 
 }
@@ -573,4 +621,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { statusCreate, statusDelete, statusList, statusUpdate }
+module.exports = { statusCreate, statusDelete, statusList, statusUpdate, statusShow }
