@@ -2199,15 +2199,15 @@ const paymentsReport = async function (req, reply){
         aggregateQuery.push({ "$match": {"collectedBy": userId }});        
     }
 
-    if(req.query.balanceType != null && req.query.balanceType != ""){
-        if(req.query.balanceType.toLowerCase() !='single' ||req.query.balanceType.toLowerCase() !='reserve'){
+    if(req.query.operationTypeType != null && req.query.operationType != ""){
+        if(req.query.operationType.toLowerCase() !='single' ||req.query.operationType.toLowerCase() !='reserve'){
             return reply.code(400).send({
                 status:'fail',
                 message:'El tipo de operación recibido no es válido'
             })
 
         }
-        let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
+        let operationType = req.query.operationType.toLowerCase();
         aggregateQuery.push({ "$match": {"operationType": operationType }});        
     }
 
