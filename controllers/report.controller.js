@@ -2191,7 +2191,7 @@ const paymentsReport = async function (req, reply){
     
     if(req.query.reserveId != null){
         let reserveId = mongoose.Types.ObjectId(req.query.reserveId)
-        aggregateQuery.push({ "$match": {"reseveId": reserveId }});        
+        aggregateQuery.push({ "$match": {"reserveId": reserveId }});        
     }
 
     if(req.query.userId != null){
@@ -2323,6 +2323,119 @@ const paymentsReport = async function (req, reply){
         //     }
         //   }
     )
+
+    if(req.query.search && req.query.search!=""){
+        aggregateQuery.push(
+            {
+                '$match': {
+                  '$or': [                    
+                    
+                    {
+                        'branchId.code': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'branchId.name': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },
+                    {
+                        'saleId.folio': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+
+                    {
+                        'saleId.products.modelName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'saleId.products.color': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'saleId.client.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'saleId.client.phone': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'saleId.client.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+
+                    {
+                        'reserveId.folio': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+
+                    {
+                        'reserveId.products.modelName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'reserveId.products.color': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                      {
+                        'reserveId.client.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'reserveId.client.phone': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },
+                    {
+                        'reseverId.client.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                      },                        
+                    {
+                        'collectedBy.fullName': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    },                    
+                    {
+                        'collectedBy.email': {
+                          '$regex': searchString, 
+                          '$options': 'i'
+                        }
+                    }
+
+                  ]
+                }
+              }
+        )
+
+    }
 
     let payments = await Payment.aggregate(aggregateQuery);        
     payments.forEach(payment=>{               

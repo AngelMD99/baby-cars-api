@@ -72,16 +72,16 @@ const listPayments = async function (req, reply){
         console.log("INITIAL DATE ADJUSTED CRM RENTALS: ", initialDay);
         console.log("FINAL DATE RECEIVED CRM RENTALS: ", req.query.finalDate);                       
         console.log("FINAL DATE RECEIVED CRM RENTALS: ", finalDay);                       
-        searchQuery['createdAt']={"$gte": initialDay,"$lte":finalDay}
+        searchQuery['paidOn']={"$gte": initialDay,"$lte":finalDay}
     }
     if (req.query.initialDate!=null && req.query.finalDate==null){        
         let initialDay=new Date(req.query.initialDate);
-        searchQuery['createdAt']={"$gte": initialDay}
+        searchQuery['paidOn']={"$gte": initialDay}
 
     }
     if (req.query.finalDate!=null && req.query.initialDate==null){
         let finalDay= addDays(req.query.finalDate,1)
-        searchQuery['createdAt']={"$lte": finalDay}
+        searchQuery['paidOn']={"$lte": finalDay}
     }
     const options = {
         select: `-isDeleted -__v -updatedAt`, 
@@ -479,7 +479,7 @@ const listPayments = async function (req, reply){
             console.log("FINAL DATE RECEIVED CRM RENTALS: ", finalDay);
             aggregateQuery.push({
                 '$match':{
-                    createdAt:{"$gte": initialDay,"$lte":finalDay}
+                    paidOn:{"$gte": initialDay,"$lte":finalDay}
                 }
             })                                   
         }
@@ -487,7 +487,7 @@ const listPayments = async function (req, reply){
             let initialDay=new Date(req.query.initialDate);
             aggregateQuery.push({
                 '$match':{
-                    createdAt:{"$gte": initialDay}
+                    paidOn:{"$gte": initialDay}
                 }
             })                                              
         }
@@ -495,7 +495,7 @@ const listPayments = async function (req, reply){
             let finalDay= addDays(req.query.finalDate,1)
             aggregateQuery.push({
                 '$match':{
-                    createdAt:{"$lte": finalDay}
+                    paidOn:{"$lte": finalDay}
                 }
             })                                                          
         }
