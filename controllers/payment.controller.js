@@ -768,6 +768,33 @@ const listPayments = async function (req, reply){
     
     let docs = JSON.stringify(paymentsPaginated.docs);    
     var payments = JSON.parse(docs);
+
+    payments.forEach(payment=>{
+        switch (payment.operationType) {
+            case "reserve":
+                payment.operationType="Apartado"                
+                break;
+            case "single":
+                payment.operationType="Único"                
+                break;
+        
+            default:
+                break;
+        }
+
+        switch (payment.isDiscarded) {
+            case true:
+                payment.isDiscarded="Si"                
+                break;
+            case false:
+                payment.isDiscarded="No"                
+                break;
+        
+            default:
+                break;
+        }
+
+    })
     
 
     return reply.code(200).send({

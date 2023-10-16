@@ -84,7 +84,8 @@ const authorizeUserFunc = async function (req, reply) {
 const paymentDef={
     type:'object',
     properties: {
-        _id:{type:'string'},                       
+        _id:{type:'string'},
+        isDiscarded:{type:'string'},
         fullName:{type:'string'},
         email:{type:'string'},
         contactLastName:{type:'string'},
