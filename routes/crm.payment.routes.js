@@ -109,7 +109,7 @@ const paymentDef={
 
             }
         }, 
-                      
+        paidOn:{type:'string'},                            
         createdAt:{type:'string'},
         updatedAt:{type:'string'}
       }

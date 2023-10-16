@@ -81,34 +81,108 @@ const authorizeUserFunc = async function (req, reply) {
     }
 }
 
-const paymentDef = { 
-    type: 'object',    
+const paymentDef={
+    type:'object',
     properties: {
-        _id: { type: 'string' },
-        records:{
-
-        },       
+        _id:{type:'string'},                       
+        fullName:{type:'string'},
+        email:{type:'string'},
+        contactLastName:{type:'string'},
+        role:{type:'string'},
+        operationType:{type:'string'},
         branchId:{
             type:'object',
             properties:{
                 _id:{type:'string'},
-                code:{type:'string'},
                 name:{type:'string'},
+                code:{type:'string'}
             }
         },
-        carId: { 
-            type: 'object',
+        saleId:{
+            type:'object',
             properties:{
                 _id:{type:'string'},
-                name:{type:'string'},
-                color:{type:'string'},
-                modelo:{type:'string'}
+                folio:{type:'string'},
+                client:{
+                    type:'object',
+                    properties:{
+                        fullName:{type:'string'},
+                        phone:{type:'string'},
+                        email:{type:'string'}
+                    }
+                },
+                products:{
+                    type:'array',
+                    items:{
+                        type:'object',
+                        properties:{
+                           modelId:{type:'string'},
+                           modelName:{type:'string'},
+                           color:{type:'string'},
+                           price:{type:'number'},
+                           quantity:{type:'number'},
+                        }
+                    }
+                },
+                totalSale:{type:'number'},
+                createdAt:{type:'string'},
+                updatedAt:{type:'string'}               
 
             }
-        },        
+        },  
+        reserveId:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                isDeleted:{type:'boolean'},
+                isPaid:{type:'boolean'},
+                isCancelled:{type:'boolean'},                
+                folio:{type:'string'},
+                client:{
+                    type:'object',
+                    properties:{
+                        fullName:{type:'string'},
+                        phone:{type:'string'},
+                        email:{type:'string'}
+                    }
+                },
+                products:{
+                    type:'array',
+                    items:{
+                        type:'object',
+                        properties:{
+                           modelId:{type:'string'},
+                           modelName:{type:'string'},
+                           color:{type:'string'},
+                           price:{type:'number'},
+                           quantity:{type:'number'},
+                        }
+                    }
+                },
+                totalSale:{type:'number'},
+                expirationDate:{type:'string'},
+                createdAt:{type:'string'},
+                updatedAt:{type:'string'}               
+
+            }
+        },
+        collectedBy:{
+            type:'object',
+            properties:{
+                _id:{type:'string'},
+                fullName:{type:'string'},
+                email:{type:'string'},
+                phone:{type:'string'},
+
+
+            }
+        }, 
+
+        paidOn:{type:'string'},              
         createdAt:{type:'string'},
-        updatedAt:{type:'string'}        
-    }
+        updatedAt:{type:'string'}
+      }
+
 }
 
 const postPaymentUpOpts = {
