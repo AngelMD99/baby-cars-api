@@ -46,6 +46,11 @@ const listPayments = async function (req, reply){
         searchQuery['operationType']=req.query.operationType
     }
 
+    if (req.isDiscarded!=null && req.query.isDiscarded!=""){
+        let cancelationFilter = req.isDiscarded.toLowerCase() == "true" ? true : false
+        searchQuery['isDiscarded']=cancelationFilter;        
+    }
+
     // if(req.query.modelId){
     //     searchQuery['products.modelId']=req.query.modelId
     // }
@@ -446,6 +451,15 @@ const listPayments = async function (req, reply){
                 }
             })
           }
+
+          if (req.isDiscarded!=null && req.query.isDiscarded!=""){
+            let cancelationFilter = req.isDiscarded.toLowerCase() == "true" ? true : false
+            aggregateQuery.push({
+                '$match':{
+                    isDiscarded:cancelationFilter
+                }
+            })            
+        }
 
 
           if (req.query.initialDate!=null && req.query.finalDate!=null){                    
