@@ -36,6 +36,16 @@ const listPayments = async function (req, reply){
         searchQuery['collectedBy']=req.query.collectedBy
     }
 
+    if(req.query.operationType && req.query.operationType!=""){
+        if(!['reserve','single'].includes(req.query.operationType.toLowerCase())) {
+            return reply.code(400).send({
+                status:'fail',
+                message:'Tipo de operación no valido'
+            })
+        }
+        searchQuery['operationType']=req.query.operationType
+    }
+
     // if(req.query.modelId){
     //     searchQuery['products.modelId']=req.query.modelId
     // }
@@ -427,6 +437,14 @@ const listPayments = async function (req, reply){
                     collectedBy:new ObjectId(req.query.userId)
                 }
                 })
+          }
+
+          if(req.query.operationType){
+            aggregateQuery.push({
+                '$match':{
+                    operationType:req.query.operationType
+                }
+            })
           }
 
 
