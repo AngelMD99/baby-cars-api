@@ -769,6 +769,12 @@ const listPayments = async function (req, reply){
 
 }
 
+function addDays(date, days) {
+    var newDate = new Date(date.valueOf());
+    newDate.setDate(newDate.getDate() + days);
+    return newDate;
+}
+
 function paginateArray(array, limit, page) {
     return array.slice((page - 1) * limit, page * limit);
 }

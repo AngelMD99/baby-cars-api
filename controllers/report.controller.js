@@ -2212,7 +2212,7 @@ const paymentsReport = async function (req, reply){
     }
 
     if (req.isDiscarded!=null && req.query.isDiscarded!=""){
-        let cancelationFilter = req.isDiscarded.toLowerCase() == "true" ? true : false
+        let cancelationFilter = req.isDiscarded.toLowerCase() == "si" ? true : false
         aggregateQuery.push({ "$match": {"isDiscarded": cancelationFilter }});        
     }
 
