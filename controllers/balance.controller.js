@@ -313,15 +313,15 @@ const balanceList = async function (req, reply){
     }
 
     if(req.query.balanceType != null && req.query.balanceType != ""){
-        if(req.query.balanceType.toLowerCase() !='rentals' ||req.query.balanceType.toLowerCase() !='payments'){
+        if(req.query.balanceType.toLowerCase() !='rentals'  && req.query.balanceType.toLowerCase() !='payments'){
             return reply.code(400).send({
                 status:'fail',
                 message:'El tipo de operación recibido no es válido'
             })
 
         }
-        let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
-        aggregateQuery.push({ "$match": {"balanceType": operationType }});        
+        let operationType =req.query.balanceType.toLowerCase();
+        searchQuery['balanceType'] = operationType;        
     }
     
 
