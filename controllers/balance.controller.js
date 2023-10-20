@@ -321,7 +321,7 @@ const balanceList = async function (req, reply){
 
         }
         let operationType = mongoose.Types.ObjectId(req.query.operationType.toLowerCase())
-        aggregateQuery.push({ "$match": {"operationType": operationType }});        
+        aggregateQuery.push({ "$match": {"balanceType": operationType }});        
     }
     
 
