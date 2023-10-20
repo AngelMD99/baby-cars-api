@@ -15,6 +15,7 @@ const balanceDef={
     type:'object',
     properties: {
         _id:{type:'string'},
+        isDeleted:{type:'boolean'},
         folio:{type:'string'},
         balanceType:{type:'string'}                              ,
         amount:{type:'number'},

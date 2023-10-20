@@ -355,7 +355,7 @@ const balanceList = async function (req, reply){
         searchQuery['balanceDate']={"$lte": finalDay}
     }
     const options = {
-        select: `-isDeleted -__v -updatedAt`, 
+        select: `-__v -updatedAt`, 
 
     }
     if (req.query.page){
@@ -669,7 +669,16 @@ const balanceList = async function (req, reply){
             let currentDate = new Date ()
             let remainingTime = minutesDiff (currentDate,doc.expireDate);
             doc.remainingTime=remainingTime
-
+        }
+        switch (doc.balanceType) {
+            case 'rentals':
+                doc.balanceType="Rentas"                
+                break;
+            case 'payments':
+                doc.balanceType="Pagos"                
+                break;        
+            default:
+                break;
         }
         
 
