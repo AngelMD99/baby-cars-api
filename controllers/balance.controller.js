@@ -289,6 +289,18 @@ const balanceShow = async function (req,reply){
     ])
 
     const balanceSavedObj = await balance.toObject()
+    switch (balanceSavedObj.balanceType) {
+        case 'rentals':
+            balanceSavedObj.balanceType = "Rentas"
+            
+            break;
+        case 'payments':
+            balanceSavedObj.balanceType = "Pagos"                
+            break;
+    
+        default:
+            break;
+    }
     delete balanceSavedObj._v;
     return reply.code(201).send({
         status: 'success',
