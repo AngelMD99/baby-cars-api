@@ -383,6 +383,17 @@ const userList = async function (req, reply){
         searchQuery['branchId']=req.query.branchId
     }
 
+    if(req.query.role){
+        let validRoles =['admin','supervisor','employee'];
+        if(!validRoles.includes(req.query.role.toLowerCase())){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'El rol proporcionado no es valido'
+            })    
+        }
+        searchQuery['role']=req.query.branchId.toLowerCase()
+    }
+
     const options = {
         select: `-isDeleted -__v`, 
 
@@ -500,6 +511,14 @@ const userList = async function (req, reply){
             aggregateQuery.push({
                 '$match':{
                     branchId:new ObjectId(req.query.branchId)
+                }
+            })
+          }
+
+          if(req.query.role){
+            aggregateQuery.push({
+                '$match':{
+                    role:req.query.role.toLowerCase()
                 }
             })
           }
