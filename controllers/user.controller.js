@@ -282,6 +282,17 @@ const userCreate = async function (req, reply){
             code:"",
         }
     }
+    switch (userObj.role) {
+        case "admin":
+            userObj.role="administrador"            
+            break;
+        case "employee":
+            userObj.role="empleado"            
+            break;
+    
+        default:
+            break;
+    }
     delete userObj.__v
     delete userObj.password
 
@@ -316,6 +327,17 @@ const userShow = async function (req, reply){
             name:"",
             code:""            
         }
+    }
+    switch (userObj.role) {
+        case "admin":
+            userObj.role="administrador"            
+            break;
+        case "employee":
+            userObj.role="empleado"            
+            break;
+    
+        default:
+            break;
     }
    
     
@@ -586,6 +608,19 @@ const userList = async function (req, reply){
 
     let docs = JSON.stringify(usersPaginated.docs);    
     var users = JSON.parse(docs);
+    users.forEach(userObj=>{
+        switch (userObj.role) {
+            case "admin":
+                userObj.role="administrador"            
+                break;
+            case "employee":
+                userObj.role="empleado"            
+                break;
+        
+            default:
+                break;
+        }
+    })
     
 
     return reply.code(200).send({
