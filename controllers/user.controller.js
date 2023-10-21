@@ -391,7 +391,7 @@ const userList = async function (req, reply){
                 message: 'El rol proporcionado no es valido'
             })    
         }
-        searchQuery['role']=req.query.branchId.toLowerCase()
+        searchQuery['role']=req.query.role.toLowerCase()
     }
 
     const options = {
