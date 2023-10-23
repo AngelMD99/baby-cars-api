@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isEnabled: {
+        type: Boolean,
+        default: true,
+    },
     role: {
         type: String,
         required: true,

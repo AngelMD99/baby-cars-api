@@ -295,6 +295,7 @@ const userCreate = async function (req, reply){
     }
     delete userObj.__v
     delete userObj.password
+    userObj.isEnabled= userObj.isEnabled == true ? "Si" : "No";
 
     return reply.code(201).send({
         status: 'success',
@@ -339,6 +340,8 @@ const userShow = async function (req, reply){
         default:
             break;
     }
+
+    userObj.isEnabled= userObj.isEnabled == true ? "Si" : "No";
    
     
     return reply.code(200).send({
@@ -639,7 +642,10 @@ const userList = async function (req, reply){
             default:
                 break;
         }
+        userObj.isEnabled= userObj.isEnabled == true ? "Si" : "No";
     })
+
+
     
 
     return reply.code(200).send({

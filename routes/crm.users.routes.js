@@ -16,7 +16,8 @@ const errResponse = {
 const userDef={
     type:'object',
     properties: {
-        _id:{type:'string'},                       
+        _id:{type:'string'},
+        isEnabled:{type:'string'} ,                       
         fullName:{type:'string'},
         email:{type:'string'},
         phone:{type:'string'},
