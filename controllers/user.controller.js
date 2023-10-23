@@ -367,13 +367,44 @@ const userDelete = async function (req, reply){
     await updatedUser.save();
     return reply.code(200).send({
         status: 'success',
-        message: 'Usuario '+updatedUser.fullName+' eliminado correctamente'           
-        
-    })  
-    
+        message: 'Usuario '+updatedUser.fullName+' eliminado correctamente'                   
+    })     
+}
 
+const userDisable = async function (req, reply){
+    let currentUser = await User.findOne({_id: req.params.id, isDeleted:false});
+    if(currentUser == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no registrado'
+        })
+    }
 
+    let updatedUser = await User.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedUser.isEnabled=false;
+    await updatedUser.save();
+    return reply.code(200).send({
+        status: 'success',
+        message: 'Usuario '+updatedUser.fullName+' ha sido deshabilitado'                   
+    })     
+}
 
+const userEnable = async function (req, reply){
+    let currentUser = await User.findOne({_id: req.params.id, isDeleted:false});
+    if(currentUser == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no registrado'
+        })
+    }
+
+    let updatedUser = await User.findOne({_id: req.params.id, isDeleted:false}).select('-__v');
+    updatedUser.isEnabled=true;
+    await updatedUser.save();
+    return reply.code(200).send({
+        status: 'success',
+        message: 'Usuario '+updatedUser.fullName+' habilitado'                   
+    })     
 }
 
 
@@ -921,4 +952,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin, usersAvailable }
+module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin, usersAvailable, userDisable, userEnable }

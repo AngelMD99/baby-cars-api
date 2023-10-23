@@ -291,6 +291,60 @@ const deleteSingleUserOpts={
     
 }
 
+const disableSingleUserOpts={
+    schema: {
+         description:"Disables the user with the id provided.",
+         tags:['Users'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: users.userDisable,
+    
+}
+
+const enableSingleUserOpts={
+    schema: {
+         description:"Enables the user with the id provided.",
+         tags:['Users'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                type:'object',
+                properties:{
+                    status:{type:'string'},
+                    message:{type:'string'}
+                }
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeFunc,
+    handler: users.userEnable,
+    
+}
+
 const getUsersOpts={
     schema: {
          description:"Retrieves the information of all the users stored on the database.",
@@ -404,6 +458,8 @@ function crmUsersRoutes(fastify, options, done) {
     fastify.delete('/crm/users/:id', deleteSingleUserOpts);
     fastify.get('/crm/users/available', UsersAvailableOpts);
     fastify.put('/crm/users/:id', putSingleUserOpts);
+    fastify.put('/crm/users/:id/disable', disableSingleUserOpts);
+    fastify.put('/crm/users/:id/enable', enableSingleUserOpts);
 
 done()
 }
