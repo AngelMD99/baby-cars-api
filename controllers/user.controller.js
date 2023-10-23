@@ -456,7 +456,8 @@ const userList = async function (req, reply){
             let usersQuery = await User.paginate(searchQuery, options);
             usersQuery.docs.forEach(user => {
                 let newObj={
-                    _id:user._id,                    
+                    _id:user._id,  
+                    isEnabled:user.isEnabled,
                     fullName:user.fullName, 
                     email:user.email, 
                     role:user.role,
@@ -573,7 +574,8 @@ const userList = async function (req, reply){
               
               {
                 '$project': {               
-                  'fullName': 1, 
+                  'fullName': 1,
+                  'isEnabled':1, 
                   'email': 1,
                   'branchId._id': {
                     '$first': '$branchInfo._id'
@@ -660,7 +662,7 @@ const userList = async function (req, reply){
     }
 
     let docs = JSON.stringify(usersPaginated.docs);    
-    var users = JSON.parse(docs);
+    var users = JSON.parse(docs);    
     users.forEach(userObj=>{
         switch (userObj.role) {
             case "admin":
