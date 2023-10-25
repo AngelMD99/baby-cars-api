@@ -1,4 +1,4 @@
-const { modelCreate, modelShow, modelUpdate, modelDelete, modelList, modelsAvailable } = require('../controllers/modelo.controller');
+const { modelCreate, modelShow, modelUpdate, modelDelete, modelList, modelsAvailable, colorsAvailable } = require('../controllers/modelo.controller');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -314,6 +314,37 @@ const getModelsAvailableOpts={
     
 }
 
+const getColorsAvailableOpts={
+    schema: {
+         description:"Retrieves the information of all distinct colors registered in models collection.",
+         tags:['Models'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+        querystring:{
+            page:{type:'string'},
+            perPage:{type:'string'}
+        },
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data:{
+                    type:'array',
+                    items:{type:'string'},
+                  }
+                }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeToken,
+    handler: colorsAvailable
+    
+}
+
 function crmModelsRoutes(fastify, options, done) {
     fastify.post('/crm/models', postModelUpOpts)
     fastify.get('/crm/models/:id', getSingleModelOpts)    
@@ -321,6 +352,7 @@ function crmModelsRoutes(fastify, options, done) {
     fastify.put('/crm/models/:id', putSingleModelOpts)
     fastify.get('/crm/models/available', getModelsAvailableOpts) 
     fastify.get('/crm/models', getModelsOpts)
+    fastify.get('/crm/colors', getColorsAvailableOpts)
      
 done()
 }

@@ -312,6 +312,14 @@ const modelList = async function (req, reply){
     
 }
 
+const colorsAvailable = async function (req, reply){        
+    const colors = await Modelo.distinct( "colors" )       
+    return reply.code(200).send({
+        status: 'success',
+        data: colors
+    })
+}
+
 
 function paginateArray(array, limit, page) {
     return array.slice((page - 1) * limit, page * limit);
@@ -336,4 +344,4 @@ function diacriticSensitiveRegex(string = '') {
 }
 
 
-module.exports = { modelCreate, modelShow, modelUpdate, modelDelete, modelList, modelsAvailable }
+module.exports = { modelCreate, modelShow, modelUpdate, modelDelete, modelList, modelsAvailable, colorsAvailable }
