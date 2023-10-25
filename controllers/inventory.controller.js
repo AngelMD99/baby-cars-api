@@ -82,7 +82,7 @@ const inventoryList = async function (req,reply){
     let searchQuery = {
         isDeleted: false,			
     };
-    if(req.query.modelIdId){
+    if(req.query.modelId){
         searchQuery['modelId']=req.query.modelId;        
     }
 
@@ -109,7 +109,7 @@ const inventoryList = async function (req,reply){
     else{
         options.sort={"modelId.name":1}
     }
-    let inventoriesPaginated={};
+    let inventoriesPaginated={};    
     if(!req.query.search){ 
         
         //let sortOrder={name:1}               
