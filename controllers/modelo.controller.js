@@ -313,11 +313,44 @@ const modelList = async function (req, reply){
 }
 
 const colorsAvailable = async function (req, reply){        
-    const colors = await Modelo.distinct( "colors" )       
+    const colors = await Modelo.distinct( "colors" );
+    let colorOptions =[
+        {
+            value:"",
+            text:"<Todos>"
+        }
+    ];
+
+    const sortedColors = colors.sort((a, b) => {
+        return a.localeCompare(b, undefined, {sensitivity: 'base'});
+      });    
+    sortedColors.forEach(item=>{
+        let newObj={
+            value:item.toLowerCase(),
+            text: item.charAt(0).toUpperCase() + item.slice(1),
+        }
+        if(!colorOptions.includes(newObj.value)){
+            colorOptions.push(newObj)    
+        }        
+    })
+
+    const uniqueIds = [];
+
+    const unique = colorOptions.filter(element => {
+        const isDuplicate = uniqueIds.includes(element.value);
+        if (!isDuplicate) {
+            uniqueIds.push(element.value);
+            return true;
+        }
+
+        return false;
+    });
+    
     return reply.code(200).send({
         status: 'success',
-        data: colors
+        data: unique
     })
+
 }
 
 

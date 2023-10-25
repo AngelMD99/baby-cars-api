@@ -332,7 +332,13 @@ const getColorsAvailableOpts={
                   status: { type: 'string' },
                   data:{
                     type:'array',
-                    items:{type:'string'},
+                    items:{
+                        type:'object',
+                        properties:{
+                            value:{type:'string'},
+                            text:{type:'string'}
+                        }
+                    },
                   }
                 }               
             },
