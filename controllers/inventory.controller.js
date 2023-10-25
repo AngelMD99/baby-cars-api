@@ -91,7 +91,7 @@ const inventoryList = async function (req,reply){
     }
     
     const options = {
-        select: `-isDeleted -__v -updatedAt -createdAt`, 
+        select: `-isDeleted -__v`, 
 
     }
     if (req.query.page){
@@ -110,12 +110,13 @@ const inventoryList = async function (req,reply){
         options.sort={"modelId.name":1}
     }
     let inventoriesPaginated={};
-    if(!req.query.search){         
+    if(!req.query.search){ 
+        
         //let sortOrder={name:1}               
         let allModels = await Modelo.find({});
-        if(options.page!=null && options.limit!=null){
+        if(options.page!=null && options.limit!=null){            
             inventoriesPaginated.docs=[];
-            let inventoriesQuery = await Inventory.paginate(searchQuery, options);
+            let inventoriesQuery = await Inventory.paginate(searchQuery, options)            
             inventoriesQuery.docs.forEach(inventory => {
                 let newObj={
                     _id:inventory._id,                    
