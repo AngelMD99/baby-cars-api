@@ -2823,6 +2823,8 @@ const inventoryReport = async function (req, reply){
     let aggregateQuery=[];
     let offset = await getOffsetSetting()
 
+    aggregateQuery.push({ "$match": {"isDeleted": false }})
+
     if(req.query.modelId != null){
         let modelId = mongoose.Types.ObjectId(req.query.modelId)
         aggregateQuery.push({ "$match": {"modelId": modelId }});        
