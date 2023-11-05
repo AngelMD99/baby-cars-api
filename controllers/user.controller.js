@@ -167,6 +167,13 @@ const userBranchLogin = async function (req, reply) {
     this.jwt.sign({_id: user._id, role:user.role, isDeleted:user.isDeleted, timestamp: timestamp}, async (err, token) => {
         if (err) return reply.send(err)
 
+        if(!user.branchId){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'Usuario no tiene sucursal asignada'
+            })   
+        }
+
         if (user.branchId){
             await user.populate([
                 {path:'branchId', select:'_id name code'},
@@ -372,11 +379,10 @@ const userVerify = async function (req, reply){
     //     delete carObj.branchId;
     // }
     if(!userObj.branchId || !userObj.branchId._id){
-        userObj.branchId={
-            _id:null,
-            name:"",
-            code:""            
-        }
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no tiene sucursal asignada'
+        })   
     }
     switch (userObj.role) {
         case "admin":
