@@ -8,6 +8,36 @@ const errResponse = {
     }
 }
 
+const authorizeUserFunc = async function (req, reply) {
+    try {
+
+        if(!req.headers.authorization){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Sesión expirada'
+            })            
+        }
+        const decoded = await req.jwtVerify()      
+        const user = await User.findOne({_id: decoded._id, isDeleted:false});        
+        if(user == null){
+            return reply.code(401).send({
+                status: 'fail',
+                message: 'Usuario autentificado no existe'
+            })             
+        }
+        if(user.isEnabled == false){
+            return reply.code(404).send({
+                status: 'fail',
+                message: 'Usuario deshabilitado'
+            })
+        }
+    
+        return decoded
+    } catch (err) {
+      return reply.code(401).send(err)
+    }
+}
+
 const userDef={
     type:'object',
     properties: {
@@ -65,6 +95,33 @@ const postUserSignInOpts = {
 
 }
 
+const verifySingleUserOpts={
+    schema: {
+         description:"Retrieves the information of a single user with the id provided in order to verify role and branches",
+         tags:['Users'],
+        //  headers:{
+        //     authorization:{type:'string'}
+        // },
+         params:{
+            id:{type:'string'}
+         },         
+         response: {
+            200: {
+                  type: 'object',
+                  properties: {
+                  status: { type: 'string' },
+                  data: userDef
+                  }               
+            },
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: users.userVerify,
+    
+}
+
 function appUsersRoutes(fastify, options, done) {
     // fastify.get('/branches/:id/cars', getCarsOpts)
     // fastify.get('/branches/:id/auto-off', autoStopCars)        
@@ -74,6 +131,7 @@ function appUsersRoutes(fastify, options, done) {
     // fastify.put('/cars/:id/stop', stopSingleCarOpts)            
     //fastify.delete('/crm/branches/:id', getCarsOpts)
     fastify.post('/app/users/in', postUserSignInOpts);
+    fastify.get('/app/users/verify', verifySingleUserOpts);
 
 done()
 }

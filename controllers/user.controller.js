@@ -347,9 +347,56 @@ const userShow = async function (req, reply){
     return reply.code(200).send({
         status: 'success',
         data: userObj
-    })    
+    })   
 
+}
 
+const userVerify = async function (req, reply){
+
+    const decoded = await req.jwtVerify();    
+    let loggedUser = await User.findOne({_id:decoded._id, isDeleted:false}).select('-createdAt -updatedAt -__v');    
+    if (!loggedUser){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no encontrado'
+        })        
+    }
+    
+    await loggedUser.populate([
+        {path:'branchId', select:'_id name code'},       
+    ]);  
+    let userObj = await loggedUser.toObject();            
+    // if (carObj.branchId){
+    //     carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
+    //     carObj.branchName=carObj.branchId.name ? carObj.branchId.name :"";
+    //     delete carObj.branchId;
+    // }
+    if(!userObj.branchId || !userObj.branchId._id){
+        userObj.branchId={
+            _id:null,
+            name:"",
+            code:""            
+        }
+    }
+    switch (userObj.role) {
+        case "admin":
+            userObj.role="administrador"            
+            break;
+        case "employee":
+            userObj.role="empleado"            
+            break;
+    
+        default:
+            break;
+    }
+
+    userObj.isEnabled= userObj.isEnabled == true ? "Si" : "No";
+   
+    
+    return reply.code(200).send({
+        status: 'success',
+        data: userObj
+    })   
 
 }
 
@@ -954,4 +1001,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin, usersAvailable, userDisable, userEnable }
+module.exports = { userLogin, userCreate, userShow, userDelete, userList, userUpdate, userBranchLogin, usersAvailable, userDisable, userEnable, userVerify }
