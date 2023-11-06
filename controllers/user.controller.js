@@ -391,21 +391,14 @@ const userVerify = async function (req, reply){
         {path:'branchId', select:'_id name code'},       
     ]);  
 
-    if(!loggedUser.branchId || logged.branchId == null){
+    if(!loggedUser.branchId || loggedUser.branchId == null){
         return reply.code(400).send({
             status: 'fail',
             message: 'Usuario tiene asignada sucursal no válida'
         })  
 
     }
-
-    if(!loggedUser.branchId || logged.branchId == null){
-        return reply.code(400).send({
-            status: 'fail',
-            message: 'Usuario tiene asignada sucursal no válida'
-        })  
-
-    }
+    
     let userObj = await loggedUser.toObject();            
     // if (carObj.branchId){
     //     carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
