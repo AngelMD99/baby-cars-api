@@ -174,11 +174,18 @@ const userBranchLogin = async function (req, reply) {
             })   
         }
 
-        if (user.branchId){
+        if (user.branchId){            
             await user.populate([
                 {path:'branchId', select:'_id name code'},
-            ]); 
-             
+            ]);              
+        }
+
+        if(!user.branchId || user.branchId == null){
+            return reply.code(400).send({
+                status: 'fail',
+                message: 'Usuario tiene asignada sucursal no válida'
+            })  
+
         }
 
         user.lastLogin = new Date();
@@ -188,6 +195,8 @@ const userBranchLogin = async function (req, reply) {
 
         delete userObj.password;
         delete userObj.lastLogin;
+
+        console.log("USER OBJ:", userObj)
 
         return reply.code(200).send({
             status: 'success',
@@ -368,10 +377,35 @@ const userVerify = async function (req, reply){
             message: 'Usuario no encontrado'
         })        
     }
+
+    if(!loggedUser.branchId){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario no tiene sucursal asignada'
+        })   
+    }
+  
+  
     
     await loggedUser.populate([
         {path:'branchId', select:'_id name code'},       
     ]);  
+
+    if(!loggedUser.branchId || logged.branchId == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario tiene asignada sucursal no válida'
+        })  
+
+    }
+
+    if(!loggedUser.branchId || logged.branchId == null){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'Usuario tiene asignada sucursal no válida'
+        })  
+
+    }
     let userObj = await loggedUser.toObject();            
     // if (carObj.branchId){
     //     carObj.branchCode=carObj.branchId.code ? carObj.branchId.code :"";
