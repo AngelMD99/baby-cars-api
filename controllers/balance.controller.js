@@ -34,15 +34,15 @@ const balanceRentalsCreate = async function (req,reply){
             message: 'Usuario autentificado no existe'
         })
     }
-    let today = new Date ();    
+
+    let today = new Date ();        
     let searchQuery = {
-        isDeleted: false,
-        isDiscarded:false,
+        isDeleted: false,        
         branchId:ObjectId(req.params.id),
-        updatedAt:{"$gte": loggedUser.lastLogin,"$lte":today},        
+        createdAt:{"$gte": loggedUser.lastLogin,"$lte":today},        
         paymentType:{ $regex:"efectivo",$options:'i'}
 		
-    };
+    };    
     let rentalsQuery = await Rental.find(searchQuery)
     let userBalanceValidation= await Balance.findOne({
         isDeleted:false,
