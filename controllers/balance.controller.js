@@ -731,14 +731,11 @@ const balanceDelete = async function (req,reply){
     
 }
 
-const balanceVerifications = async function (req,reply){
+const rentalBalanceVerification = async function (req,reply){
     const decoded = await req.jwtVerify();    
     let loggedUser = await User.findOne({_id:decoded._id});
     let now = new Date();
-
     let nowDateTime = now.getTime();
-
-
     let rentalsBalance = await Balance.findOne({
         isDeleted:false,
         balanceType:'rentals',
@@ -751,10 +748,8 @@ const balanceVerifications = async function (req,reply){
             status: 'fail',
             message: 'No se ha generado el corte de rentas para la ultima sesión del usuario actual.'
         })  
-
     }
     if (rentalsBalance){
-
         let datesDifference = nowDateTime - rentalsBalance.balanceDate.getTime();
         console.log("now:  ",now)
         console.log("DATES DIFF:",datesDifference)
@@ -765,6 +760,23 @@ const balanceVerifications = async function (req,reply){
             })  
         }
     }
+    
+
+    return reply.code(201).send({
+        status: 'success',
+        data:'Corte de pagos con fecha valida'
+    })
+
+
+}
+
+
+const paymentBalanceVerification = async function (req,reply){
+    const decoded = await req.jwtVerify();    
+    let loggedUser = await User.findOne({_id:decoded._id});
+    let now = new Date();
+    let nowDateTime = now.getTime();
+    
 
     let paymentsBalance = await Balance.findOne({
         isDeleted:false,
@@ -795,9 +807,42 @@ const balanceVerifications = async function (req,reply){
 
     return reply.code(201).send({
         status: 'success',
-        data:'Cortes con fecha valida'
+        data:'Cortes de pagos con fecha valida'
     })
 
+
+}
+
+const balanceDateValidation = async function (req,reply){
+    let now = new Date();
+    let nowDateTime = now.getTime();
+    
+    let balanceCheck = await Balance.findOne({    
+        _id: new ObjectId(req.params.balanceId),
+        isDeleted:false
+               
+    })     
+
+    if (!balanceCheck){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'No se encontró el corte proporcionado'
+        })  
+    }    
+    let datesDifference = nowDateTime - balanceCheck.balanceDate.getTime();    
+    if (datesDifference>90000){
+        return reply.code(400).send({
+            status: 'fail',
+            message: 'El corte ha expirado, es necesario calcularlo de nuevo.'
+        })  
+    }
+    else{
+        return reply.code(201).send({
+            status: 'success',
+            data:'Balance válido'
+        })
+    
+    }
 
 }
 
@@ -851,4 +896,4 @@ function diacriticSensitiveRegex(string = '') {
        .replace(/u/g, '[u,ü,ú,ù]');
 }
 
-module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate, balancePaymentsCreate, balanceVerifications }
+module.exports = { balanceRentalsCreate, balanceDelete, balanceList, balanceShow, balanceUpdate, balancePaymentsCreate, rentalBalanceVerification, paymentBalanceVerification, balanceDateValidation }

@@ -4,7 +4,7 @@ const { branchLogin } = require('../controllers/branch.controller');
 const { branchRentalsList, branchRentalCashBalance } = require('../controllers/rental.controller');
 const { statusCreate, statusDelete, statusList, statusUpdate } = require('../controllers/status.controller');
 const { batteryCreate } = require('../controllers/battery.controller');
-const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate, balanceVerifications } = require('../controllers/balance.controller');
+const { balanceShow, balanceRentalsCreate, balanceList, balancePaymentsCreate, rentalBalanceVerification, paymentBalanceVerification, balanceDateValidation } = require('../controllers/balance.controller');
 
 const errResponse = {
     type: 'object',
@@ -472,9 +472,9 @@ const getSingleBalanceOpts={
     
 }
 
-const getBalanceValidationOpts={
+const getRentalBalanceValidationOpts={
     schema: {
-         description:"Checks if the balances of the logged user for the branchId in URL is valid",
+         description:"Checks if the rentals balance of the logged user for the branchId in URL is valid",
          tags:['Branches'], 
         //  headers:{
         //     authorization:{type:'string'}
@@ -486,14 +486,52 @@ const getBalanceValidationOpts={
          
     },
     preHandler: authorizeUserFunc,
-    handler: balanceVerifications,
+    handler: rentalBalanceVerification,
+    
+}
+
+const getPaymentBalanceValidationOpts={
+    schema: {
+         description:"Checks if the payments balance of the logged user for the branchId in URL is valid",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+         response: {
+            200: errResponse,
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: paymentBalanceVerification,
+    
+}
+
+const getDateBalanceValidationOpts={
+    schema: {
+         description:"Checks if balance has not expired before print it",
+         tags:['Branches'], 
+        //  headers:{
+        //     authorization:{type:'string'}
+        // }, 
+         response: {
+            200: errResponse,
+            400: errResponse
+        }
+         
+    },
+    preHandler: authorizeUserFunc,
+    handler: balanceDateValidation,
     
 }
 
 function appBranchesRoutes(fastify, options, done) {   
     fastify.post('/branches/in', postBranchSignInOpts) 
     fastify.get('/branches/:id/rentals', getRentalsOpts) 
-    fastify.get('/branches/:id/verifybalances', getBalanceValidationOpts) 
+    fastify.get('/branches/:id/verifyrentalbalance', getRentalBalanceValidationOpts) 
+    fastify.get('/branches/:id/verifypaymentbalance', getPaymentBalanceValidationOpts) 
+    fastify.get('/branches/:id/balancedate/:balanceId', getDateBalanceValidationOpts) 
     fastify.get('/branches/:id/balance', getBalanceOpts)     
     fastify.post('/branches/:id/balance/rentals', postRentalBalanceOpts)    
     fastify.post('/branches/:id/balance/payments', postPaymentBalanceOpts)
