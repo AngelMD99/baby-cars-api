@@ -125,11 +125,14 @@ const listPayments = async function (req, reply){
             paymentsQuery.docs.forEach(payment => {
                 let newObj={
                     _id:payment._id,
+                    isDeleted:payment.isDeleted,
+                    isDiscarded:payment.isDiscarded,
                     folio:payment.folio,
                     operationType:payment.operationType,
                     client:payment.client,
                     products:payment.products,                    
                     totalSale:payment.totalSale,
+                    paidOn:payment.paidOn,
                     createdAt:payment.createdAt,
                     updateAt:payment.updatedAt,                   
 
@@ -543,6 +546,7 @@ const listPayments = async function (req, reply){
               {
                 '$project': {
                   'isDeleted':1,
+                  'isDiscarded':1,
                   //'branchId': 1,                   
                   'folio': 1, 
                   'operationType':1,
@@ -575,6 +579,7 @@ const listPayments = async function (req, reply){
                     '$first':'$reserveInfo'
 
                   },
+                  'paidOn':1,
                   
                   'createdAt':1,
                   'updatedAt':1,                 
