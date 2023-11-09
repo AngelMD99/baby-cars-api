@@ -51,7 +51,8 @@ const balanceRentalsCreate = async function (req,reply){
         userId: loggedUser._id,
         loginDate:loggedUser.lastLogin,
 
-    })
+    })    
+
     if(userBalanceValidation){
         if (rentalsQuery.length>0){
             let rentalSum = 0; 
@@ -60,8 +61,9 @@ const balanceRentalsCreate = async function (req,reply){
             rentalSum = rentalSum + cashRental.planType.price
             })        
             userBalanceValidation.amount = rentalSum;
-            userBalanceValidation.balanceDate = new Date();           
+                      
         }
+        userBalanceValidation.balanceDate = new Date(); 
         await userBalanceValidation.save();
         await userBalanceValidation.populate([
             { path:'branchId',select:'name code'},
@@ -187,9 +189,9 @@ const balancePaymentsCreate = async function (req,reply){
             paymentsQuery.forEach(cashPayment=>{
             rentalSum = rentalSum + cashPayment.amount
             })        
-            userBalanceValidation.amount = rentalSum; 
-            userBalanceValidation.balanceDate = new Date();          
+            userBalanceValidation.amount = rentalSum;                      
         }
+        userBalanceValidation.balanceDate = new Date(); 
         await userBalanceValidation.save();        
         await userBalanceValidation.populate([
             { path:'branchId',select:'name code'},
@@ -749,6 +751,8 @@ const rentalBalanceVerification = async function (req,reply){
             message: 'No se ha generado el corte de rentas para la ultima sesión del usuario actual.'
         })  
     }
+
+    console.log("RENTALS BALANCE: ", rentalsBalance)
     if (rentalsBalance){
         let datesDifference = nowDateTime - rentalsBalance.balanceDate.getTime();
         console.log("now:  ",now)
@@ -814,14 +818,18 @@ const paymentBalanceVerification = async function (req,reply){
 }
 
 const balanceDateValidation = async function (req,reply){
+    const decoded = await req.jwtVerify();    
+    let loggedUser = await User.findOne({_id:decoded._id});
     let now = new Date();
     let nowDateTime = now.getTime();
     
     let balanceCheck = await Balance.findOne({    
         _id: new ObjectId(req.params.balanceId),
-        isDeleted:false
+        isDeleted:false,
+        userId:loggedUser._id
                
-    })     
+    })  
+
 
     if (!balanceCheck){
         return reply.code(400).send({
@@ -829,6 +837,8 @@ const balanceDateValidation = async function (req,reply){
             message: 'No se encontró el corte proporcionado'
         })  
     }    
+    console.log("NOW: ", now)
+    console.log("BALANCE CHECK: ",balanceCheck)
     let datesDifference = nowDateTime - balanceCheck.balanceDate.getTime();    
     if (datesDifference>90000){
         return reply.code(400).send({
